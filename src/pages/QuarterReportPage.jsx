@@ -231,21 +231,9 @@ export default function QuarterReportPage() {
   const filteredCyclesData = useMemo(() => {
     if (!query.data?.length) return []
 
-    return query.data.map((cycle) => {
-      const cycleEnabled = !filters.cycle || filters.cycle === cycle.monthKey
-      if (!cycleEnabled) {
-        return {
-          ...cycle,
-          rows: [],
-          peopleOps: [],
-          attendance: [],
-          summary: sumRows([]),
-          attendanceSummary: sumAttendance([]),
-          labor: 0,
-          peopleCount: 0,
-        }
-      }
-
+    return query.data
+      .filter((cycle) => !filters.cycle || filters.cycle === cycle.monthKey)
+      .map((cycle) => {
       const inDateRange = (value) => {
         const raw = String(value || '').slice(0, 10)
         if (filters.dateFrom && raw < filters.dateFrom) return false
@@ -279,11 +267,30 @@ export default function QuarterReportPage() {
       const baseRowIds = new Set(baseRows.map((row) => String(row.id)))
       const basePeopleOps = cycle.peopleOps.filter((row) => baseRowIds.has(String(row.submission_id)))
 
+      const attendancePersonScopeActive = Boolean(filters.attendanceStatus || filters.absenceType)
+      const attendanceScopedPersonIds = new Set(
+        cycle.attendance
+          .filter((row) => {
+            if (!inDateRange(row.attendance_date)) return false
+            if (filters.personId && String(row.person_id) !== filters.personId) return false
+            if (filters.role && row.role !== filters.role) return false
+            if (filters.attendanceStatus && row.status !== filters.attendanceStatus) return false
+            if (filters.absenceType && row.absence_type !== filters.absenceType) return false
+            return true
+          })
+          .map((row) => String(row.person_id)),
+      )
+
       let rows = baseRows
-      if (filters.personId || filters.role) {
+      if (filters.personId || filters.role || attendancePersonScopeActive) {
         const matchingSubmissionIds = new Set(
           basePeopleOps
-            .filter((row) => (!filters.personId || String(row.person_id) === filters.personId) && (!filters.role || row.role === filters.role))
+            .filter((row) => {
+              if (filters.personId && String(row.person_id) !== filters.personId) return false
+              if (filters.role && row.role !== filters.role) return false
+              if (attendancePersonScopeActive && !attendanceScopedPersonIds.has(String(row.person_id))) return false
+              return true
+            })
             .map((row) => String(row.submission_id)),
         )
         rows = baseRows.filter((row) => matchingSubmissionIds.has(String(row.id)))
@@ -294,6 +301,7 @@ export default function QuarterReportPage() {
       const peopleOps = allPeopleForRows.filter((row) => {
         if (filters.personId && String(row.person_id) !== filters.personId) return false
         if (filters.role && row.role !== filters.role) return false
+        if (attendancePersonScopeActive && !attendanceScopedPersonIds.has(String(row.person_id))) return false
         return true
       })
 
@@ -408,6 +416,26 @@ export default function QuarterReportPage() {
   const cycleLabels = selectedCycles.map((cycle) => monthName(cycle.month_key))
   const titleRange = cycleLabels.join(' · ')
 
+  const visibleCycles = filters.cycle
+    ? selectedCycles.filter((cycle) => cycle.month_key === filters.cycle)
+    : selectedCycles
+
+  const selectedPerson = filterOptions.people.find((person) => person.id === filters.personId)
+  const filterSummaryParts = [
+    filters.cycle ? `الدورة: ${monthName(filters.cycle)}` : '',
+    filters.dateFrom ? `من: ${filters.dateFrom}` : '',
+    filters.dateTo ? `إلى: ${filters.dateTo}` : '',
+    filters.project ? `المشروع: ${filters.project}` : '',
+    filters.section ? `القطاع: ${filters.section}` : '',
+    selectedPerson ? `الشخص: ${selectedPerson.name}` : '',
+    filters.role ? `الدور: ${roleLabels[filters.role] || filters.role}` : '',
+    filters.review ? `المراجعة: ${filters.review === 'reviewed' ? 'تمت' : 'لم تتم'}` : '',
+    filters.attendanceStatus ? `الحضور: ${filters.attendanceStatus === 'present' ? 'حاضر' : filters.attendanceStatus === 'absent' ? 'غياب' : 'قادم'}` : '',
+    filters.absenceType ? `نوع الغياب: ${filters.absenceType === 'excused' ? 'بإذن' : 'بدون إذن'}` : '',
+    filters.search ? `بحث: ${filters.search}` : '',
+  ].filter(Boolean)
+  const filterSummary = filterSummaryParts.join(' · ')
+
   const excelSheets = report ? [
     {
       name: 'ملخص الكوارتر',
@@ -445,7 +473,7 @@ export default function QuarterReportPage() {
         'الأمتار': row.meters,
         'قيمة الإنتاجية': row.revenue,
         'متوسط / متر': row.meters > 0 ? row.revenue / row.meters : 0,
-        ...Object.fromEntries(selectedCycles.map((cycle) => [
+        ...Object.fromEntries(visibleCycles.map((cycle) => [
           `${monthName(cycle.month_key)} - أمتار`,
           Number(row.byCycle[cycle.month_key]?.meters || 0),
         ])),
@@ -459,7 +487,7 @@ export default function QuarterReportPage() {
         'الأمتار': row.meters,
         'قيمة الإنتاجية': row.revenue,
         'متوسط / متر': row.meters > 0 ? row.revenue / row.meters : 0,
-        ...Object.fromEntries(selectedCycles.map((cycle) => [
+        ...Object.fromEntries(visibleCycles.map((cycle) => [
           `${monthName(cycle.month_key)} - أمتار`,
           Number(row.byCycle[cycle.month_key]?.meters || 0),
         ])),
@@ -473,7 +501,7 @@ export default function QuarterReportPage() {
         'العمليات': row.operationsCount,
         'الأمتار': row.meters,
         'المستحقات': row.earnings,
-        ...Object.fromEntries(selectedCycles.map((cycle) => [
+        ...Object.fromEntries(visibleCycles.map((cycle) => [
           `${monthName(cycle.month_key)} - مستحقات`,
           Number(row.byCycle[cycle.month_key]?.earnings || 0),
         ])),
@@ -519,7 +547,7 @@ export default function QuarterReportPage() {
       await exportExecutiveExcel({
         filename: `stc-quarter-${selectedKeys.join('-')}`,
         title: 'STC QUARTER PRODUCTIVITY REPORT',
-        subtitle: titleRange,
+        subtitle: filterSummary ? `${titleRange} · ${filterSummary}` : titleRange,
         kpis: [
           { label: 'العمليات', value: report.operations },
           { label: 'إجمالي الأمتار', value: report.meters },
@@ -717,13 +745,13 @@ export default function QuarterReportPage() {
               <header><div><span>PROJECT DETAIL</span><h2>تفاصيل كل المشاريع</h2></div><small>{number(report.projects.length)} مشروع</small></header>
               <div className="data-table-wrap">
                 <table className="data-table report-table">
-                  <thead><tr><th>المشروع</th><th>العمليات</th><th>الأمتار</th><th>قيمة الإنتاجية</th><th>متوسط / متر</th>{selectedCycles.map((cycle) => <th key={cycle.month_key}>{monthName(cycle.month_key)}</th>)}</tr></thead>
+                  <thead><tr><th>المشروع</th><th>العمليات</th><th>الأمتار</th><th>قيمة الإنتاجية</th><th>متوسط / متر</th>{visibleCycles.map((cycle) => <th key={cycle.month_key}>{monthName(cycle.month_key)}</th>)}</tr></thead>
                   <tbody>
                     {report.projects.map((row) => (
                       <tr key={row.name}>
                         <td className="strong-cell">{row.name}</td><td>{number(row.operations)}</td><td>{number(row.meters)}</td>
                         <td>{money(row.revenue)}</td><td>{money(row.meters > 0 ? row.revenue / row.meters : 0)}</td>
-                        {selectedCycles.map((cycle) => <td key={cycle.month_key}>{number(row.byCycle[cycle.month_key]?.meters || 0)} م</td>)}
+                        {visibleCycles.map((cycle) => <td key={cycle.month_key}>{number(row.byCycle[cycle.month_key]?.meters || 0)} م</td>)}
                       </tr>
                     ))}
                   </tbody>
@@ -735,13 +763,13 @@ export default function QuarterReportPage() {
               <header><div><span>SECTION DETAIL</span><h2>تفاصيل كل القطاعات</h2></div><small>{number(report.sections.length)} قطاع</small></header>
               <div className="data-table-wrap">
                 <table className="data-table report-table">
-                  <thead><tr><th>القطاع</th><th>العمليات</th><th>الأمتار</th><th>قيمة الإنتاجية</th><th>متوسط / متر</th>{selectedCycles.map((cycle) => <th key={cycle.month_key}>{monthName(cycle.month_key)}</th>)}</tr></thead>
+                  <thead><tr><th>القطاع</th><th>العمليات</th><th>الأمتار</th><th>قيمة الإنتاجية</th><th>متوسط / متر</th>{visibleCycles.map((cycle) => <th key={cycle.month_key}>{monthName(cycle.month_key)}</th>)}</tr></thead>
                   <tbody>
                     {report.sections.map((row) => (
                       <tr key={row.name}>
                         <td className="strong-cell">{row.name}</td><td>{number(row.operations)}</td><td>{number(row.meters)}</td>
                         <td>{money(row.revenue)}</td><td>{money(row.meters > 0 ? row.revenue / row.meters : 0)}</td>
-                        {selectedCycles.map((cycle) => <td key={cycle.month_key}>{number(row.byCycle[cycle.month_key]?.meters || 0)} م</td>)}
+                        {visibleCycles.map((cycle) => <td key={cycle.month_key}>{number(row.byCycle[cycle.month_key]?.meters || 0)} م</td>)}
                       </tr>
                     ))}
                   </tbody>
