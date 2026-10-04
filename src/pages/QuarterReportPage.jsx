@@ -607,10 +607,132 @@ export default function QuarterReportPage() {
         <div className="page-error">{query.error.message}</div>
       ) : report ? (
         <>
+          <section className="quarter-filter-panel no-print">
+            <header className="quarter-filter-panel__head">
+              <div>
+                <span><SlidersHorizontal size={16} /> فلترة الكوارتر</span>
+                <small>كل الأرقام والجداول والتقارير تتحدث حسب الفلاتر المختارة</small>
+              </div>
+              <div className="quarter-filter-panel__actions">
+                {activeFilterCount ? <span className="quarter-filter-count">{activeFilterCount} فلتر نشط</span> : <span className="quarter-filter-count is-empty">بدون فلاتر</span>}
+                <button className="btn btn-ghost btn-sm" type="button" onClick={resetFilters} disabled={!activeFilterCount}>
+                  <RotateCcw size={14} /> مسح الكل
+                </button>
+              </div>
+            </header>
+
+            <div className="quarter-filter-grid">
+              <label className="quarter-filter-search">
+                <span>بحث عام</span>
+                <div className="input-with-icon">
+                  <Search size={15} />
+                  <input
+                    value={filters.search}
+                    onChange={(event) => setFilter('search', event.target.value)}
+                    placeholder="مشروع، قطاع، اسم، ملاحظة، تاريخ..."
+                  />
+                </div>
+              </label>
+
+              <label>
+                <span>الدورة</span>
+                <select value={filters.cycle} onChange={(event) => setFilter('cycle', event.target.value)}>
+                  <option value="">كل الدورات الثلاث</option>
+                  {selectedCycles.map((cycle) => <option key={cycle.month_key} value={cycle.month_key}>{monthName(cycle.month_key)}</option>)}
+                </select>
+              </label>
+
+              <label>
+                <span>من تاريخ</span>
+                <input type="date" value={filters.dateFrom} onChange={(event) => setFilter('dateFrom', event.target.value)} />
+              </label>
+
+              <label>
+                <span>إلى تاريخ</span>
+                <input type="date" value={filters.dateTo} onChange={(event) => setFilter('dateTo', event.target.value)} />
+              </label>
+
+              <label>
+                <span>المشروع</span>
+                <select value={filters.project} onChange={(event) => setFilter('project', event.target.value)}>
+                  <option value="">كل المشاريع</option>
+                  {filterOptions.projects.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+              </label>
+
+              <label>
+                <span>القطاع</span>
+                <select value={filters.section} onChange={(event) => setFilter('section', event.target.value)}>
+                  <option value="">كل القطاعات</option>
+                  {filterOptions.sections.map((item) => <option key={item} value={item}>{item}</option>)}
+                </select>
+              </label>
+
+              <label>
+                <span>الشخص</span>
+                <select value={filters.personId} onChange={(event) => setFilter('personId', event.target.value)}>
+                  <option value="">كل الأفراد</option>
+                  {filterOptions.people.map((person) => (
+                    <option key={person.id} value={person.id}>
+                      {person.name} · {roleLabels[person.role] || person.role}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>الدور</span>
+                <select value={filters.role} onChange={(event) => setFilter('role', event.target.value)}>
+                  <option value="">كل الأدوار</option>
+                  {filterOptions.roles.map((role) => <option key={role} value={role}>{roleLabels[role] || role}</option>)}
+                </select>
+              </label>
+
+              <label>
+                <span>المراجعة</span>
+                <select value={filters.review} onChange={(event) => setFilter('review', event.target.value)}>
+                  <option value="">كل الحالات</option>
+                  <option value="reviewed">تمت المراجعة</option>
+                  <option value="not_reviewed">لم تتم المراجعة</option>
+                </select>
+              </label>
+
+              <label>
+                <span>الحضور</span>
+                <select
+                  value={filters.attendanceStatus}
+                  onChange={(event) => setFilters((current) => ({
+                    ...current,
+                    attendanceStatus: event.target.value,
+                    absenceType: event.target.value === 'absent' ? current.absenceType : '',
+                  }))}
+                >
+                  <option value="">كل حالات الحضور</option>
+                  <option value="present">حاضر</option>
+                  <option value="absent">غياب</option>
+                  <option value="upcoming">قادم</option>
+                </select>
+              </label>
+
+              <label>
+                <span>نوع الغياب</span>
+                <select
+                  value={filters.absenceType}
+                  disabled={Boolean(filters.attendanceStatus && filters.attendanceStatus !== 'absent')}
+                  onChange={(event) => setFilter('absenceType', event.target.value)}
+                >
+                  <option value="">كل أنواع الغياب</option>
+                  <option value="excused">غياب بإذن</option>
+                  <option value="unexcused">غياب بدون إذن</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
           <section className="report-actions no-print">
             <div>
               <strong>تقرير الكوارتر — {titleRange}</strong>
-              <span>Dashboard موحدة للدورات الثلاث مع تقرير Excel وPDF كامل.</span>
+              <span>{activeFilterCount ? `النتائج الحالية مفلترة بـ ${activeFilterCount} فلتر · Excel وPDF هيخرجوا بنفس النتائج` : 'Dashboard موحدة للدورات الثلاث مع تقرير Excel وPDF كامل.'}</span>
             </div>
             <div>
               <button className="btn btn-secondary" type="button" onClick={exportExcel} disabled={exporting}>
@@ -628,6 +750,7 @@ export default function QuarterReportPage() {
                 <span>STC · QUARTER ENGINEERING OPERATIONS REPORT</span>
                 <h1>تقرير الكوارتر التنفيذي</h1>
                 <p>{titleRange}</p>
+                {filterSummary ? <small className="quarter-report-filter-summary">الفلاتر المطبقة: {filterSummary}</small> : null}
               </div>
               <div className="report-cover-mark"><CalendarRange size={31} /></div>
             </header>
