@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   BarChart3, CalendarCheck2, CircleDollarSign, FileSpreadsheet, Printer,
   Ruler, TrendingUp, Users, BriefcaseBusiness, Layers3, CalendarRange,
+  Search, SlidersHorizontal, RotateCcw,
 } from 'lucide-react'
 import {
   Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -12,6 +13,7 @@ import { useFeedback } from '../context/FeedbackContext'
 import { appService } from '../services/appService'
 import { exportExecutiveExcel } from '../lib/exporters'
 import { date, money, monthName, number, roleLabels } from '../lib/format'
+import { smartIncludes } from '../lib/smartSearch'
 
 const chartTooltipStyle = {
   borderRadius: 12,
@@ -125,6 +127,19 @@ export default function QuarterReportPage() {
   const feedback = useFeedback()
   const [selectedKeys, setSelectedKeys] = useState(['', '', ''])
   const [exporting, setExporting] = useState(false)
+  const [filters, setFilters] = useState({
+    search: '',
+    cycle: '',
+    dateFrom: '',
+    dateTo: '',
+    project: '',
+    section: '',
+    personId: '',
+    role: '',
+    review: '',
+    attendanceStatus: '',
+    absenceType: '',
+  })
 
   useEffect(() => {
     if (cycles.length >= 3 && selectedKeys.every((value) => !value)) {
@@ -171,9 +186,169 @@ export default function QuarterReportPage() {
     })),
   })
 
+  const filterOptions = useMemo(() => {
+    const cyclesData = query.data || []
+    const projects = [...new Set(cyclesData.flatMap((cycle) => cycle.rows.map((row) => row.project)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'))
+    const sections = [...new Set(cyclesData.flatMap((cycle) => cycle.rows.map((row) => row.section)).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'))
+    const peopleMap = new Map()
+    cyclesData.flatMap((cycle) => cycle.peopleOps).forEach((row) => {
+      if (row.person_id && !peopleMap.has(String(row.person_id))) {
+        peopleMap.set(String(row.person_id), { id: String(row.person_id), name: row.person_name || '—', role: row.role })
+      }
+    })
+    const people = [...peopleMap.values()].sort((a, b) => a.name.localeCompare(b.name, 'ar'))
+    const roles = [...new Set(cyclesData.flatMap((cycle) => cycle.peopleOps.map((row) => row.role)).filter(Boolean))]
+    return { projects, sections, people, roles }
+  }, [filteredCyclesData])
+
+  const setFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }))
+
+  const resetFilters = () => setFilters({
+    search: '',
+    cycle: '',
+    dateFrom: '',
+    dateTo: '',
+    project: '',
+    section: '',
+    personId: '',
+    role: '',
+    review: '',
+    attendanceStatus: '',
+    absenceType: '',
+  })
+
+  const activeFilterCount = useMemo(
+    () => Object.values(filters).filter((value) => String(value || '').trim()).length,
+    [filters],
+  )
+
+  useEffect(() => {
+    if (filters.cycle && !selectedKeys.includes(filters.cycle)) {
+      setFilters((current) => ({ ...current, cycle: '' }))
+    }
+  }, [filters.cycle, selectedKeys])
+
+  const filteredCyclesData = useMemo(() => {
+    if (!query.data?.length) return []
+
+    return query.data.map((cycle) => {
+      const cycleEnabled = !filters.cycle || filters.cycle === cycle.monthKey
+      if (!cycleEnabled) {
+        return {
+          ...cycle,
+          rows: [],
+          peopleOps: [],
+          attendance: [],
+          summary: sumRows([]),
+          attendanceSummary: sumAttendance([]),
+          labor: 0,
+          peopleCount: 0,
+        }
+      }
+
+      const inDateRange = (value) => {
+        const raw = String(value || '').slice(0, 10)
+        if (filters.dateFrom && raw < filters.dateFrom) return false
+        if (filters.dateTo && raw > filters.dateTo) return false
+        return true
+      }
+
+      const baseRows = cycle.rows.filter((row) => {
+        if (!inDateRange(row.work_date)) return false
+        if (filters.project && row.project !== filters.project) return false
+        if (filters.section && row.section !== filters.section) return false
+        if (filters.review && row.review_status !== filters.review) return false
+        if (filters.search && !smartIncludes(
+          filters.search,
+          row.work_date,
+          row.project,
+          row.section,
+          row.engineers,
+          row.technicians,
+          row.assistants,
+          row.workers,
+          row.meters,
+          row.price_per_meter,
+          row.total,
+          row.note,
+          row.review_status === 'reviewed' ? 'تمت المراجعة' : 'لم تتم المراجعة',
+        )) return false
+        return true
+      })
+
+      const baseRowIds = new Set(baseRows.map((row) => String(row.id)))
+      const basePeopleOps = cycle.peopleOps.filter((row) => baseRowIds.has(String(row.submission_id)))
+
+      let rows = baseRows
+      if (filters.personId || filters.role) {
+        const matchingSubmissionIds = new Set(
+          basePeopleOps
+            .filter((row) => (!filters.personId || String(row.person_id) === filters.personId) && (!filters.role || row.role === filters.role))
+            .map((row) => String(row.submission_id)),
+        )
+        rows = baseRows.filter((row) => matchingSubmissionIds.has(String(row.id)))
+      }
+
+      const finalRowIds = new Set(rows.map((row) => String(row.id)))
+      const allPeopleForRows = cycle.peopleOps.filter((row) => finalRowIds.has(String(row.submission_id)))
+      const peopleOps = allPeopleForRows.filter((row) => {
+        if (filters.personId && String(row.person_id) !== filters.personId) return false
+        if (filters.role && row.role !== filters.role) return false
+        return true
+      })
+
+      const relevantPersonIds = new Set(allPeopleForRows.map((row) => String(row.person_id)))
+      const operationScopeActive = Boolean(filters.project || filters.section || filters.review || filters.search)
+
+      const attendance = cycle.attendance.filter((row) => {
+        if (!inDateRange(row.attendance_date)) return false
+        if (filters.personId && String(row.person_id) !== filters.personId) return false
+        if (filters.role && row.role !== filters.role) return false
+        if (filters.attendanceStatus && row.status !== filters.attendanceStatus) return false
+        if (filters.absenceType && row.absence_type !== filters.absenceType) return false
+        if (operationScopeActive && relevantPersonIds.size && !relevantPersonIds.has(String(row.person_id))) {
+          const attendanceSearchMatch = filters.search && smartIncludes(
+            filters.search,
+            row.person_name,
+            roleLabels[row.role] || row.role,
+            row.attendance_date,
+            row.note,
+            row.status === 'present' ? 'حاضر' : row.status === 'absent' ? 'غياب' : 'قادم',
+            row.absence_type === 'excused' ? 'بإذن' : row.absence_type === 'unexcused' ? 'بدون إذن' : '',
+          )
+          if (!attendanceSearchMatch) return false
+        } else if (filters.search && !operationScopeActive && !smartIncludes(
+          filters.search,
+          row.person_name,
+          roleLabels[row.role] || row.role,
+          row.attendance_date,
+          row.note,
+        )) return false
+        return true
+      })
+
+      const summary = sumRows(rows)
+      const attendanceSummary = sumAttendance(attendance)
+      const labor = peopleOps.reduce((sum, row) => sum + Number(row.share_amount || 0), 0)
+      const peopleCount = new Set(peopleOps.map((row) => row.person_id).filter(Boolean)).size
+
+      return {
+        ...cycle,
+        rows,
+        attendance,
+        peopleOps,
+        summary,
+        attendanceSummary,
+        labor,
+        peopleCount,
+      }
+    })
+  }, [query.data, filters])
+
+
   const report = useMemo(() => {
-    if (!query.data?.length) return null
-    const cyclesData = query.data
+    if (!filteredCyclesData.length) return null
+    const cyclesData = filteredCyclesData
     const operations = cyclesData.reduce((sum, cycle) => sum + cycle.summary.operations, 0)
     const meters = cyclesData.reduce((sum, cycle) => sum + cycle.summary.meters, 0)
     const revenue = cyclesData.reduce((sum, cycle) => sum + cycle.summary.revenue, 0)
