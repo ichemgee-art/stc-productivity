@@ -199,7 +199,7 @@ export default function QuarterReportPage() {
     const people = [...peopleMap.values()].sort((a, b) => a.name.localeCompare(b.name, 'ar'))
     const roles = [...new Set(cyclesData.flatMap((cycle) => cycle.peopleOps.map((row) => row.role)).filter(Boolean))]
     return { projects, sections, people, roles }
-  }, [filteredCyclesData])
+  }, [query.data])
 
   const setFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }))
 
@@ -298,7 +298,7 @@ export default function QuarterReportPage() {
       })
 
       const relevantPersonIds = new Set(allPeopleForRows.map((row) => String(row.person_id)))
-      const operationScopeActive = Boolean(filters.project || filters.section || filters.review || filters.search)
+      const structuralOperationScope = Boolean(filters.project || filters.section || filters.review)
 
       const attendance = cycle.attendance.filter((row) => {
         if (!inDateRange(row.attendance_date)) return false
@@ -306,8 +306,12 @@ export default function QuarterReportPage() {
         if (filters.role && row.role !== filters.role) return false
         if (filters.attendanceStatus && row.status !== filters.attendanceStatus) return false
         if (filters.absenceType && row.absence_type !== filters.absenceType) return false
-        if (operationScopeActive && relevantPersonIds.size && !relevantPersonIds.has(String(row.person_id))) {
-          const attendanceSearchMatch = filters.search && smartIncludes(
+
+        const personIsRelevant = relevantPersonIds.has(String(row.person_id))
+        if (structuralOperationScope && !personIsRelevant) return false
+
+        if (filters.search) {
+          const attendanceSearchMatch = smartIncludes(
             filters.search,
             row.person_name,
             roleLabels[row.role] || row.role,
@@ -316,14 +320,9 @@ export default function QuarterReportPage() {
             row.status === 'present' ? 'حاضر' : row.status === 'absent' ? 'غياب' : 'قادم',
             row.absence_type === 'excused' ? 'بإذن' : row.absence_type === 'unexcused' ? 'بدون إذن' : '',
           )
-          if (!attendanceSearchMatch) return false
-        } else if (filters.search && !operationScopeActive && !smartIncludes(
-          filters.search,
-          row.person_name,
-          roleLabels[row.role] || row.role,
-          row.attendance_date,
-          row.note,
-        )) return false
+          if (!personIsRelevant && !attendanceSearchMatch) return false
+        }
+
         return true
       })
 
@@ -396,7 +395,7 @@ export default function QuarterReportPage() {
       topSection: sections[0] || null,
       topPerson: people[0] || null,
     }
-  }, [query.data])
+  }, [filteredCyclesData])
 
   const setSlot = (index, value) => {
     setSelectedKeys((current) => current.map((item, itemIndex) => itemIndex === index ? value : item))
