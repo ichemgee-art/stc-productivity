@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   BarChart3, CalendarDays, CircleDollarSign, FileSpreadsheet, FolderKanban,
@@ -9,13 +9,21 @@ import { useFeedback } from '../context/FeedbackContext'
 import { appService } from '../services/appService'
 import { exportExecutiveExcel } from '../lib/exporters'
 import { date, money, monthName, number, roleLabels } from '../lib/format'
-import { smartIncludes } from '../lib/smartSearch'
+import { normalizeSearch, smartIncludes } from '../lib/smartSearch'
 
 const PROJECT_HISTORY_SEARCH_KEY = 'stc_project_history_search'
+const PROJECT_HISTORY_SELECTED_KEY = 'stc_project_history_selected'
 
 const getInitialProjectSearch = () => {
   if (typeof window === 'undefined') return ''
-  return window.localStorage.getItem(PROJECT_HISTORY_SEARCH_KEY) || ''
+  return window.localStorage.getItem(PROJECT_HISTORY_SELECTED_KEY)
+    || window.localStorage.getItem(PROJECT_HISTORY_SEARCH_KEY)
+    || ''
+}
+
+const getInitialSelectedProject = () => {
+  if (typeof window === 'undefined') return ''
+  return window.localStorage.getItem(PROJECT_HISTORY_SELECTED_KEY) || ''
 }
 
 const summarizeRows = (rows) => {
@@ -77,6 +85,7 @@ export default function ExecutiveReportPage() {
   const { cycles } = useCycle()
   const feedback = useFeedback()
   const [search, setSearch] = useState(getInitialProjectSearch)
+  const [selectedProject, setSelectedProject] = useState(getInitialSelectedProject)
   const [exporting, setExporting] = useState(false)
 
   const historyQuery = useQuery({
@@ -94,17 +103,42 @@ export default function ExecutiveReportPage() {
   const allRows = historyQuery.data?.rows || []
   const allPeopleOps = historyQuery.data?.peopleOps || []
 
+  const saveSelectedProject = (projectName) => {
+    setSelectedProject(projectName)
+    if (typeof window !== 'undefined') {
+      if (projectName) {
+        window.localStorage.setItem(PROJECT_HISTORY_SELECTED_KEY, projectName)
+        window.localStorage.setItem(PROJECT_HISTORY_SEARCH_KEY, projectName)
+      } else {
+        window.localStorage.removeItem(PROJECT_HISTORY_SELECTED_KEY)
+      }
+    }
+  }
+
   const updateSearch = (value) => {
     setSearch(value)
     if (typeof window !== 'undefined') {
       if (value.trim()) window.localStorage.setItem(PROJECT_HISTORY_SEARCH_KEY, value)
       else window.localStorage.removeItem(PROJECT_HISTORY_SEARCH_KEY)
     }
+
+    if (selectedProject && normalizeSearch(value) !== normalizeSearch(selectedProject)) {
+      saveSelectedProject('')
+    }
+  }
+
+  const chooseProject = (projectName) => {
+    setSearch(projectName)
+    saveSelectedProject(projectName)
   }
 
   const clearSearch = () => {
     setSearch('')
-    if (typeof window !== 'undefined') window.localStorage.removeItem(PROJECT_HISTORY_SEARCH_KEY)
+    setSelectedProject('')
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(PROJECT_HISTORY_SEARCH_KEY)
+      window.localStorage.removeItem(PROJECT_HISTORY_SELECTED_KEY)
+    }
   }
 
   const normalizedSearch = search.trim()
@@ -119,11 +153,36 @@ export default function ExecutiveReportPage() {
     return projectNames.filter((name) => smartIncludes(normalizedSearch, name))
   }, [normalizedSearch, projectNames])
 
-  const report = useMemo(() => {
-    if (!normalizedSearch) return null
+  useEffect(() => {
+    if (!normalizedSearch || !projectNames.length) return
 
+    const exactMatch = projectNames.find(
+      (name) => normalizeSearch(name) === normalizeSearch(normalizedSearch),
+    )
+
+    if (exactMatch) {
+      if (selectedProject !== exactMatch) saveSelectedProject(exactMatch)
+      return
+    }
+
+    if (matchedProjectNames.length === 1) {
+      const onlyMatch = matchedProjectNames[0]
+      if (selectedProject !== onlyMatch) saveSelectedProject(onlyMatch)
+    }
+  }, [normalizedSearch, projectNames, matchedProjectNames, selectedProject])
+
+  const effectiveProject = useMemo(() => {
+    if (!selectedProject) return ''
+    const normalizedSelected = normalizeSearch(selectedProject)
+    return projectNames.find((name) => normalizeSearch(name) === normalizedSelected) || ''
+  }, [selectedProject, projectNames])
+
+  const report = useMemo(() => {
+    if (!effectiveProject) return null
+
+    const normalizedProject = normalizeSearch(effectiveProject)
     const rows = allRows
-      .filter((row) => smartIncludes(normalizedSearch, row.project))
+      .filter((row) => normalizeSearch(row.project) === normalizedProject)
       .sort((a, b) => String(a.work_date).localeCompare(String(b.work_date)))
 
     const rowIds = new Set(rows.map((row) => String(row.id)))
@@ -185,9 +244,9 @@ export default function ExecutiveReportPage() {
       firstDate,
       lastDate,
       cycleRows,
-      projectNames: [...new Set(rows.map((row) => row.project).filter(Boolean))],
+      projectNames: [effectiveProject],
     }
-  }, [normalizedSearch, allRows, allPeopleOps, cycles])
+  }, [effectiveProject, allRows, allPeopleOps, cycles])
 
   const hasResults = Boolean(report?.rows.length)
 
@@ -353,12 +412,12 @@ export default function ExecutiveReportPage() {
         </label>
       </section>
 
-      {normalizedSearch && matchedProjectNames.length > 1 ? (
+      {normalizedSearch && matchedProjectNames.length > 1 && !effectiveProject ? (
         <section className="project-match-strip no-print">
           <span>مشروعات مطابقة:</span>
           <div>
             {matchedProjectNames.slice(0, 12).map((name) => (
-              <button key={name} type="button" onClick={() => updateSearch(name)}>{name}</button>
+              <button key={name} type="button" onClick={() => chooseProject(name)}>{name}</button>
             ))}
           </div>
         </section>
@@ -370,11 +429,17 @@ export default function ExecutiveReportPage() {
           <strong>ابدأ بكتابة اسم المشروع</strong>
           <p>الحصر غير مرتبط بالدورة المختارة بالأعلى؛ البحث يتم على كل البيانات التاريخية المسجلة في النظام.</p>
         </section>
+      ) : !effectiveProject ? (
+        <section className="project-history-empty">
+          <FolderKanban size={34} />
+          <strong>{matchedProjectNames.length ? 'اختار المشروع المطلوب' : 'مفيش مشروع مطابق للبحث'}</strong>
+          <p>{matchedProjectNames.length ? 'في أكتر من مشروع قريب من البحث. اختار اسم مشروع واحد من الاقتراحات عشان الحصر يكون Exact عليه فقط.' : 'جرّب كتابة جزء أوضح من اسم المشروع.'}</p>
+        </section>
       ) : !hasResults ? (
         <section className="project-history-empty">
           <FolderKanban size={34} />
-          <strong>مفيش مشروع مطابق للبحث</strong>
-          <p>جرّب كتابة جزء من اسم المشروع أو اختار اسم من الاقتراحات.</p>
+          <strong>المشروع المختار ملوش عمليات مسجلة</strong>
+          <p>تم اختيار المشروع بالاسم المطابق، لكن مفيش عمليات تاريخية مرتبطة به.</p>
         </section>
       ) : (
         <>
