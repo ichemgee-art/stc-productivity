@@ -93,7 +93,7 @@ export default function AppLayout() {
   const sidebar = (
     <>
       <div className="sidebar-brand">
-        <img className="sidebar-brand-logo" src="/stc-logo.jpg" alt="STC Specialized Trading & Construction" />
+        <img className="sidebar-brand-logo" src="/stc-logo-hq.jpg" alt="STC Specialized Trading & Construction" />
       </div>
       <div className="sidebar-section-label">OPERATIONS</div>
       <nav className="sidebar-nav">
