@@ -548,7 +548,7 @@ export default function ExecutiveReportPage() {
                 <h1>{report.projectNames.join('، ')}</h1>
                 <p>{hasDateRange ? <>الحصر خلال الفترة المختارة · {dateFrom ? date(dateFrom) : 'من البداية'} → {dateTo ? date(dateTo) : 'آخر تاريخ'}</> : <>حصر تاريخي كامل من {date(report.firstDate)} إلى {date(report.lastDate)}</>}</p>
               </div>
-              <div className="report-cover-logo"><img src="/stc-logo.jpg" alt="STC Specialized Trading & Construction" /></div>
+              <div className="report-cover-logo"><img src="/stc-logo-hq.jpg" alt="STC Specialized Trading & Construction" /></div>
             </header>
 
             <section className="report-kpi-grid project-history-kpis">
