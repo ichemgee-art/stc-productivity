@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf'
 
 const safeName = (value) => String(value || 'export').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 80)
 
-const BRAND_LOGO_PATH = '/stc-logo.jpg'
+const BRAND_LOGO_PATH = '/stc-logo-hq.jpg'
 let brandLogoPngPromise
 
 const getBrandLogoBlob = async () => {
