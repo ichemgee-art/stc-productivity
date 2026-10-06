@@ -4013,3 +4013,308 @@ html[data-theme="dark"] .project-history-period__grid input{
 @media print{
   .project-history-period{display:none!important}
 }
+
+
+/* READABILITY V4 — larger professional typography */
+body{
+  font-size:15px;
+  line-height:1.6;
+}
+
+/* Navigation & topbar */
+.sidebar-brand strong{font-size:17px!important}
+.sidebar-brand small{font-size:11px!important;line-height:1.5}
+.sidebar-section-label{font-size:10px!important;letter-spacing:1px}
+.nav-link{
+  font-size:13px!important;
+  line-height:1.45;
+  padding-block:11px!important;
+}
+.sidebar-role strong{font-size:12px!important}
+.sidebar-role small{font-size:10px!important}
+
+.topbar-title h1{font-size:21px!important}
+.topbar-title p{font-size:11.5px!important;line-height:1.55}
+.cycle-select-wrap small{font-size:10px!important}
+.cycle-select-wrap select{font-size:12px!important}
+.cycle-dates{font-size:10px!important}
+.user-chip strong{font-size:11px!important}
+.user-chip small{font-size:9.5px!important}
+
+/* Core cards and sections */
+.panel-header h3{font-size:16px!important}
+.panel-header p{font-size:11px!important;line-height:1.6}
+.hero-strip h2{font-size:25px!important}
+.hero-strip p{font-size:12px!important;line-height:1.7}
+.eyebrow{font-size:10.5px!important;line-height:1.5}
+
+.stat-card__label{font-size:11px!important}
+.stat-card__value{font-size:24px!important;line-height:1.25}
+.stat-card__helper{font-size:10px!important;line-height:1.55}
+
+.rank-number{font-size:11px!important}
+.rank-name strong{font-size:12px!important}
+.rank-name small{font-size:10px!important}
+.rank-value{font-size:12px!important}
+.insight-grid span{font-size:11px!important}
+.insight-grid strong{font-size:20px!important}
+
+/* Forms, filters and actions */
+.field>span,
+.quarter-select-grid label>span,
+.quarter-filter-grid label>span,
+.project-history-search__field>span,
+.project-history-period__grid label>span{
+  font-size:11px!important;
+  line-height:1.5;
+}
+
+.field input,
+.field select,
+.field textarea,
+.filters-bar input,
+.filters-bar select,
+.table-input,
+.data-table select,
+.quarter-select-grid select,
+.quarter-filter-grid input,
+.quarter-filter-grid select,
+.project-history-search__field input,
+.project-history-period__grid input,
+.operation-note-editor textarea{
+  font-size:13px!important;
+  line-height:1.55!important;
+}
+
+.btn{
+  font-size:12.5px!important;
+  min-height:42px;
+  line-height:1.35;
+}
+.btn-sm{
+  font-size:11px!important;
+  min-height:34px;
+}
+.form-error,.inline-error{font-size:12px!important;line-height:1.65}
+.form-hint{font-size:11.5px!important;line-height:1.75}
+.toggle-row{font-size:12.5px!important}
+
+/* Status, chips and summaries */
+.status-pill{
+  font-size:10.5px!important;
+  padding:6px 9px!important;
+}
+.count-chip{font-size:9.5px!important}
+.summary-line span{font-size:10.5px!important}
+.summary-line strong{font-size:16px!important}
+
+/* All data tables */
+.data-table{
+  font-size:12.5px!important;
+  line-height:1.55;
+}
+.data-table th{
+  font-size:12px!important;
+  font-weight:900!important;
+  letter-spacing:0;
+}
+.data-table td{
+  font-size:12.5px!important;
+}
+.data-table th,
+.data-table td{
+  padding:12px 13px!important;
+}
+.strong-cell{
+  font-size:13px!important;
+  font-weight:900!important;
+}
+.operation-note-column,
+.operation-note-readonly{
+  font-size:12px!important;
+  line-height:1.65!important;
+}
+.autosave-note-field small,
+.operation-note-editor small{
+  font-size:10px!important;
+}
+
+/* People */
+.people-headline h2{font-size:22px!important}
+.people-headline p{font-size:11.5px!important;line-height:1.65}
+.person-identity strong{font-size:13px!important}
+.person-identity span{font-size:10px!important}
+.person-metrics span{font-size:9.5px!important}
+.person-metrics strong{font-size:12px!important}
+.person-footer{font-size:10px!important}
+.person-profile-copy>strong{font-size:15px!important}
+.person-kpi-primary span,
+.person-attendance-row span{font-size:10px!important}
+.person-kpi-primary strong{font-size:16px!important}
+.person-attendance-row strong{font-size:14px!important}
+.person-operation-note p{font-size:12px!important;line-height:1.65}
+.person-operation-note small,
+.person-operation-notes__more{font-size:10px!important}
+
+/* Management / review / entry */
+.management-hero h2{font-size:25px!important}
+.management-hero p{font-size:13px!important;line-height:1.65}
+.management-quick-card span{font-size:11px!important}
+.management-quick-card strong{font-size:16px!important}
+.management-quick-card small{font-size:10px!important}
+.management-alert span{font-size:12px!important}
+.management-alert small{font-size:10px!important}
+.review-card-head h3{font-size:18px!important}
+.review-card-head p{font-size:13px!important;line-height:1.65}
+.review-grid span,
+.review-team-grid span{font-size:11.5px!important}
+.review-grid strong{font-size:15px!important}
+.review-team-grid p{font-size:13px!important}
+.entry-flow span{font-size:12.5px!important}
+.people-picker__head strong{font-size:15px!important}
+.people-picker__head span{font-size:12px!important}
+.pick-person{font-size:13px!important}
+.calc-preview span{font-size:11.5px!important}
+.calc-preview strong{font-size:19px!important}
+
+/* Quarter */
+.quarter-selector__copy h2{font-size:23px!important}
+.quarter-selector__copy p{font-size:11.5px!important;line-height:1.7}
+.quarter-filter-panel__head>div:first-child>span{font-size:14px!important}
+.quarter-filter-panel__head small{font-size:10.5px!important}
+.quarter-filter-count{font-size:10.5px!important}
+.quarter-report-filter-summary{font-size:10px!important}
+.quarter-highlight-grid span{font-size:10px!important}
+.quarter-highlight-grid strong{font-size:14px!important}
+.quarter-highlight-grid small{font-size:10px!important}
+
+/* Executive / project report */
+.project-history-search__copy h2{font-size:24px!important}
+.project-history-search__copy p{font-size:12.5px!important;line-height:1.75}
+.project-history-search__field>span{font-size:11px!important}
+.project-match-strip>span{font-size:11px!important}
+.project-match-strip button{font-size:11px!important}
+.project-history-empty strong{font-size:17px!important}
+.project-history-empty p{font-size:12px!important;line-height:1.75}
+.project-history-period__head strong{font-size:13px!important}
+.project-history-period__head small{font-size:11px!important}
+.project-history-period__grid label>span{font-size:11px!important}
+.project-history-date-range span{font-size:10.5px!important}
+.project-history-date-range strong{font-size:14px!important}
+
+.executive-report-cover span{font-size:10px!important}
+.executive-report-cover h1{font-size:26px!important}
+.executive-report-cover p{font-size:12px!important;line-height:1.6}
+.report-kpi-grid span{font-size:10.5px!important}
+.report-kpi-grid strong{font-size:18px!important}
+.report-section>header span{font-size:9.5px!important}
+.report-section>header h2{font-size:16px!important}
+.report-section>header small{font-size:10.5px!important}
+.report-ranking-list b{font-size:10px!important}
+.report-ranking-list strong{font-size:12px!important}
+.report-ranking-list small{font-size:10px!important}
+.report-ranking-list em{font-size:12px!important}
+.executive-report-footer{font-size:10.5px!important}
+
+/* Toasts / dialogs / search / AI */
+.app-toast__copy strong{font-size:15px!important}
+.app-toast__copy p{font-size:13px!important;line-height:1.65}
+.confirm-copy h3{font-size:20px!important}
+.confirm-copy>p,.confirm-details{font-size:13px!important;line-height:1.65}
+.notification-popover,
+.global-search-panel,
+.ai-panel{
+  font-size:13px;
+}
+.notification-item,
+.global-search-result,
+.ai-message{
+  font-size:12.5px!important;
+  line-height:1.6;
+}
+
+/* Keep charts readable */
+.recharts-cartesian-axis-tick-value{
+  font-size:11px!important;
+}
+.recharts-legend-item-text{
+  font-size:11px!important;
+}
+
+/* Mobile readability */
+@media(max-width:760px){
+  body{font-size:16px!important}
+
+  .topbar-title h1{font-size:20px!important}
+  .cycle-select-wrap small{font-size:10px!important}
+  .cycle-select-wrap select{font-size:13px!important}
+
+  .mobile-bottom-nav__item{
+    font-size:10.5px!important;
+    font-weight:900;
+  }
+
+  .panel-header h3{font-size:17px!important}
+  .panel-header p{font-size:12px!important}
+  .stat-card__label{font-size:11px!important}
+  .stat-card__value{font-size:23px!important}
+  .stat-card__helper{font-size:10px!important}
+
+  .data-table{font-size:13px!important}
+  .data-table th{font-size:12.5px!important}
+  .data-table td{font-size:13px!important}
+  .data-table th,.data-table td{padding:12px 11px!important}
+
+  .filters-bar input,
+  .filters-bar select,
+  .field input,
+  .field select,
+  .field textarea,
+  .table-input,
+  .quarter-filter-grid input,
+  .quarter-filter-grid select,
+  .project-history-search__field input,
+  .project-history-period__grid input{
+    font-size:14px!important;
+  }
+
+  .btn{font-size:13px!important}
+  .btn-sm{font-size:11.5px!important}
+
+  .project-history-search__copy h2{font-size:21px!important}
+  .project-history-search__copy p{font-size:13px!important}
+  .project-history-period__head strong{font-size:13px!important}
+  .project-history-period__head small{font-size:11px!important}
+  .project-history-period__grid label>span{font-size:11px!important}
+
+  .report-kpi-grid span{font-size:11px!important}
+  .report-kpi-grid strong{font-size:17px!important}
+  .report-section>header h2{font-size:16px!important}
+  .report-section>header span{font-size:10px!important}
+  .report-section>header small{font-size:10.5px!important}
+
+  .people-headline h2,
+  .management-hero h2{font-size:21px!important}
+  .people-headline p,
+  .management-hero p{font-size:12.5px!important}
+}
+
+/* Printing should still be comfortably readable */
+@media print{
+  .report-table{
+    font-size:10pt!important;
+    line-height:1.4!important;
+  }
+  .report-table th{
+    font-size:9.5pt!important;
+  }
+  .report-table td{
+    font-size:9.5pt!important;
+    padding:6pt 7pt!important;
+  }
+  .report-section>header h2{font-size:13pt!important}
+  .report-section>header span,
+  .report-section>header small{font-size:8.5pt!important}
+  .report-kpi-grid span{font-size:8.5pt!important}
+  .report-kpi-grid strong{font-size:13pt!important}
+}
