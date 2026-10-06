@@ -4,6 +4,72 @@ import { jsPDF } from 'jspdf'
 
 const safeName = (value) => String(value || 'export').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 80)
 
+const BRAND_LOGO_PATH = '/stc-logo.svg'
+let brandLogoPngPromise
+
+const getBrandLogoPngBlob = async () => {
+  if (!brandLogoPngPromise) {
+    brandLogoPngPromise = fetch(BRAND_LOGO_PATH)
+      .then((response) => {
+        if (!response.ok) throw new Error('تعذر تحميل لوجو STC')
+        return response.blob()
+      })
+      .then((svgBlob) => new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(svgBlob)
+        const image = new Image()
+        image.onload = () => {
+          try {
+            const canvas = document.createElement('canvas')
+            canvas.width = 720
+            canvas.height = 270
+            const context = canvas.getContext('2d')
+            context.fillStyle = '#FFFFFF'
+            context.fillRect(0, 0, canvas.width, canvas.height)
+            context.drawImage(image, 0, 0, canvas.width, canvas.height)
+            canvas.toBlob((blob) => {
+              URL.revokeObjectURL(objectUrl)
+              if (blob) resolve(blob)
+              else reject(new Error('تعذر تجهيز لوجو Excel'))
+            }, 'image/png')
+          } catch (error) {
+            URL.revokeObjectURL(objectUrl)
+            reject(error)
+          }
+        }
+        image.onerror = () => {
+          URL.revokeObjectURL(objectUrl)
+          reject(new Error('تعذر قراءة لوجو STC'))
+        }
+        image.src = objectUrl
+      }))
+      .catch(() => null)
+  }
+  return brandLogoPngPromise
+}
+
+const addLogoToExcelSheet = (sheet, logoBlob) => {
+  if (!logoBlob) return sheet
+  const columnCount = Math.max(1, sheet?.columns?.length || 1)
+  return {
+    ...sheet,
+    images: [
+      ...(sheet.images || []),
+      {
+        content: logoBlob,
+        contentType: 'image/png',
+        width: 132,
+        height: 50,
+        dpi: 96,
+        anchor: { row: 1, column: columnCount },
+        offsetX: 4,
+        offsetY: 3,
+        title: 'STC',
+        description: 'Specialized Trading & Construction',
+      },
+    ],
+  }
+}
+
 const EXCEL_COLORS = {
   navy: '#253A55',
   gold: '#F3B820',
@@ -384,7 +450,10 @@ export async function exportExcel({ filename, sheets }) {
     ? workbookSheets
     : [buildStyledTableSheet({ name: 'البيانات', rows: [] }, 'Sheet1')]
 
-  await writeExcelFile(output, {
+  const logoBlob = await getBrandLogoPngBlob()
+  const brandedOutput = output.map((sheet) => addLogoToExcelSheet(sheet, logoBlob))
+
+  await writeExcelFile(brandedOutput, {
     fontFamily: 'Arial',
     fontSize: 10,
   }).toFile(`${safeName(filename)}.xlsx`)
@@ -408,7 +477,10 @@ export async function exportExecutiveExcel({
     dashboardName,
   }, names[index + 1]))
 
-  await writeExcelFile([dashboard, ...tableSheets], {
+  const logoBlob = await getBrandLogoPngBlob()
+  const brandedSheets = [dashboard, ...tableSheets].map((sheet) => addLogoToExcelSheet(sheet, logoBlob))
+
+  await writeExcelFile(brandedSheets, {
     fontFamily: 'Arial',
     fontSize: 10,
   }).toFile(`${safeName(filename)}.xlsx`)
@@ -491,8 +563,8 @@ export async function exportTablePdf({ filename, sheets }) {
             <h1>${escapeHtml(sheet.name || reportTitle)}</h1>
             <p>تقرير تشغيلي كامل — جميع الصفوف والأعمدة مدرجة داخل المستند.</p>
           </div>
-          <div class="executive-mark">
-            <span class="mark-bars"><i></i><i></i><i></i></span>
+          <div class="executive-logo-wrap">
+            <img class="executive-logo" src="${escapeHtml(brandLogoUrl)}" alt="STC Specialized Trading & Construction" />
           </div>
         </header>
 
@@ -525,6 +597,7 @@ export async function exportTablePdf({ filename, sheets }) {
   }).join('')
 
   const title = safeName(filename)
+  const brandLogoUrl = `${window.location.origin}${BRAND_LOGO_PATH}`
   printWindow.document.open()
   printWindow.document.write(`<!doctype html>
 <html lang="ar" dir="rtl">
@@ -608,37 +681,23 @@ export async function exportTablePdf({ filename, sheets }) {
       font-size: 7px;
     }
 
-    .executive-mark {
-      width: 48px;
-      height: 48px;
-      flex: 0 0 48px;
-      display: grid;
-      place-items: center;
-      border: 1px solid rgba(255,255,255,.18);
-      border-radius: 12px;
-      background: rgba(255,255,255,.07);
-    }
-
-    .mark-bars {
-      width: 24px;
-      height: 24px;
+    .executive-logo-wrap {
+      width: 132px;
+      flex: 0 0 132px;
       display: flex;
-      align-items: end;
-      justify-content: center;
-      gap: 3px;
-      padding-bottom: 3px;
-      border-bottom: 2px solid #F3B820;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 4px;
+      border-radius: 8px;
+      background: #FFFFFF;
     }
 
-    .mark-bars i {
-      width: 4px;
+    .executive-logo {
       display: block;
-      border-radius: 2px 2px 0 0;
-      background: #F3B820;
+      width: 124px;
+      height: auto;
+      object-fit: contain;
     }
-    .mark-bars i:nth-child(1){height:9px}
-    .mark-bars i:nth-child(2){height:16px}
-    .mark-bars i:nth-child(3){height:12px}
 
     .report-meta-grid {
       display: grid;
