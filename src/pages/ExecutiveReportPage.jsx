@@ -374,7 +374,6 @@ export default function ExecutiveReportPage() {
         'مستحق العامل للفرد': Number(row.worker_share_per_person || 0),
         'المراجعة': row.review_status === 'reviewed' ? 'تمت المراجعة' : 'لم تتم',
         'السعر مفقود': row.price_missing ? 'نعم' : 'لا',
-        'المصدر': row.source || '—',
         'الملاحظات': row.note || '',
         'وقت الإدخال': row.submitted_at || '',
         'آخر تحديث': row.updated_at || '',
@@ -549,7 +548,7 @@ export default function ExecutiveReportPage() {
                 <h1>{report.projectNames.join('، ')}</h1>
                 <p>{hasDateRange ? <>الحصر خلال الفترة المختارة · {dateFrom ? date(dateFrom) : 'من البداية'} → {dateTo ? date(dateTo) : 'آخر تاريخ'}</> : <>حصر تاريخي كامل من {date(report.firstDate)} إلى {date(report.lastDate)}</>}</p>
               </div>
-              <div className="report-cover-mark"><FolderKanban size={31} /></div>
+              <div className="report-cover-logo"><img src="/stc-logo.svg" alt="STC Specialized Trading & Construction" /></div>
             </header>
 
             <section className="report-kpi-grid project-history-kpis">
@@ -651,7 +650,7 @@ export default function ExecutiveReportPage() {
                     <tr>
                       <th>#</th><th>التاريخ</th><th>المشروع</th><th>القطاع</th><th>المهندسين</th><th>الفنيين</th><th>ع.فنيين</th>
                       <th>المساعدين</th><th>ع.مساعدين</th><th>العمال</th><th>ع.عمال</th><th>الأمتار</th><th>سعر المتر</th><th>الإجمالي</th>
-                      <th>مستحق الفنيين</th><th>مستحق المساعدين</th><th>مستحق العمال</th><th>المراجعة</th><th>المصدر</th><th>الملاحظات</th>
+                      <th>مستحق الفنيين</th><th>مستحق المساعدين</th><th>مستحق العمال</th><th>المراجعة</th><th>الملاحظات</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -675,7 +674,6 @@ export default function ExecutiveReportPage() {
                         <td>{money(row.assistant_share_total)}</td>
                         <td>{money(row.worker_share_total)}</td>
                         <td>{row.review_status === 'reviewed' ? 'تمت المراجعة' : 'لم تتم'}</td>
-                        <td>{row.source || '—'}</td>
                         <td className="operation-note-column">{row.note || '—'}</td>
                       </tr>
                     ))}
