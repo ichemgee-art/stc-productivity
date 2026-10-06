@@ -13,6 +13,8 @@ import { normalizeSearch, smartIncludes } from '../lib/smartSearch'
 
 const PROJECT_HISTORY_SEARCH_KEY = 'stc_project_history_search'
 const PROJECT_HISTORY_SELECTED_KEY = 'stc_project_history_selected'
+const PROJECT_HISTORY_DATE_FROM_KEY = 'stc_project_history_date_from'
+const PROJECT_HISTORY_DATE_TO_KEY = 'stc_project_history_date_to'
 
 const getInitialProjectSearch = () => {
   if (typeof window === 'undefined') return ''
@@ -24,6 +26,16 @@ const getInitialProjectSearch = () => {
 const getInitialSelectedProject = () => {
   if (typeof window === 'undefined') return ''
   return window.localStorage.getItem(PROJECT_HISTORY_SELECTED_KEY) || ''
+}
+
+const getInitialDateFrom = () => {
+  if (typeof window === 'undefined') return ''
+  return window.localStorage.getItem(PROJECT_HISTORY_DATE_FROM_KEY) || ''
+}
+
+const getInitialDateTo = () => {
+  if (typeof window === 'undefined') return ''
+  return window.localStorage.getItem(PROJECT_HISTORY_DATE_TO_KEY) || ''
 }
 
 const summarizeRows = (rows) => {
@@ -86,6 +98,8 @@ export default function ExecutiveReportPage() {
   const feedback = useFeedback()
   const [search, setSearch] = useState(getInitialProjectSearch)
   const [selectedProject, setSelectedProject] = useState(getInitialSelectedProject)
+  const [dateFrom, setDateFrom] = useState(getInitialDateFrom)
+  const [dateTo, setDateTo] = useState(getInitialDateTo)
   const [exporting, setExporting] = useState(false)
 
   const historyQuery = useQuery({
@@ -132,9 +146,35 @@ export default function ExecutiveReportPage() {
     saveSelectedProject(projectName)
   }
 
+  const updateDateFrom = (value) => {
+    setDateFrom(value)
+    if (typeof window !== 'undefined') {
+      if (value) window.localStorage.setItem(PROJECT_HISTORY_DATE_FROM_KEY, value)
+      else window.localStorage.removeItem(PROJECT_HISTORY_DATE_FROM_KEY)
+    }
+  }
+
+  const updateDateTo = (value) => {
+    setDateTo(value)
+    if (typeof window !== 'undefined') {
+      if (value) window.localStorage.setItem(PROJECT_HISTORY_DATE_TO_KEY, value)
+      else window.localStorage.removeItem(PROJECT_HISTORY_DATE_TO_KEY)
+    }
+  }
+
+  const clearDateRange = () => {
+    setDateFrom('')
+    setDateTo('')
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(PROJECT_HISTORY_DATE_FROM_KEY)
+      window.localStorage.removeItem(PROJECT_HISTORY_DATE_TO_KEY)
+    }
+  }
+
   const clearSearch = () => {
     setSearch('')
     setSelectedProject('')
+    clearDateRange()
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(PROJECT_HISTORY_SEARCH_KEY)
       window.localStorage.removeItem(PROJECT_HISTORY_SELECTED_KEY)
@@ -142,6 +182,7 @@ export default function ExecutiveReportPage() {
   }
 
   const normalizedSearch = search.trim()
+  const hasDateRange = Boolean(dateFrom || dateTo)
 
   const projectNames = useMemo(
     () => [...new Set(allRows.map((row) => row.project).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar')),
@@ -182,7 +223,13 @@ export default function ExecutiveReportPage() {
 
     const normalizedProject = normalizeSearch(effectiveProject)
     const rows = allRows
-      .filter((row) => normalizeSearch(row.project) === normalizedProject)
+      .filter((row) => {
+        if (normalizeSearch(row.project) !== normalizedProject) return false
+        const workDate = String(row.work_date || '').slice(0, 10)
+        if (dateFrom && workDate < dateFrom) return false
+        if (dateTo && workDate > dateTo) return false
+        return true
+      })
       .sort((a, b) => String(a.work_date).localeCompare(String(b.work_date)))
 
     const rowIds = new Set(rows.map((row) => String(row.id)))
@@ -246,7 +293,7 @@ export default function ExecutiveReportPage() {
       cycleRows,
       projectNames: [effectiveProject],
     }
-  }, [effectiveProject, allRows, allPeopleOps, cycles])
+  }, [effectiveProject, allRows, allPeopleOps, cycles, dateFrom, dateTo])
 
   const hasResults = Boolean(report?.rows.length)
 
@@ -340,9 +387,9 @@ export default function ExecutiveReportPage() {
     setExporting(true)
     try {
       await exportExecutiveExcel({
-        filename: `stc-project-history-${normalizedSearch}`,
+        filename: `stc-project-history-${effectiveProject}${dateFrom ? `-${dateFrom}` : ''}${dateTo ? `-${dateTo}` : ''}`,
         title: 'STC PROJECT FULL HISTORY REPORT',
-        subtitle: `${report.projectNames.join('، ')} · من ${date(report.firstDate)} إلى ${date(report.lastDate)}`,
+        subtitle: `${report.projectNames.join('، ')} · ${hasDateRange ? `الفترة المختارة: ${dateFrom ? date(dateFrom) : 'البداية'} → ${dateTo ? date(dateTo) : 'النهاية'}` : `كل الفترات: من ${date(report.firstDate)} إلى ${date(report.lastDate)}`}`,
         kpis: [
           { label: 'العمليات', value: report.summary.operations },
           { label: 'إجمالي الأمتار', value: report.summary.meters },
@@ -410,6 +457,40 @@ export default function ExecutiveReportPage() {
             </datalist>
           </div>
         </label>
+
+        <div className="project-history-period">
+          <div className="project-history-period__head">
+            <div>
+              <strong>الفترة</strong>
+              <small>{hasDateRange ? 'الحصر مفلتر بالفترة المختارة' : 'كل الفترات — الوضع الافتراضي'}</small>
+            </div>
+            {hasDateRange ? (
+              <button className="btn btn-ghost btn-sm" type="button" onClick={clearDateRange}>
+                <X size={14} /> كل الفترات
+              </button>
+            ) : <span className="status-pill success">كل الفترات</span>}
+          </div>
+          <div className="project-history-period__grid">
+            <label>
+              <span>من تاريخ</span>
+              <input
+                type="date"
+                value={dateFrom}
+                max={dateTo || undefined}
+                onChange={(event) => updateDateFrom(event.target.value)}
+              />
+            </label>
+            <label>
+              <span>إلى تاريخ</span>
+              <input
+                type="date"
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={(event) => updateDateTo(event.target.value)}
+              />
+            </label>
+          </div>
+        </div>
       </section>
 
       {normalizedSearch && matchedProjectNames.length > 1 && !effectiveProject ? (
@@ -438,15 +519,15 @@ export default function ExecutiveReportPage() {
       ) : !hasResults ? (
         <section className="project-history-empty">
           <FolderKanban size={34} />
-          <strong>المشروع المختار ملوش عمليات مسجلة</strong>
-          <p>تم اختيار المشروع بالاسم المطابق، لكن مفيش عمليات تاريخية مرتبطة به.</p>
+          <strong>{hasDateRange ? 'مفيش عمليات في الفترة المختارة' : 'المشروع المختار ملوش عمليات مسجلة'}</strong>
+          <p>{hasDateRange ? 'المشروع موجود، لكن مفيش عمليات داخلة جوه رينج التاريخ الحالي. اختار فترة أوسع أو ارجع لكل الفترات.' : 'تم اختيار المشروع بالاسم المطابق، لكن مفيش عمليات تاريخية مرتبطة به.'}</p>
         </section>
       ) : (
         <>
           <section className="report-actions no-print">
             <div>
               <strong>حصر المشروع — {report.projectNames.join('، ')}</strong>
-              <span>كل البيانات من {date(report.firstDate)} إلى {date(report.lastDate)} عبر {number(report.cycleRows.length)} دورة</span>
+              <span>{hasDateRange ? `الفترة المختارة: ${dateFrom ? date(dateFrom) : 'من البداية'} إلى ${dateTo ? date(dateTo) : 'آخر تاريخ'}` : `كل الفترات: من ${date(report.firstDate)} إلى ${date(report.lastDate)}`} · {number(report.cycleRows.length)} دورة</span>
             </div>
             <div>
               <button className="btn btn-secondary" type="button" onClick={exportExcel} disabled={exporting}>
@@ -466,7 +547,7 @@ export default function ExecutiveReportPage() {
               <div>
                 <span>STC · COMPLETE PROJECT HISTORY REPORT</span>
                 <h1>{report.projectNames.join('، ')}</h1>
-                <p>حصر تاريخي كامل من {date(report.firstDate)} إلى {date(report.lastDate)}</p>
+                <p>{hasDateRange ? <>الحصر خلال الفترة المختارة · {dateFrom ? date(dateFrom) : 'من البداية'} → {dateTo ? date(dateTo) : 'آخر تاريخ'}</> : <>حصر تاريخي كامل من {date(report.firstDate)} إلى {date(report.lastDate)}</>}</p>
               </div>
               <div className="report-cover-mark"><FolderKanban size={31} /></div>
             </header>
@@ -561,7 +642,7 @@ export default function ExecutiveReportPage() {
 
             <section className="report-section report-full-operations">
               <header>
-                <div><span>FULL PROJECT OPERATIONS</span><h2>كل عمليات المشروع من أول يوم لآخر يوم</h2></div>
+                <div><span>FULL PROJECT OPERATIONS</span><h2>{hasDateRange ? 'كل عمليات المشروع داخل الفترة المختارة' : 'كل عمليات المشروع من أول يوم لآخر يوم'}</h2></div>
                 <small>{number(report.rows.length)} عملية</small>
               </header>
               <div className="data-table-wrap">
@@ -604,7 +685,7 @@ export default function ExecutiveReportPage() {
             </section>
 
             <footer className="executive-report-footer">
-              <span>STC Productivity System · Project Full History</span>
+              <span>STC Productivity System · {hasDateRange ? 'Project Date Range' : 'Project Full History'}</span>
               <strong>{date(report.firstDate)} → {date(report.lastDate)}</strong>
             </footer>
           </article>
