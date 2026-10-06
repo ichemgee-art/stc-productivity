@@ -1,23 +1,52 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { BarChart3, CalendarCheck2, CircleDollarSign, FileSpreadsheet, Printer, Ruler, TrendingUp, Users } from 'lucide-react'
+import {
+  BarChart3, CalendarDays, CircleDollarSign, FileSpreadsheet, FolderKanban,
+  Printer, Ruler, Search, TrendingUp, Users,
+} from 'lucide-react'
 import { useCycle } from '../context/CycleContext'
+import { useFeedback } from '../context/FeedbackContext'
 import { appService } from '../services/appService'
 import { exportExecutiveExcel } from '../lib/exporters'
 import { date, money, monthName, number, roleLabels } from '../lib/format'
+import { smartIncludes } from '../lib/smartSearch'
 
 const summarizeRows = (rows) => {
   const meters = rows.reduce((sum, row) => sum + Number(row.meters || 0), 0)
   const value = rows.reduce((sum, row) => sum + Number(row.total || 0), 0)
-  return { operations: rows.length, meters, value, avgPrice: meters > 0 ? value / meters : 0 }
+  return {
+    operations: rows.length,
+    meters,
+    value,
+    avgPrice: meters > 0 ? value / meters : 0,
+  }
 }
 
-const summarizeAttendance = (rows) => {
-  const relevant = rows.filter((row) => row.status !== 'upcoming' && !row.is_friday)
-  const present = relevant.filter((row) => row.status === 'present').length
-  const absent = relevant.filter((row) => row.status === 'absent').length
-  const total = present + absent
-  return { present, absent, rate: total ? (present / total) * 100 : 0 }
+const aggregatePeople = (rows) => {
+  const map = new Map()
+  rows.forEach((row) => {
+    const key = row.person_id || `${row.person_name}-${row.role}`
+    const current = map.get(key) || {
+      id: key,
+      name: row.person_name || '—',
+      role: row.role,
+      meters: 0,
+      earnings: 0,
+      operations: new Set(),
+      firstDate: row.work_date,
+      lastDate: row.work_date,
+    }
+    current.meters += Number(row.meters || 0)
+    current.earnings += Number(row.share_amount || 0)
+    current.operations.add(row.submission_id)
+    if (!current.firstDate || row.work_date < current.firstDate) current.firstDate = row.work_date
+    if (!current.lastDate || row.work_date > current.lastDate) current.lastDate = row.work_date
+    map.set(key, current)
+  })
+
+  return [...map.values()]
+    .map((row) => ({ ...row, operationsCount: row.operations.size }))
+    .sort((a, b) => b.earnings - a.earnings)
 }
 
 const groupBy = (rows, key) => {
@@ -33,121 +62,142 @@ const groupBy = (rows, key) => {
   return [...map.values()].sort((a, b) => b.meters - a.meters)
 }
 
-const aggregatePeople = (rows) => {
-  const map = new Map()
-  rows.forEach((row) => {
-    const key = row.person_id
-    const current = map.get(key) || {
-      name: row.person_name,
-      role: row.role,
-      meters: 0,
-      earnings: 0,
-      operations: new Set(),
-    }
-    current.meters += Number(row.meters || 0)
-    current.earnings += Number(row.share_amount || 0)
-    current.operations.add(row.submission_id)
-    map.set(key, current)
-  })
-  return [...map.values()]
-    .map((row) => ({ ...row, operationsCount: row.operations.size }))
-    .sort((a, b) => b.earnings - a.earnings)
-}
-
-const changePct = (current, previous) => {
-  const c = Number(current || 0)
-  const p = Number(previous || 0)
-  if (!p) return c ? null : 0
-  return ((c - p) / Math.abs(p)) * 100
-}
-
-function ComparisonRow({ label, current, previous, format = number }) {
-  const delta = changePct(current, previous)
-  return (
-    <tr>
-      <td>{label}</td>
-      <td>{format(current)}</td>
-      <td>{format(previous)}</td>
-      <td className={delta == null ? '' : delta >= 0 ? 'report-positive' : 'report-negative'}>
-        {delta == null ? 'جديد' : `${delta >= 0 ? '+' : ''}${number(delta, 1)}%`}
-      </td>
-    </tr>
-  )
-}
+const cycleForDate = (cycles, workDate) => (
+  cycles.find((cycle) => workDate >= cycle.cycle_start && workDate <= cycle.cycle_end) || null
+)
 
 export default function ExecutiveReportPage() {
-  const { monthKey, selectedCycle } = useCycle()
+  const { cycles } = useCycle()
+  const feedback = useFeedback()
+  const [search, setSearch] = useState('')
   const [exporting, setExporting] = useState(false)
 
-  const query = useQuery({
-    queryKey: ['cycle-data', 'executive-report', monthKey],
-    enabled: Boolean(monthKey && selectedCycle),
+  const historyQuery = useQuery({
+    queryKey: ['all-time', 'project-history-report'],
     queryFn: async () => {
-      const dashboard = await appService.dashboard(monthKey)
-      const previousKey = dashboard.previous_month_key
-      const previousBounds = await appService.cycleBounds(previousKey)
-
-      const [currentRows, previousRows, currentAttendance, previousAttendance, currentOps, previousOps] = await Promise.all([
-        appService.productivityRows(selectedCycle.cycle_start, selectedCycle.cycle_end),
-        appService.productivityRows(previousBounds.cycle_start, previousBounds.cycle_end),
-        appService.attendance(monthKey),
-        appService.attendance(previousKey),
-        appService.cyclePersonOperations(selectedCycle.cycle_start, selectedCycle.cycle_end),
-        appService.cyclePersonOperations(previousBounds.cycle_start, previousBounds.cycle_end),
+      const [rows, peopleOps] = await Promise.all([
+        appService.historicalProductivityRows(),
+        appService.historicalPersonOperations(),
       ])
-
-      return { dashboard, previousKey, previousBounds, currentRows, previousRows, currentAttendance, previousAttendance, currentOps, previousOps }
+      return { rows, peopleOps }
     },
+    staleTime: 60_000,
   })
 
+  const allRows = historyQuery.data?.rows || []
+  const allPeopleOps = historyQuery.data?.peopleOps || []
+  const normalizedSearch = search.trim()
+
+  const projectNames = useMemo(
+    () => [...new Set(allRows.map((row) => row.project).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar')),
+    [allRows],
+  )
+
+  const matchedProjectNames = useMemo(() => {
+    if (!normalizedSearch) return []
+    return projectNames.filter((name) => smartIncludes(normalizedSearch, name))
+  }, [normalizedSearch, projectNames])
+
   const report = useMemo(() => {
-    if (!query.data) return null
-    const current = summarizeRows(query.data.currentRows)
-    const previous = summarizeRows(query.data.previousRows)
-    const attendance = summarizeAttendance(query.data.currentAttendance)
-    const previousAttendance = summarizeAttendance(query.data.previousAttendance)
-    const labor = query.data.currentOps.reduce((sum, row) => sum + Number(row.share_amount || 0), 0)
-    const previousLabor = query.data.previousOps.reduce((sum, row) => sum + Number(row.share_amount || 0), 0)
+    if (!normalizedSearch) return null
+
+    const rows = allRows
+      .filter((row) => smartIncludes(normalizedSearch, row.project))
+      .sort((a, b) => String(a.work_date).localeCompare(String(b.work_date)))
+
+    const rowIds = new Set(rows.map((row) => String(row.id)))
+    const peopleOps = allPeopleOps.filter((row) => rowIds.has(String(row.submission_id)))
+
+    const summary = summarizeRows(rows)
+    const labor = peopleOps.reduce((sum, row) => sum + Number(row.share_amount || 0), 0)
+    const people = aggregatePeople(peopleOps)
+    const sections = groupBy(rows, 'section')
+
+    const firstDate = rows[0]?.work_date || null
+    const lastDate = rows.at(-1)?.work_date || null
+
+    const cycleMap = new Map()
+    rows.forEach((row) => {
+      const cycle = cycleForDate(cycles, row.work_date)
+      const key = cycle?.month_key || 'outside-cycle'
+      const current = cycleMap.get(key) || {
+        key,
+        label: cycle ? monthName(cycle.month_key) : 'خارج دورة معروفة',
+        cycleStart: cycle?.cycle_start || null,
+        cycleEnd: cycle?.cycle_end || null,
+        operations: 0,
+        meters: 0,
+        value: 0,
+        labor: 0,
+        people: new Set(),
+        firstDate: row.work_date,
+        lastDate: row.work_date,
+      }
+      current.operations += 1
+      current.meters += Number(row.meters || 0)
+      current.value += Number(row.total || 0)
+      if (row.work_date < current.firstDate) current.firstDate = row.work_date
+      if (row.work_date > current.lastDate) current.lastDate = row.work_date
+      cycleMap.set(key, current)
+    })
+
+    peopleOps.forEach((row) => {
+      const cycle = cycleForDate(cycles, row.work_date)
+      const key = cycle?.month_key || 'outside-cycle'
+      const current = cycleMap.get(key)
+      if (!current) return
+      current.labor += Number(row.share_amount || 0)
+      if (row.person_id) current.people.add(row.person_id)
+    })
+
+    const cycleRows = [...cycleMap.values()]
+      .map((row) => ({ ...row, peopleCount: row.people.size }))
+      .sort((a, b) => String(a.firstDate).localeCompare(String(b.firstDate)))
 
     return {
-      current,
-      previous,
-      attendance,
-      previousAttendance,
+      rows,
+      peopleOps,
+      summary,
       labor,
-      previousLabor,
-      projects: groupBy(query.data.currentRows, 'project'),
-      sections: groupBy(query.data.currentRows, 'section'),
-      people: aggregatePeople(query.data.currentOps),
-      previousKey: query.data.previousKey,
-      currentRows: query.data.currentRows,
+      people,
+      sections,
+      firstDate,
+      lastDate,
+      cycleRows,
+      projectNames: [...new Set(rows.map((row) => row.project).filter(Boolean))],
     }
-  }, [query.data])
+  }, [normalizedSearch, allRows, allPeopleOps, cycles])
 
-  if (query.isLoading) return <div className="page-loader">جاري إعداد التقرير التنفيذي...</div>
-  if (query.isError) return <div className="page-error">{query.error.message}</div>
-  if (!report) return null
+  const hasResults = Boolean(report?.rows.length)
 
-  const sheets = [
+  const sheets = report ? [
     {
-      name: 'الملخص التنفيذي',
+      name: 'ملخص المشروع',
       rows: [{
-        'الدورة': monthName(monthKey),
-        'عدد العمليات': report.current.operations,
-        'إجمالي الأمتار': report.current.meters,
-        'قيمة الإنتاجية': report.current.value,
-        'متوسط سعر المتر': report.current.avgPrice,
+        'المشروع / المشاريع المطابقة': report.projectNames.join('، '),
+        'أول عملية': report.firstDate ? date(report.firstDate) : '—',
+        'آخر عملية': report.lastDate ? date(report.lastDate) : '—',
+        'عدد الدورات': report.cycleRows.length,
+        'عدد العمليات': report.summary.operations,
+        'إجمالي الأمتار': report.summary.meters,
+        'قيمة الإنتاجية': report.summary.value,
+        'متوسط سعر المتر': report.summary.avgPrice,
         'مستحقات فريق التنفيذ': report.labor,
-        'نسبة الحضور %': report.attendance.rate,
+        'عدد أفراد التنفيذ': report.people.length,
       }],
     },
     {
-      name: 'المشاريع',
-      rows: report.projects.map((row) => ({
-        'المشروع': row.name,
+      name: 'الحصر حسب الدورات',
+      rows: report.cycleRows.map((row) => ({
+        'الدورة': row.label,
+        'من': row.cycleStart ? date(row.cycleStart) : date(row.firstDate),
+        'إلى': row.cycleEnd ? date(row.cycleEnd) : date(row.lastDate),
         'العمليات': row.operations,
         'الأمتار': row.meters,
         'قيمة الإنتاجية': row.value,
+        'متوسط سعر المتر': row.meters > 0 ? row.value / row.meters : 0,
+        'مستحقات الفريق': row.labor,
+        'أفراد التنفيذ': row.peopleCount,
       })),
     },
     {
@@ -157,195 +207,309 @@ export default function ExecutiveReportPage() {
         'العمليات': row.operations,
         'الأمتار': row.meters,
         'قيمة الإنتاجية': row.value,
+        'متوسط سعر المتر': row.meters > 0 ? row.value / row.meters : 0,
       })),
     },
     {
       name: 'أداء الأفراد',
       rows: report.people.map((row) => ({
         'الاسم': row.name,
-        'الدور': roleLabels[row.role] || row.role,
+        'الدور': roleLabels[row.role] || row.role || '—',
         'العمليات': row.operationsCount,
         'الأمتار': row.meters,
         'المستحقات': row.earnings,
+        'أول ظهور': row.firstDate ? date(row.firstDate) : '—',
+        'آخر ظهور': row.lastDate ? date(row.lastDate) : '—',
       })),
     },
     {
-      name: 'العمليات كاملة',
-      rows: report.currentRows.map((row, index) => ({
+      name: 'كل العمليات',
+      rows: report.rows.map((row, index) => ({
         '#': index + 1,
         'التاريخ': date(row.work_date),
         'المشروع': row.project || '—',
         'القطاع': row.section || '—',
         'المهندسين': row.engineers || '—',
         'الفنيين': row.technicians || '—',
+        'عدد الفنيين': Number(row.technician_count || 0),
         'المساعدين': row.assistants || '—',
+        'عدد المساعدين': Number(row.assistant_count || 0),
         'العمال': row.workers || '—',
+        'عدد العمال': Number(row.worker_count || 0),
         'الأمتار': Number(row.meters || 0),
         'سعر المتر': Number(row.price_per_meter || 0),
         'الإجمالي': Number(row.total || 0),
+        'إجمالي مستحق الفنيين': Number(row.tech_share_total || 0),
+        'مستحق الفني للفرد': Number(row.tech_share_per_person || 0),
+        'إجمالي مستحق المساعدين': Number(row.assistant_share_total || 0),
+        'مستحق المساعد للفرد': Number(row.assistant_share_per_person || 0),
+        'إجمالي مستحق العمال': Number(row.worker_share_total || 0),
+        'مستحق العامل للفرد': Number(row.worker_share_per_person || 0),
         'المراجعة': row.review_status === 'reviewed' ? 'تمت المراجعة' : 'لم تتم',
+        'السعر مفقود': row.price_missing ? 'نعم' : 'لا',
+        'المصدر': row.source || '—',
+        'الملاحظات': row.note || '',
+        'وقت الإدخال': row.submitted_at || '',
+        'آخر تحديث': row.updated_at || '',
       })),
     },
-  ]
+  ] : []
 
-  const excel = async () => {
+  const exportExcel = async () => {
+    if (!hasResults || exporting) return
     setExporting(true)
     try {
       await exportExecutiveExcel({
-        filename: `stc-executive-report-${monthKey}`,
-        title: `STC EXECUTIVE PRODUCTIVITY REPORT — ${monthName(monthKey)}`,
-        subtitle: `الدورة من ${date(selectedCycle.cycle_start)} إلى ${date(selectedCycle.cycle_end)} · مقارنة مع ${monthName(report.previousKey)}`,
+        filename: `stc-project-history-${normalizedSearch}`,
+        title: 'STC PROJECT FULL HISTORY REPORT',
+        subtitle: `${report.projectNames.join('، ')} · من ${date(report.firstDate)} إلى ${date(report.lastDate)}`,
         kpis: [
-          { label: 'العمليات', value: report.current.operations },
-          { label: 'إجمالي الأمتار', value: report.current.meters },
-          { label: 'قيمة الإنتاجية', value: report.current.value },
-          { label: 'متوسط سعر المتر', value: report.current.avgPrice },
+          { label: 'العمليات', value: report.summary.operations },
+          { label: 'إجمالي الأمتار', value: report.summary.meters },
+          { label: 'قيمة الإنتاجية', value: report.summary.value },
+          { label: 'متوسط سعر المتر', value: report.summary.avgPrice },
           { label: 'مستحقات الفريق', value: report.labor },
-          { label: 'نسبة الحضور %', value: report.attendance.rate },
+          { label: 'عدد الدورات', value: report.cycleRows.length },
         ],
         highlights: [
-          { title: 'أعلى مشروع تنفيذًا', value: report.projects[0] ? `${report.projects[0].name} · ${number(report.projects[0].meters)} م` : '—' },
+          { title: 'أول عملية', value: date(report.firstDate) },
+          { title: 'آخر عملية', value: date(report.lastDate) },
+          { title: 'أفراد التنفيذ', value: number(report.people.length) },
           { title: 'أعلى قطاع', value: report.sections[0] ? `${report.sections[0].name} · ${number(report.sections[0].meters)} م` : '—' },
-          { title: 'أعلى مستحق فردي', value: report.people[0] ? `${report.people[0].name} · ${money(report.people[0].earnings)}` : '—' },
-          { title: 'الحضور', value: `${number(report.attendance.rate, 1)}% · ${number(report.attendance.present)} حضور · ${number(report.attendance.absent)} غياب` },
         ],
         sheets,
       })
+    } catch (error) {
+      feedback.error('تعذر إنشاء تقرير المشروع', error.message || 'حدث خطأ أثناء إنشاء ملف Excel')
     } finally {
       setExporting(false)
     }
   }
 
+  if (historyQuery.isLoading) {
+    return <div className="page-loader">جاري تجهيز أرشيف المشاريع الكامل...</div>
+  }
+
+  if (historyQuery.isError) {
+    return <div className="page-error">{historyQuery.error.message}</div>
+  }
+
   return (
-    <div className="page-stack executive-report-page">
-      <section className="report-actions no-print">
-        <div><strong>التقرير التنفيذي الشهري</strong><span>جاهز للطباعة أو الحفظ PDF بجودة عالية</span></div>
-        <div>
-          <button className="btn btn-secondary" type="button" onClick={excel} disabled={exporting}><FileSpreadsheet size={16} /> Excel</button>
-          <button className="btn btn-primary" type="button" onClick={() => window.print()}><Printer size={16} /> PDF / طباعة</button>
+    <div className="page-stack executive-report-page project-history-report-page">
+      <section className="project-history-search no-print">
+        <div className="project-history-search__copy">
+          <span className="eyebrow">PROJECT FULL HISTORY</span>
+          <h2>حصر كامل بالمشروع</h2>
+          <p>اكتب اسم المشروع، والنظام يجمع كل عملياته من أول يوم مسجل لآخر يوم عبر كل الدورات والشهور.</p>
         </div>
+
+        <label className="project-history-search__field">
+          <span>اسم المشروع</span>
+          <div className="input-with-icon">
+            <Search size={18} />
+            <input
+              list="project-history-options"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="اكتب اسم المشروع..."
+              autoComplete="off"
+            />
+            <datalist id="project-history-options">
+              {projectNames.map((name) => <option key={name} value={name} />)}
+            </datalist>
+          </div>
+        </label>
       </section>
 
-      <article className="executive-report-document">
-        <header className="executive-report-cover">
+      {normalizedSearch && matchedProjectNames.length > 1 ? (
+        <section className="project-match-strip no-print">
+          <span>مشروعات مطابقة:</span>
           <div>
-            <span>STC · ENGINEERING OPERATIONS REPORT</span>
-            <h1>التقرير التنفيذي — {monthName(monthKey)}</h1>
-            <p>ملخص الإدارة للدورة من {selectedCycle.cycle_start} إلى {selectedCycle.cycle_end}</p>
-          </div>
-          <div className="report-cover-mark"><BarChart3 size={30} /></div>
-        </header>
-
-        <section className="report-kpi-grid">
-          <div><BarChart3 /><span>العمليات</span><strong>{number(report.current.operations)}</strong></div>
-          <div><Ruler /><span>الأمتار</span><strong>{number(report.current.meters)} م</strong></div>
-          <div><TrendingUp /><span>قيمة الإنتاجية</span><strong>{money(report.current.value)}</strong></div>
-          <div><CircleDollarSign /><span>مستحقات الفريق</span><strong>{money(report.labor)}</strong></div>
-          <div><CalendarCheck2 /><span>الحضور</span><strong>{number(report.attendance.rate, 1)}%</strong></div>
-          <div><Users /><span>أفراد نشطون بالتنفيذ</span><strong>{number(report.people.length)}</strong></div>
-        </section>
-
-        <section className="report-section">
-          <header><div><span>PERFORMANCE COMPARISON</span><h2>مقارنة بالدورة السابقة</h2></div><small>{monthName(report.previousKey)}</small></header>
-          <div className="data-table-wrap">
-            <table className="data-table report-table">
-              <thead><tr><th>المؤشر</th><th>الحالية</th><th>السابقة</th><th>التغير</th></tr></thead>
-              <tbody>
-                <ComparisonRow label="عدد العمليات" current={report.current.operations} previous={report.previous.operations} />
-                <ComparisonRow label="إجمالي الأمتار" current={report.current.meters} previous={report.previous.meters} />
-                <ComparisonRow label="قيمة الإنتاجية" current={report.current.value} previous={report.previous.value} format={money} />
-                <ComparisonRow label="مستحقات فريق التنفيذ" current={report.labor} previous={report.previousLabor} format={money} />
-                <ComparisonRow label="نسبة الحضور" current={report.attendance.rate} previous={report.previousAttendance.rate} format={(v) => `${number(v, 1)}%`} />
-              </tbody>
-            </table>
+            {matchedProjectNames.slice(0, 12).map((name) => (
+              <button key={name} type="button" onClick={() => setSearch(name)}>{name}</button>
+            ))}
           </div>
         </section>
+      ) : null}
 
-        <section className="report-two-column">
-          <section className="report-section">
-            <header><div><span>PROJECTS</span><h2>أعلى المشاريع تنفيذًا</h2></div></header>
-            <div className="report-ranking-list">
-              {report.projects.slice(0, 8).map((row, index) => (
-                <div key={row.name}>
-                  <b>{index + 1}</b>
-                  <span><strong>{row.name}</strong><small>{number(row.operations)} عملية</small></span>
-                  <em>{number(row.meters)} م</em>
-                </div>
-              ))}
+      {!normalizedSearch ? (
+        <section className="project-history-empty">
+          <Search size={34} />
+          <strong>ابدأ بكتابة اسم المشروع</strong>
+          <p>الحصر غير مرتبط بالدورة المختارة بالأعلى؛ البحث يتم على كل البيانات التاريخية المسجلة في النظام.</p>
+        </section>
+      ) : !hasResults ? (
+        <section className="project-history-empty">
+          <FolderKanban size={34} />
+          <strong>مفيش مشروع مطابق للبحث</strong>
+          <p>جرّب كتابة جزء من اسم المشروع أو اختار اسم من الاقتراحات.</p>
+        </section>
+      ) : (
+        <>
+          <section className="report-actions no-print">
+            <div>
+              <strong>حصر المشروع — {report.projectNames.join('، ')}</strong>
+              <span>كل البيانات من {date(report.firstDate)} إلى {date(report.lastDate)} عبر {number(report.cycleRows.length)} دورة</span>
+            </div>
+            <div>
+              <button className="btn btn-secondary" type="button" onClick={exportExcel} disabled={exporting}>
+                <FileSpreadsheet size={16} /> {exporting ? '...' : 'تقرير Excel'}
+              </button>
+              <button className="btn btn-primary" type="button" onClick={() => window.print()}>
+                <Printer size={16} /> PDF / طباعة
+              </button>
             </div>
           </section>
 
-          <section className="report-section">
-            <header><div><span>SECTIONS</span><h2>أعلى القطاعات</h2></div></header>
-            <div className="report-ranking-list">
-              {report.sections.slice(0, 8).map((row, index) => (
-                <div key={row.name}>
-                  <b>{index + 1}</b>
-                  <span><strong>{row.name}</strong><small>{number(row.operations)} عملية</small></span>
-                  <em>{number(row.meters)} م</em>
+          <article className="executive-report-document project-history-document">
+            <header className="executive-report-cover project-history-cover">
+              <div>
+                <span>STC · COMPLETE PROJECT HISTORY REPORT</span>
+                <h1>{report.projectNames.join('، ')}</h1>
+                <p>حصر تاريخي كامل من {date(report.firstDate)} إلى {date(report.lastDate)}</p>
+              </div>
+              <div className="report-cover-mark"><FolderKanban size={31} /></div>
+            </header>
+
+            <section className="report-kpi-grid project-history-kpis">
+              <div><BarChart3 /><span>إجمالي العمليات</span><strong>{number(report.summary.operations)}</strong></div>
+              <div><Ruler /><span>إجمالي الأمتار</span><strong>{number(report.summary.meters)} م</strong></div>
+              <div><TrendingUp /><span>قيمة الإنتاجية</span><strong>{money(report.summary.value)}</strong></div>
+              <div><CircleDollarSign /><span>مستحقات الفريق</span><strong>{money(report.labor)}</strong></div>
+              <div><CalendarDays /><span>عدد الدورات</span><strong>{number(report.cycleRows.length)}</strong></div>
+              <div><Users /><span>أفراد التنفيذ</span><strong>{number(report.people.length)}</strong></div>
+            </section>
+
+            <section className="project-history-date-range">
+              <article><span>أول عملية</span><strong>{date(report.firstDate)}</strong></article>
+              <article><span>آخر عملية</span><strong>{date(report.lastDate)}</strong></article>
+              <article><span>متوسط سعر المتر</span><strong>{money(report.summary.avgPrice)}</strong></article>
+              <article><span>عدد القطاعات</span><strong>{number(report.sections.length)}</strong></article>
+            </section>
+
+            <section className="report-section">
+              <header><div><span>CYCLE HISTORY</span><h2>الحصر حسب كل دورة</h2></div><small>{number(report.cycleRows.length)} دورة</small></header>
+              <div className="data-table-wrap">
+                <table className="data-table report-table">
+                  <thead>
+                    <tr><th>الدورة</th><th>من</th><th>إلى</th><th>العمليات</th><th>الأمتار</th><th>قيمة الإنتاجية</th><th>متوسط / متر</th><th>المستحقات</th><th>الأفراد</th></tr>
+                  </thead>
+                  <tbody>
+                    {report.cycleRows.map((row) => (
+                      <tr key={row.key}>
+                        <td className="strong-cell">{row.label}</td>
+                        <td>{row.cycleStart ? date(row.cycleStart) : date(row.firstDate)}</td>
+                        <td>{row.cycleEnd ? date(row.cycleEnd) : date(row.lastDate)}</td>
+                        <td>{number(row.operations)}</td>
+                        <td>{number(row.meters)}</td>
+                        <td>{money(row.value)}</td>
+                        <td>{money(row.meters > 0 ? row.value / row.meters : 0)}</td>
+                        <td>{money(row.labor)}</td>
+                        <td>{number(row.peopleCount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section className="report-two-column">
+              <section className="report-section">
+                <header><div><span>SECTIONS</span><h2>القطاعات داخل المشروع</h2></div></header>
+                <div className="report-ranking-list">
+                  {report.sections.map((row, index) => (
+                    <div key={row.name}>
+                      <b>{index + 1}</b>
+                      <span><strong>{row.name}</strong><small>{number(row.operations)} عملية</small></span>
+                      <em>{number(row.meters)} م</em>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </section>
-        </section>
+              </section>
 
-        <section className="report-section">
-          <header><div><span>TEAM PERFORMANCE</span><h2>أعلى المستحقات حسب الأفراد</h2></div></header>
-          <div className="data-table-wrap">
-            <table className="data-table report-table">
-              <thead><tr><th>#</th><th>الاسم</th><th>الدور</th><th>العمليات</th><th>الأمتار</th><th>المستحقات</th></tr></thead>
-              <tbody>
-                {report.people.slice(0, 12).map((row, index) => (
-                  <tr key={`${row.name}-${row.role}`}>
-                    <td>{index + 1}</td><td>{row.name}</td><td>{roleLabels[row.role] || row.role}</td>
-                    <td>{number(row.operationsCount)}</td><td>{number(row.meters)}</td><td>{money(row.earnings)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+              <section className="report-section">
+                <header><div><span>TEAM</span><h2>إجمالي فريق التنفيذ</h2></div><small>{number(report.people.length)} فرد</small></header>
+                <div className="report-ranking-list">
+                  {report.people.slice(0, 12).map((row, index) => (
+                    <div key={row.id}>
+                      <b>{index + 1}</b>
+                      <span><strong>{row.name}</strong><small>{roleLabels[row.role] || row.role} · {number(row.operationsCount)} عملية</small></span>
+                      <em>{money(row.earnings)}</em>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </section>
 
-        <section className="report-section report-full-operations">
-          <header>
-            <div><span>FULL OPERATIONS TABLE</span><h2>جميع عمليات الدورة</h2></div>
-            <small>{number(report.currentRows.length)} عملية</small>
-          </header>
-          <div className="data-table-wrap">
-            <table className="data-table report-table report-operations-table">
-              <thead>
-                <tr>
-                  <th>#</th><th>التاريخ</th><th>المشروع</th><th>القطاع</th><th>المهندسين</th><th>الفنيين</th>
-                  <th>المساعدين</th><th>العمال</th><th>الأمتار</th><th>سعر المتر</th><th>الإجمالي</th><th>المراجعة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.currentRows.map((row, index) => (
-                  <tr key={row.id || `${row.work_date}-${row.project}-${index}`}>
-                    <td>{index + 1}</td>
-                    <td>{date(row.work_date)}</td>
-                    <td>{row.project || '—'}</td>
-                    <td>{row.section || '—'}</td>
-                    <td>{row.engineers || '—'}</td>
-                    <td>{row.technicians || '—'}</td>
-                    <td>{row.assistants || '—'}</td>
-                    <td>{row.workers || '—'}</td>
-                    <td>{number(row.meters)}</td>
-                    <td>{money(row.price_per_meter)}</td>
-                    <td>{money(row.total)}</td>
-                    <td>{row.review_status === 'reviewed' ? 'تمت المراجعة' : 'لم تتم'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+            <section className="report-section">
+              <header><div><span>TEAM DETAILS</span><h2>تفاصيل مستحقات وأداء كل فرد</h2></div><small>{number(report.people.length)} فرد</small></header>
+              <div className="data-table-wrap">
+                <table className="data-table report-table">
+                  <thead><tr><th>#</th><th>الاسم</th><th>الدور</th><th>العمليات</th><th>الأمتار</th><th>المستحقات</th><th>أول ظهور</th><th>آخر ظهور</th></tr></thead>
+                  <tbody>
+                    {report.people.map((row, index) => (
+                      <tr key={row.id}>
+                        <td>{index + 1}</td><td className="strong-cell">{row.name}</td><td>{roleLabels[row.role] || row.role}</td>
+                        <td>{number(row.operationsCount)}</td><td>{number(row.meters)}</td><td>{money(row.earnings)}</td>
+                        <td>{date(row.firstDate)}</td><td>{date(row.lastDate)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
 
-        <footer className="executive-report-footer">
-          <span>Generated from STC Productivity System</span>
-          <strong>{monthName(monthKey)}</strong>
-        </footer>
-      </article>
+            <section className="report-section report-full-operations">
+              <header>
+                <div><span>FULL PROJECT OPERATIONS</span><h2>كل عمليات المشروع من أول يوم لآخر يوم</h2></div>
+                <small>{number(report.rows.length)} عملية</small>
+              </header>
+              <div className="data-table-wrap">
+                <table className="data-table report-table report-operations-table">
+                  <thead>
+                    <tr>
+                      <th>#</th><th>التاريخ</th><th>المشروع</th><th>القطاع</th><th>المهندسين</th><th>الفنيين</th><th>ع.فنيين</th>
+                      <th>المساعدين</th><th>ع.مساعدين</th><th>العمال</th><th>ع.عمال</th><th>الأمتار</th><th>سعر المتر</th><th>الإجمالي</th>
+                      <th>مستحق الفنيين</th><th>مستحق المساعدين</th><th>مستحق العمال</th><th>المراجعة</th><th>المصدر</th><th>الملاحظات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {report.rows.map((row, index) => (
+                      <tr key={row.id || index}>
+                        <td>{index + 1}</td>
+                        <td>{date(row.work_date)}</td>
+                        <td className="strong-cell">{row.project || '—'}</td>
+                        <td>{row.section || '—'}</td>
+                        <td>{row.engineers || '—'}</td>
+                        <td>{row.technicians || '—'}</td>
+                        <td>{number(row.technician_count || 0)}</td>
+                        <td>{row.assistants || '—'}</td>
+                        <td>{number(row.assistant_count || 0)}</td>
+                        <td>{row.workers || '—'}</td>
+                        <td>{number(row.worker_count || 0)}</td>
+                        <td>{number(row.meters)}</td>
+                        <td>{money(row.price_per_meter)}</td>
+                        <td>{money(row.total)}</td>
+                        <td>{money(row.tech_share_total)}</td>
+                        <td>{money(row.assistant_share_total)}</td>
+                        <td>{money(row.worker_share_total)}</td>
+                        <td>{row.review_status === 'reviewed' ? 'تمت المراجعة' : 'لم تتم'}</td>
+                        <td>{row.source || '—'}</td>
+                        <td className="operation-note-column">{row.note || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <footer className="executive-report-footer">
+              <span>STC Productivity System · Project Full History</span>
+              <strong>{date(report.firstDate)} → {date(report.lastDate)}</strong>
+            </footer>
+          </article>
+        </>
+      )}
     </div>
   )
 }
