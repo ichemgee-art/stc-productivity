@@ -113,6 +113,26 @@ export const appService = {
       .range(from, to))
   },
 
+  async historicalProductivityRows() {
+    return fetchAll((from, to) => supabase
+      .from('v_master_data')
+      .select('*')
+      .order('work_date', { ascending: false })
+      .order('submitted_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, to))
+  },
+
+  async historicalPersonOperations() {
+    return fetchAll((from, to) => supabase
+      .from('v_person_operations')
+      .select('person_id,person_name,role,submission_id,work_date,project,meters,share_amount')
+      .order('work_date', { ascending: false })
+      .order('submission_id', { ascending: false })
+      .order('person_id', { ascending: true })
+      .range(from, to))
+  },
+
   async submissionTeam(submissionId) {
     return unwrap(
       await supabase
