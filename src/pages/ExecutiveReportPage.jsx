@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   BarChart3, CalendarDays, CircleDollarSign, FileSpreadsheet, FolderKanban,
-  Printer, Ruler, Search, TrendingUp, Users,
+  Printer, Ruler, Search, TrendingUp, Users, X,
 } from 'lucide-react'
 import { useCycle } from '../context/CycleContext'
 import { useFeedback } from '../context/FeedbackContext'
@@ -10,6 +10,13 @@ import { appService } from '../services/appService'
 import { exportExecutiveExcel } from '../lib/exporters'
 import { date, money, monthName, number, roleLabels } from '../lib/format'
 import { smartIncludes } from '../lib/smartSearch'
+
+const PROJECT_HISTORY_SEARCH_KEY = 'stc_project_history_search'
+
+const getInitialProjectSearch = () => {
+  if (typeof window === 'undefined') return ''
+  return window.localStorage.getItem(PROJECT_HISTORY_SEARCH_KEY) || ''
+}
 
 const summarizeRows = (rows) => {
   const meters = rows.reduce((sum, row) => sum + Number(row.meters || 0), 0)
@@ -69,7 +76,7 @@ const cycleForDate = (cycles, workDate) => (
 export default function ExecutiveReportPage() {
   const { cycles } = useCycle()
   const feedback = useFeedback()
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(getInitialProjectSearch)
   const [exporting, setExporting] = useState(false)
 
   const historyQuery = useQuery({
@@ -86,6 +93,20 @@ export default function ExecutiveReportPage() {
 
   const allRows = historyQuery.data?.rows || []
   const allPeopleOps = historyQuery.data?.peopleOps || []
+
+  const updateSearch = (value) => {
+    setSearch(value)
+    if (typeof window !== 'undefined') {
+      if (value.trim()) window.localStorage.setItem(PROJECT_HISTORY_SEARCH_KEY, value)
+      else window.localStorage.removeItem(PROJECT_HISTORY_SEARCH_KEY)
+    }
+  }
+
+  const clearSearch = () => {
+    setSearch('')
+    if (typeof window !== 'undefined') window.localStorage.removeItem(PROJECT_HISTORY_SEARCH_KEY)
+  }
+
   const normalizedSearch = search.trim()
 
   const projectNames = useMemo(
@@ -310,10 +331,21 @@ export default function ExecutiveReportPage() {
             <input
               list="project-history-options"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => updateSearch(event.target.value)}
               placeholder="اكتب اسم المشروع..."
               autoComplete="off"
             />
+            {normalizedSearch ? (
+              <button
+                className="project-history-clear"
+                type="button"
+                onClick={clearSearch}
+                title="مسح الحصر"
+                aria-label="مسح اسم المشروع والحصر"
+              >
+                <X size={16} />
+              </button>
+            ) : null}
             <datalist id="project-history-options">
               {projectNames.map((name) => <option key={name} value={name} />)}
             </datalist>
@@ -326,7 +358,7 @@ export default function ExecutiveReportPage() {
           <span>مشروعات مطابقة:</span>
           <div>
             {matchedProjectNames.slice(0, 12).map((name) => (
-              <button key={name} type="button" onClick={() => setSearch(name)}>{name}</button>
+              <button key={name} type="button" onClick={() => updateSearch(name)}>{name}</button>
             ))}
           </div>
         </section>
@@ -357,6 +389,9 @@ export default function ExecutiveReportPage() {
               </button>
               <button className="btn btn-primary" type="button" onClick={() => window.print()}>
                 <Printer size={16} /> PDF / طباعة
+              </button>
+              <button className="btn btn-ghost" type="button" onClick={clearSearch}>
+                <X size={16} /> مسح الحصر
               </button>
             </div>
           </section>
