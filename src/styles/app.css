@@ -3895,3 +3895,33 @@ html[data-theme="dark"] .project-match-strip button{
     page-break-inside:avoid!important;
   }
 }
+
+
+/* Persistent project history search */
+.project-history-clear{
+  width:32px;
+  height:32px;
+  flex:0 0 32px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:var(--surface);
+  color:var(--muted);
+  cursor:pointer;
+}
+.project-history-clear:hover{
+  color:var(--danger);
+  border-color:var(--danger-border);
+  background:var(--danger-soft);
+}
+html[data-theme="dark"] .project-history-clear{
+  background:var(--dm-surface-2)!important;
+  border-color:var(--dm-border)!important;
+  color:var(--dm-muted)!important;
+}
+html[data-theme="dark"] .project-history-clear:hover{
+  color:#FF8D8D!important;
+  border-color:#6B323C!important;
+  background:#3A1D23!important;
+}
