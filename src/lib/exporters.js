@@ -4,44 +4,16 @@ import { jsPDF } from 'jspdf'
 
 const safeName = (value) => String(value || 'export').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 80)
 
-const BRAND_LOGO_PATH = '/stc-logo.svg'
+const BRAND_LOGO_PATH = '/stc-logo.jpg'
 let brandLogoPngPromise
 
-const getBrandLogoPngBlob = async () => {
+const getBrandLogoBlob = async () => {
   if (!brandLogoPngPromise) {
     brandLogoPngPromise = fetch(BRAND_LOGO_PATH)
       .then((response) => {
         if (!response.ok) throw new Error('تعذر تحميل لوجو STC')
         return response.blob()
       })
-      .then((svgBlob) => new Promise((resolve, reject) => {
-        const objectUrl = URL.createObjectURL(svgBlob)
-        const image = new Image()
-        image.onload = () => {
-          try {
-            const canvas = document.createElement('canvas')
-            canvas.width = 720
-            canvas.height = 270
-            const context = canvas.getContext('2d')
-            context.fillStyle = '#FFFFFF'
-            context.fillRect(0, 0, canvas.width, canvas.height)
-            context.drawImage(image, 0, 0, canvas.width, canvas.height)
-            canvas.toBlob((blob) => {
-              URL.revokeObjectURL(objectUrl)
-              if (blob) resolve(blob)
-              else reject(new Error('تعذر تجهيز لوجو Excel'))
-            }, 'image/png')
-          } catch (error) {
-            URL.revokeObjectURL(objectUrl)
-            reject(error)
-          }
-        }
-        image.onerror = () => {
-          URL.revokeObjectURL(objectUrl)
-          reject(new Error('تعذر قراءة لوجو STC'))
-        }
-        image.src = objectUrl
-      }))
       .catch(() => null)
   }
   return brandLogoPngPromise
@@ -56,7 +28,7 @@ const addLogoToExcelSheet = (sheet, logoBlob) => {
       ...(sheet.images || []),
       {
         content: logoBlob,
-        contentType: 'image/png',
+        contentType: 'image/jpeg',
         width: 132,
         height: 50,
         dpi: 96,
@@ -450,7 +422,7 @@ export async function exportExcel({ filename, sheets }) {
     ? workbookSheets
     : [buildStyledTableSheet({ name: 'البيانات', rows: [] }, 'Sheet1')]
 
-  const logoBlob = await getBrandLogoPngBlob()
+  const logoBlob = await getBrandLogoBlob()
   const brandedOutput = output.map((sheet) => addLogoToExcelSheet(sheet, logoBlob))
 
   await writeExcelFile(brandedOutput, {
@@ -477,7 +449,7 @@ export async function exportExecutiveExcel({
     dashboardName,
   }, names[index + 1]))
 
-  const logoBlob = await getBrandLogoPngBlob()
+  const logoBlob = await getBrandLogoBlob()
   const brandedSheets = [dashboard, ...tableSheets].map((sheet) => addLogoToExcelSheet(sheet, logoBlob))
 
   await writeExcelFile(brandedSheets, {
