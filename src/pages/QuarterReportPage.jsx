@@ -752,7 +752,7 @@ export default function QuarterReportPage() {
                 <p>{titleRange}</p>
                 {filterSummary ? <small className="quarter-report-filter-summary">الفلاتر المطبقة: {filterSummary}</small> : null}
               </div>
-              <div className="report-cover-logo"><img src="/stc-logo.jpg" alt="STC Specialized Trading & Construction" /></div>
+              <div className="report-cover-logo"><img src="/stc-logo-hq.jpg" alt="STC Specialized Trading & Construction" /></div>
             </header>
 
             <section className="report-kpi-grid">
