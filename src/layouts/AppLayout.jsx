@@ -93,8 +93,7 @@ export default function AppLayout() {
   const sidebar = (
     <>
       <div className="sidebar-brand">
-        <span className="brand-tile">STC</span>
-        <div><strong>STC</strong><small>Productivity System</small></div>
+        <img className="sidebar-brand-logo" src="/stc-logo.svg" alt="STC Specialized Trading & Construction" />
       </div>
       <div className="sidebar-section-label">OPERATIONS</div>
       <nav className="sidebar-nav">
