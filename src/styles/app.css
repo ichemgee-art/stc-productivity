@@ -4318,3 +4318,70 @@ body{
   .report-kpi-grid span{font-size:8.5pt!important}
   .report-kpi-grid strong{font-size:13pt!important}
 }
+
+
+/* STC BRAND LOGO V1 */
+.sidebar-brand{
+  justify-content:center;
+  padding:4px 7px 22px;
+}
+.sidebar-brand-logo{
+  display:block;
+  width:min(194px,100%);
+  height:auto;
+  object-fit:contain;
+  border-radius:7px;
+  background:#fff;
+  box-shadow:0 6px 18px rgba(0,0,0,.12);
+}
+.login-brand-logo{
+  display:block;
+  width:min(310px,72%);
+  height:auto;
+  object-fit:contain;
+  border-radius:8px;
+  background:#fff;
+  box-shadow:0 10px 28px rgba(0,0,0,.15);
+}
+.login-brand-logo.mobile{
+  width:min(250px,82%);
+}
+.report-cover-logo{
+  width:170px;
+  flex:0 0 170px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-start;
+  padding:6px;
+  border-radius:10px;
+  background:#fff;
+  box-shadow:0 8px 20px rgba(0,0,0,.14);
+}
+.report-cover-logo img{
+  display:block;
+  width:100%;
+  height:auto;
+  object-fit:contain;
+}
+@media(max-width:760px){
+  .sidebar-brand-logo{width:min(180px,100%)}
+  .login-brand-logo{width:min(260px,82%)}
+  .report-cover-logo{
+    width:118px;
+    flex-basis:118px;
+    padding:4px;
+  }
+}
+@media print{
+  .report-cover-logo{
+    width:36mm!important;
+    flex:0 0 36mm!important;
+    padding:1.5mm!important;
+    box-shadow:none!important;
+    border-radius:2mm!important;
+  }
+  .report-cover-logo img{
+    width:100%!important;
+    height:auto!important;
+  }
+}
