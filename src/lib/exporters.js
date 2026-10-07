@@ -490,8 +490,8 @@ export async function exportTablePdf({ filename, sheets }) {
   }, 0)
 
   const pageSize = maxColumns >= 9 ? 'A3 landscape' : 'A4 landscape'
-  const fontSize = maxColumns >= 14 ? 6.3 : maxColumns >= 11 ? 7 : maxColumns >= 8 ? 7.8 : 8.8
-  const cellPadding = maxColumns >= 12 ? '3.3px 2.5px' : '4px 3px'
+  const fontSize = maxColumns >= 14 ? 7.4 : maxColumns >= 11 ? 7.9 : maxColumns >= 8 ? 8.5 : 9.2
+  const cellPadding = maxColumns >= 12 ? '4.4px 3.2px' : '5.2px 4px'
   const generatedAt = new Date().toLocaleString('ar-EG', {
     year: 'numeric',
     month: '2-digit',
@@ -504,6 +504,8 @@ export async function exportTablePdf({ filename, sheets }) {
   const reportTitle = printableSheets.length === 1
     ? (printableSheets[0].name || safeName(filename))
     : safeName(filename)
+  const brandLogoUrl = `${window.location.origin}${BRAND_LOGO_PATH}`
+  const reportCode = `STC-${new Date().toISOString().replace(/\D/g, '').slice(0, 12)}`
 
   const sections = printableSheets.map((sheet, sheetIndex) => {
     const rows = sheet.rows || []
@@ -533,7 +535,7 @@ export async function exportTablePdf({ filename, sheets }) {
           <div class="executive-header__copy">
             <span class="eyebrow">STC · ENGINEERING OPERATIONS REPORT</span>
             <h1>${escapeHtml(sheet.name || reportTitle)}</h1>
-            <p>تقرير تشغيلي كامل — جميع الصفوف والأعمدة مدرجة داخل المستند.</p>
+            <p>${escapeHtml(sheet.subtitle || 'تقرير تشغيلي منظم صادر من STC Productivity System')}</p>
           </div>
           <div class="executive-logo-wrap">
             <img class="executive-logo" src="${escapeHtml(brandLogoUrl)}" alt="STC Specialized Trading & Construction" />
@@ -548,6 +550,14 @@ export async function exportTablePdf({ filename, sheets }) {
           <article>
             <span>عدد الأعمدة</span>
             <strong>${keys.length.toLocaleString('en-US')}</strong>
+          </article>
+          <article>
+            <span>القسم</span>
+            <strong>${sheetIndex + 1} / ${printableSheets.length}</strong>
+          </article>
+          <article>
+            <span>كود التقرير</span>
+            <strong class="meta-date">${escapeHtml(reportCode)}</strong>
           </article>
           <article>
             <span>تاريخ التصدير</span>
@@ -569,7 +579,6 @@ export async function exportTablePdf({ filename, sheets }) {
   }).join('')
 
   const title = safeName(filename)
-  const brandLogoUrl = `${window.location.origin}${BRAND_LOGO_PATH}`
   printWindow.document.open()
   printWindow.document.write(`<!doctype html>
 <html lang="ar" dir="rtl">
@@ -673,7 +682,7 @@ export async function exportTablePdf({ filename, sheets }) {
 
     .report-meta-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 7px;
       margin-bottom: 8px;
       break-inside: avoid;
@@ -683,8 +692,8 @@ export async function exportTablePdf({ filename, sheets }) {
     .report-meta-grid article {
       display: grid;
       gap: 2px;
-      min-height: 44px;
-      padding: 8px 10px;
+      min-height: 50px;
+      padding: 9px 10px;
       border: 1px solid #D8DEE6;
       border-radius: 7px;
       background: #FFFFFF;
@@ -692,12 +701,12 @@ export async function exportTablePdf({ filename, sheets }) {
 
     .report-meta-grid span {
       color: #7B8797;
-      font-size: 6.5px;
+      font-size: 7.2px;
     }
 
     .report-meta-grid strong {
       color: #253A55;
-      font-size: 12px;
+      font-size: 13px;
     }
 
     .report-meta-grid .meta-date {
@@ -809,13 +818,21 @@ export async function exportTablePdf({ filename, sheets }) {
     }
 
     .document-footer {
-      margin-top: 6px;
-      padding-top: 5px;
+      position: fixed;
+      left: 8mm;
+      right: 8mm;
+      bottom: 4mm;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 2mm;
       border-top: 1px solid #D8DEE6;
+      background: #FFFFFF;
       color: #7B8797;
-      font-size: 5.8px;
-      text-align: center;
+      font-size: 6.5px;
     }
+    .document-footer strong { color:#253A55; }
 
     @media screen {
       body {
@@ -877,7 +894,8 @@ export async function exportTablePdf({ filename, sheets }) {
   <main class="print-root">
     ${sections}
     <footer class="document-footer">
-      STC Productivity System · ${totalRows.toLocaleString('ar-EG')} سجل إجمالي · ${escapeHtml(generatedAt)}
+      <span>STC Productivity System · Engineering Operations Report</span>
+      <strong>${escapeHtml(reportCode)} · ${totalRows.toLocaleString('en-US')} سجل · ${escapeHtml(generatedAt)}</strong>
     </footer>
   </main>
 
@@ -886,6 +904,11 @@ export async function exportTablePdf({ filename, sheets }) {
       const runPrint = async () => {
         try {
           if (document.fonts && document.fonts.ready) await document.fonts.ready;
+          const images = Array.from(document.images || []);
+          await Promise.all(images.map((img) => img.complete ? Promise.resolve() : new Promise((resolve) => {
+            img.addEventListener('load', resolve, { once: true });
+            img.addEventListener('error', resolve, { once: true });
+          })));
         } catch (_) {}
         window.focus();
         window.print();
