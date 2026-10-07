@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Check, CheckCircle2, Layers3, LoaderCircle } from 'lucide-react'
 import PeoplePicker from './PeoplePicker'
 import { number } from '../lib/format'
