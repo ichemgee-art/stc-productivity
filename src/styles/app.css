@@ -4445,3 +4445,508 @@ body{
     max-width:28mm!important;
   }
 }
+
+
+/* PDF REPORT SYSTEM V5 — professional readable print */
+.print-operation-list{display:none}
+
+@media print{
+  @page{
+    size:A3 landscape;
+    margin:10mm 8mm 15mm;
+  }
+
+  html,
+  body{
+    background:#fff!important;
+    color:#253A55!important;
+    font-family:Cairo,Tahoma,Arial,sans-serif!important;
+    font-size:9pt!important;
+    line-height:1.55!important;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+  }
+
+  .desktop-sidebar,
+  .mobile-sidebar-backdrop,
+  .mobile-bottom-nav,
+  .topbar,
+  .ai-assistant,
+  .no-print{
+    display:none!important;
+  }
+
+  .app-shell,
+  .app-main,
+  .page-content,
+  .route-view,
+  .page-stack{
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    padding:0!important;
+    overflow:visible!important;
+    background:#fff!important;
+  }
+
+  .executive-report-document{
+    overflow:visible!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    background:#fff!important;
+  }
+
+  .executive-report-cover{
+    min-height:31mm!important;
+    margin:0 0 4mm!important;
+    padding:5mm 6mm!important;
+    border-radius:3mm!important;
+    background:#253A55!important;
+    color:#fff!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .executive-report-cover>div:first-child{
+    gap:1.3mm!important;
+  }
+
+  .executive-report-cover span{
+    font-size:7.5pt!important;
+    letter-spacing:.7pt!important;
+    color:#F3B820!important;
+  }
+
+  .executive-report-cover h1{
+    margin:0!important;
+    font-size:19pt!important;
+    line-height:1.35!important;
+    color:#fff!important;
+  }
+
+  .executive-report-cover p,
+  .quarter-report-filter-summary{
+    font-size:8.5pt!important;
+    line-height:1.55!important;
+    color:rgba(255,255,255,.84)!important;
+  }
+
+  .report-cover-logo{
+    width:35mm!important;
+    flex:0 0 35mm!important;
+    padding:1.2mm!important;
+    border-radius:2mm!important;
+    background:#fff!important;
+    box-shadow:none!important;
+  }
+
+  .report-cover-logo img{
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+  }
+
+  .report-kpi-grid{
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    gap:2mm!important;
+    padding:0 0 4mm!important;
+  }
+
+  .report-kpi-grid>div{
+    min-height:18mm!important;
+    padding:2.8mm!important;
+    border:1px solid #D8DEE6!important;
+    border-top:1.3mm solid #F3B820!important;
+    border-radius:2.2mm!important;
+    background:#fff!important;
+    box-shadow:none!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .report-kpi-grid svg{
+    width:5mm!important;
+    height:5mm!important;
+    color:#F3B820!important;
+  }
+
+  .report-kpi-grid span{
+    font-size:7.2pt!important;
+    color:#758196!important;
+  }
+
+  .report-kpi-grid strong{
+    font-size:12.2pt!important;
+    line-height:1.35!important;
+    color:#253A55!important;
+  }
+
+  .project-history-date-range,
+  .quarter-highlight-grid{
+    gap:2mm!important;
+    padding:0 0 4mm!important;
+  }
+
+  .project-history-date-range{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+
+  .project-history-date-range article,
+  .quarter-highlight-grid article{
+    min-height:17mm!important;
+    padding:2.6mm 3mm!important;
+    border:1px solid #D8DEE6!important;
+    border-radius:2mm!important;
+    background:#F8F9FB!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .project-history-date-range span,
+  .quarter-highlight-grid span{
+    font-size:7pt!important;
+    color:#758196!important;
+  }
+
+  .project-history-date-range strong,
+  .quarter-highlight-grid strong{
+    font-size:10pt!important;
+    line-height:1.4!important;
+    color:#253A55!important;
+    white-space:normal!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+  }
+
+  .quarter-highlight-grid small{
+    font-size:7.2pt!important;
+    line-height:1.45!important;
+  }
+
+  .report-section{
+    margin:0 0 4mm!important;
+    overflow:visible!important;
+    border:1px solid #D8DEE6!important;
+    border-radius:2.2mm!important;
+    background:#fff!important;
+    box-shadow:none!important;
+  }
+
+  .report-section>header{
+    min-height:14mm!important;
+    padding:2.5mm 3.2mm!important;
+    border-bottom:1px solid #D8DEE6!important;
+    border-inline-start:1.2mm solid #F3B820!important;
+    background:#F6F8FA!important;
+    break-after:avoid!important;
+    page-break-after:avoid!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .report-section>header span{
+    font-size:6.8pt!important;
+    color:#A87500!important;
+    letter-spacing:.4pt!important;
+  }
+
+  .report-section>header h2{
+    margin:0!important;
+    font-size:11.5pt!important;
+    line-height:1.4!important;
+    color:#253A55!important;
+  }
+
+  .report-section>header small{
+    font-size:7.2pt!important;
+    color:#758196!important;
+  }
+
+  .report-two-column{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:3mm!important;
+    padding:0!important;
+  }
+
+  .report-two-column .report-section{
+    margin-bottom:4mm!important;
+  }
+
+  .report-ranking-list{
+    padding:1.5mm 3mm 2mm!important;
+  }
+
+  .report-ranking-list>div{
+    min-height:10mm!important;
+    padding:1.7mm 0!important;
+    gap:2mm!important;
+    border-bottom:1px solid #E3E7EC!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .report-ranking-list b{
+    width:7mm!important;
+    height:7mm!important;
+    font-size:7.5pt!important;
+  }
+
+  .report-ranking-list strong{
+    font-size:8.6pt!important;
+    line-height:1.4!important;
+    white-space:normal!important;
+  }
+
+  .report-ranking-list small{
+    font-size:7pt!important;
+    line-height:1.4!important;
+  }
+
+  .report-ranking-list em{
+    font-size:8.5pt!important;
+  }
+
+  .data-table-wrap{
+    width:100%!important;
+    max-width:none!important;
+    overflow:visible!important;
+  }
+
+  .report-table{
+    width:100%!important;
+    min-width:0!important;
+    border-collapse:collapse!important;
+    table-layout:fixed!important;
+    font-size:8pt!important;
+    line-height:1.5!important;
+  }
+
+  .report-table thead{
+    display:table-header-group!important;
+  }
+
+  .report-table tbody{
+    display:table-row-group!important;
+  }
+
+  .report-table tr{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .report-table th{
+    padding:2.2mm 1.5mm!important;
+    border:1px solid #253A55!important;
+    background:#253A55!important;
+    color:#fff!important;
+    font-size:7.6pt!important;
+    font-weight:900!important;
+    line-height:1.45!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  .report-table td{
+    padding:2mm 1.5mm!important;
+    border:1px solid #D8DEE6!important;
+    background:#fff!important;
+    color:#253A55!important;
+    font-size:8pt!important;
+    line-height:1.5!important;
+    vertical-align:middle!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  .report-table tbody tr:nth-child(even) td{
+    background:#F5F7F9!important;
+  }
+
+  .report-table .strong-cell{
+    font-size:8.3pt!important;
+    font-weight:900!important;
+  }
+
+  /* Wide operations become readable cards in PDF instead of a compressed 12–20 column table. */
+  .report-full-operations{
+    break-before:page!important;
+    page-break-before:always!important;
+    border:0!important;
+    border-radius:0!important;
+  }
+
+  .report-full-operations>header{
+    margin-bottom:3mm!important;
+    border:1px solid #D8DEE6!important;
+    border-inline-start:1.2mm solid #F3B820!important;
+    border-radius:2mm!important;
+  }
+
+  .report-full-operations>.data-table-wrap{
+    display:none!important;
+  }
+
+  .print-operation-list{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:3mm!important;
+  }
+
+  .print-operation-card{
+    overflow:hidden!important;
+    border:1px solid #C9D1DB!important;
+    border-radius:2.2mm!important;
+    background:#fff!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .print-operation-card>header{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:3mm!important;
+    min-height:14mm!important;
+    padding:2.4mm 3mm!important;
+    border-bottom:1px solid #D8DEE6!important;
+    border-inline-start:1.1mm solid #F3B820!important;
+    background:#F4F6F8!important;
+  }
+
+  .print-operation-card>header>div{
+    display:grid!important;
+    gap:.5mm!important;
+  }
+
+  .print-operation-card>header span{
+    font-size:6.6pt!important;
+    font-weight:900!important;
+    color:#A87500!important;
+  }
+
+  .print-operation-card>header strong{
+    font-size:10pt!important;
+    line-height:1.35!important;
+    color:#253A55!important;
+  }
+
+  .print-operation-card>header b{
+    font-size:8.5pt!important;
+    color:#253A55!important;
+  }
+
+  .print-operation-card>header small{
+    font-size:7pt!important;
+    color:#758196!important;
+  }
+
+  .print-operation-kpis,
+  .print-operation-team,
+  .print-operation-dues{
+    display:grid!important;
+  }
+
+  .print-operation-kpis{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    background:#FFF9E8!important;
+  }
+
+  .print-operation-team{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+
+  .print-operation-dues{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    background:#F8F9FB!important;
+  }
+
+  .print-operation-kpis>div,
+  .print-operation-team>div,
+  .print-operation-dues>div{
+    min-height:12mm!important;
+    padding:2mm 2.5mm!important;
+    border-inline-start:1px solid #E1E6EC!important;
+    border-bottom:1px solid #E1E6EC!important;
+  }
+
+  .print-operation-kpis span,
+  .print-operation-team span,
+  .print-operation-dues span{
+    display:block!important;
+    margin-bottom:.8mm!important;
+    font-size:6.6pt!important;
+    font-weight:700!important;
+    color:#758196!important;
+  }
+
+  .print-operation-kpis strong,
+  .print-operation-team strong,
+  .print-operation-dues strong{
+    display:block!important;
+    font-size:8.2pt!important;
+    line-height:1.45!important;
+    color:#253A55!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  .print-operation-kpis strong{
+    font-size:8.8pt!important;
+    font-weight:900!important;
+  }
+
+  .print-operation-note{
+    margin:0!important;
+    padding:2.3mm 3mm!important;
+    border-top:1px solid #E1E6EC!important;
+    background:#fff!important;
+    color:#46566A!important;
+    font-size:7.5pt!important;
+    line-height:1.6!important;
+  }
+
+  .print-operation-note b{
+    color:#253A55!important;
+  }
+
+  .quarter-chart-card{
+    min-height:72mm!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .quarter-chart-wrap{
+    height:55mm!important;
+  }
+
+  .executive-report-footer{
+    margin-top:2mm!important;
+    padding:3mm 0!important;
+    border-top:1px solid #D8DEE6!important;
+    color:#758196!important;
+    font-size:7pt!important;
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+
+  .executive-report-footer strong{
+    color:#253A55!important;
+  }
+
+  .executive-report-page::after,
+  .quarter-report-page::after{
+    content:"STC Productivity System  •  Engineering Operations Report";
+    position:fixed;
+    right:8mm;
+    bottom:4mm;
+    padding-top:1.8mm;
+    width:calc(100% - 16mm);
+    border-top:1px solid #D8DEE6;
+    background:#fff;
+    color:#7B8797;
+    font-size:6.4pt;
+    text-align:right;
+  }
+}
