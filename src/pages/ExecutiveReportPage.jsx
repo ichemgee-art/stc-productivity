@@ -644,6 +644,35 @@ export default function ExecutiveReportPage() {
                 <div><span>FULL PROJECT OPERATIONS</span><h2>{hasDateRange ? 'كل عمليات المشروع داخل الفترة المختارة' : 'كل عمليات المشروع من أول يوم لآخر يوم'}</h2></div>
                 <small>{number(report.rows.length)} عملية</small>
               </header>
+              <div className="print-operation-list">
+                {report.rows.map((row, index) => (
+                  <article className="print-operation-card" key={`print-${row.id || index}`}>
+                    <header>
+                      <div><span>عملية #{index + 1}</span><strong>{row.project || '—'}</strong></div>
+                      <div><b>{date(row.work_date)}</b><small>{row.section || 'بدون قطاع'}</small></div>
+                    </header>
+                    <div className="print-operation-kpis">
+                      <div><span>الأمتار</span><strong>{number(row.meters)} م</strong></div>
+                      <div><span>سعر المتر</span><strong>{money(row.price_per_meter)}</strong></div>
+                      <div><span>الإجمالي</span><strong>{money(row.total)}</strong></div>
+                      <div><span>المراجعة</span><strong>{row.review_status === 'reviewed' ? 'تمت المراجعة' : 'لم تتم'}</strong></div>
+                    </div>
+                    <div className="print-operation-team">
+                      <div><span>المهندسين</span><strong>{row.engineers || '—'}</strong></div>
+                      <div><span>الفنيين</span><strong>{row.technicians || '—'} · {number(row.technician_count || 0)}</strong></div>
+                      <div><span>المساعدين</span><strong>{row.assistants || '—'} · {number(row.assistant_count || 0)}</strong></div>
+                      <div><span>العمال</span><strong>{row.workers || '—'} · {number(row.worker_count || 0)}</strong></div>
+                    </div>
+                    <div className="print-operation-dues">
+                      <div><span>مستحق الفنيين</span><strong>{money(row.tech_share_total)}</strong></div>
+                      <div><span>مستحق المساعدين</span><strong>{money(row.assistant_share_total)}</strong></div>
+                      <div><span>مستحق العمال</span><strong>{money(row.worker_share_total)}</strong></div>
+                    </div>
+                    {row.note ? <p className="print-operation-note"><b>ملاحظات:</b> {row.note}</p> : null}
+                  </article>
+                ))}
+              </div>
+
               <div className="data-table-wrap">
                 <table className="data-table report-table report-operations-table">
                   <thead>
