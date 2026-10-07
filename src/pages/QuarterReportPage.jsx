@@ -931,6 +931,30 @@ export default function QuarterReportPage() {
 
             <section className="report-section report-full-operations">
               <header><div><span>FULL OPERATIONS</span><h2>كل عمليات الكوارتر</h2></div><small>{number(report.operations)} عملية</small></header>
+              <div className="print-operation-list">
+                {report.cyclesData.flatMap((cycle) => cycle.rows.map((row, index) => (
+                  <article className="print-operation-card" key={`print-${cycle.monthKey}-${row.id || index}`}>
+                    <header>
+                      <div><span>{monthName(cycle.monthKey)} · عملية #{index + 1}</span><strong>{row.project || '—'}</strong></div>
+                      <div><b>{date(row.work_date)}</b><small>{row.section || 'بدون قطاع'}</small></div>
+                    </header>
+                    <div className="print-operation-kpis">
+                      <div><span>الأمتار</span><strong>{number(row.meters)} م</strong></div>
+                      <div><span>سعر المتر</span><strong>{money(row.price_per_meter)}</strong></div>
+                      <div><span>الإجمالي</span><strong>{money(row.total)}</strong></div>
+                      <div><span>المراجعة</span><strong>{row.review_status === 'reviewed' ? 'تمت المراجعة' : 'لم تتم'}</strong></div>
+                    </div>
+                    <div className="print-operation-team">
+                      <div><span>المهندسين</span><strong>{row.engineers || '—'}</strong></div>
+                      <div><span>الفنيين</span><strong>{row.technicians || '—'}</strong></div>
+                      <div><span>المساعدين</span><strong>{row.assistants || '—'}</strong></div>
+                      <div><span>العمال</span><strong>{row.workers || '—'}</strong></div>
+                    </div>
+                    {row.note ? <p className="print-operation-note"><b>ملاحظات:</b> {row.note}</p> : null}
+                  </article>
+                )))}
+              </div>
+
               <div className="data-table-wrap">
                 <table className="data-table report-table report-operations-table">
                   <thead>
