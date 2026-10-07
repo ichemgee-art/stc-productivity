@@ -284,14 +284,19 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
               <div><span>الإجمالي</span><strong>{number(successOverlay.total)} ج.م</strong></div>
             </div>
 
+            <div className="submission-success-next-step">
+              <strong>هتسجل عملية تانية؟</strong>
+              <span>لو نفس البيانات لقطاع مختلف، استخدم الاختيار الثاني بدل ما تعيد الإدخال من الأول.</span>
+            </div>
+
             <div className="submission-success-actions">
               <button className="btn btn-primary submission-success-primary" type="button" onClick={startFreshSubmission}>
                 <Check size={18} />
                 <span><strong>حفظ العملية</strong><small>مسح البيانات وبدء عملية جديدة</small></span>
               </button>
               <button className="btn btn-secondary submission-success-repeat" type="button" onClick={repeatWithAnotherSection}>
-                <Layers3 size={18} />
-                <span><strong>نفس العملية — تغيير القطاع</strong><small>احتفظ بكل البيانات وامسح القطاع فقط</small></span>
+                <Layers3 size={20} />
+                <span><strong>إنشاء عملية لقطاع آخر</strong><small>نفس المشروع والتاريخ والأمتار وفريق العمل — القطاع فقط هيتشال</small></span>
               </button>
             </div>
           </section>
