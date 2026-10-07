@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2 } from 'lucide-react'
-import { useFeedback } from '../context/FeedbackContext'
 import { appService } from '../services/appService'
 import SubmissionForm from '../components/SubmissionForm'
 
@@ -31,7 +30,6 @@ function submissionFingerprint(form, team) {
 
 export default function NewSubmissionPage() {
   const queryClient = useQueryClient()
-  const feedback = useFeedback()
   const requestRef = useRef({ fingerprint: null, id: null })
   const [lastSaved, setLastSaved] = useState(null)
   const refsQuery = useQuery({ queryKey: ['references'], queryFn: appService.references })
@@ -77,10 +75,6 @@ export default function NewSubmissionPage() {
     }
 
     setLastSaved(saved)
-    feedback.success(
-      saved.duplicatePrevented ? 'العملية كانت محفوظة بالفعل' : 'تم حفظ العملية بنجاح',
-      `${saved.project} · ${saved.section} · ${saved.meters} متر`,
-    )
     return result
   }
 
