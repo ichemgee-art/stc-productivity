@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Check, LoaderCircle } from 'lucide-react'
+import { Check, CheckCircle2, Layers3, LoaderCircle } from 'lucide-react'
 import PeoplePicker from './PeoplePicker'
 import { number } from '../lib/format'
 import { calculateSubmissionPreview } from '../lib/calculations'
 import { useFeedback } from '../context/FeedbackContext'
+import { playFeedbackSound } from '../lib/feedbackSound'
 
 const emptyTeam = { engineer: [], technician: [], assistant: [], worker: [] }
 export default function SubmissionForm({ references, initial, onSubmit, submitting, mode = 'create' }) {
   const feedback = useFeedback()
-  const successTimer = useRef(null)
+  const formRef = useRef(null)
+  const sectionRef = useRef(null)
   const [saveVisual, setSaveVisual] = useState('idle')
+  const [successOverlay, setSuccessOverlay] = useState(null)
   const [form, setForm] = useState({
     work_date: initial?.work_date || references.businessToday || '',
     project: initial?.project || '',
@@ -19,10 +22,6 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
   const [team, setTeam] = useState(initial?.team || emptyTeam)
   const [submitMode, setSubmitMode] = useState('save')
   const [formError, setFormError] = useState('')
-
-  useEffect(() => () => {
-    if (successTimer.current) window.clearTimeout(successTimer.current)
-  }, [])
 
   const matchedSection = references.sections.find((item) => item.name === form.section)
   const section = matchedSection || (
@@ -117,18 +116,21 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
 
     try {
       setSaveVisual('saving')
-      await onSubmit({
+      const result = await onSubmit({
         form: { ...form, meters: preview.meters },
         team,
-        submitMode,
+        submitMode: 'save',
       })
       setSaveVisual('success')
-      if (successTimer.current) window.clearTimeout(successTimer.current)
-      successTimer.current = window.setTimeout(() => setSaveVisual('idle'), 1500)
-
-      if (mode === 'create' && submitMode === 'saveAnother') {
-        setForm((current) => ({ ...current, meters: '' }))
-        setTeam(emptyTeam)
+      if (mode === 'create') {
+        setSuccessOverlay({
+          project: form.project.trim(),
+          section: form.section,
+          meters: preview.meters,
+          total: Number(result?.total || preview.total || 0),
+          duplicatePrevented: Boolean(result?.duplicate_prevented),
+        })
+        playFeedbackSound('success')
       }
     } catch (error) {
       setSaveVisual('idle')
@@ -138,8 +140,37 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
     }
   }
 
+  const startFreshSubmission = () => {
+    setForm({
+      work_date: businessToday || '',
+      project: '',
+      section: '',
+      meters: '',
+    })
+    setTeam(emptyTeam)
+    setFormError('')
+    setSuccessOverlay(null)
+    setSaveVisual('idle')
+    setSubmitMode('save')
+    window.requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
+  const repeatWithAnotherSection = () => {
+    setForm((current) => ({ ...current, section: '' }))
+    setFormError('')
+    setSuccessOverlay(null)
+    setSaveVisual('idle')
+    setSubmitMode('save')
+    window.requestAnimationFrame(() => {
+      sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      sectionRef.current?.focus()
+    })
+  }
+
   return (
-    <form className="submission-form" onSubmit={submit} noValidate>
+    <form ref={formRef} className="submission-form" onSubmit={submit} noValidate>
       <div className="entry-flow" aria-label="ترتيب إدخال الإنتاجية">
         <span className={steps.date ? 'completed' : ''}><b>{steps.date ? <Check size={13} /> : '1'}</b> التاريخ</span>
         <span className={steps.project ? 'completed' : ''}><b>{steps.project ? <Check size={13} /> : '2'}</b> المشروع</span>
@@ -168,7 +199,7 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
           </label>
           <label className="field">
             <span>القطاع</span>
-            <select required value={form.section} onChange={(e) => setField('section', e.target.value)}>
+            <select ref={sectionRef} required value={form.section} onChange={(e) => setField('section', e.target.value)}>
               <option value="">اختار القطاع</option>
               {sectionOptions.map((item) => (
                 <option key={item.id} value={item.name}>
@@ -229,15 +260,43 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
 
       {formError ? <div className="form-error">{formError}</div> : null}
       <footer className="form-actions">
-        <button className={`btn save-operation-btn ${saveVisual === 'success' ? 'is-success' : 'btn-primary'}`} disabled={submitting || saveVisual === 'saving'} type="submit" onClick={() => setSubmitMode('save')}>
+        <button className={`btn save-operation-btn ${saveVisual === 'success' ? 'is-success' : 'btn-primary'}`} disabled={submitting || saveVisual === 'saving' || Boolean(successOverlay)} type="submit" onClick={() => setSubmitMode('save')}>
           {saveVisual === 'saving' || submitting ? <><LoaderCircle className="spin-icon" size={18} /> جاري الحفظ...</> : saveVisual === 'success' ? <><Check size={18} /> تم الحفظ</> : mode === 'edit' ? 'حفظ التعديلات' : 'حفظ العملية'}
         </button>
-        {mode === 'create' ? (
-          <button className="btn btn-secondary" disabled={submitting} type="submit" onClick={() => setSubmitMode('saveAnother')}>
-            حفظ وإضافة عملية أخرى
-          </button>
-        ) : null}
       </footer>
+
+      {mode === 'create' && successOverlay ? (
+        <div className="submission-success-backdrop" role="presentation">
+          <section className="submission-success-modal" role="dialog" aria-modal="true" aria-labelledby="submission-success-title">
+            <div className="submission-success-check" aria-hidden="true">
+              <CheckCircle2 size={82} strokeWidth={1.8} />
+            </div>
+            <div className="submission-success-copy">
+              <span>OPERATION SAVED</span>
+              <h2 id="submission-success-title">{successOverlay.duplicatePrevented ? 'العملية محفوظة بالفعل' : 'تم تسجيل الإنتاجية بنجاح'}</h2>
+              <p>{successOverlay.project} · {successOverlay.section} · {number(successOverlay.meters)} متر</p>
+            </div>
+
+            <div className="submission-success-summary">
+              <div><span>المشروع</span><strong>{successOverlay.project}</strong></div>
+              <div><span>القطاع</span><strong>{successOverlay.section}</strong></div>
+              <div><span>الأمتار</span><strong>{number(successOverlay.meters)} م</strong></div>
+              <div><span>الإجمالي</span><strong>{number(successOverlay.total)} ج.م</strong></div>
+            </div>
+
+            <div className="submission-success-actions">
+              <button className="btn btn-primary submission-success-primary" type="button" onClick={startFreshSubmission}>
+                <Check size={18} />
+                <span><strong>حفظ العملية</strong><small>مسح البيانات وبدء عملية جديدة</small></span>
+              </button>
+              <button className="btn btn-secondary submission-success-repeat" type="button" onClick={repeatWithAnotherSection}>
+                <Layers3 size={18} />
+                <span><strong>نفس العملية — تغيير القطاع</strong><small>احتفظ بكل البيانات وامسح القطاع فقط</small></span>
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </form>
   )
 }
