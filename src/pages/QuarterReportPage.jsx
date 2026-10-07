@@ -15,6 +15,49 @@ import { exportExecutiveExcel } from '../lib/exporters'
 import { date, money, monthName, number, roleLabels } from '../lib/format'
 import { smartIncludes } from '../lib/smartSearch'
 
+
+const QUARTER_SELECTION_STORAGE_KEY = 'stc_quarter_selected_cycles'
+const QUARTER_FILTERS_STORAGE_KEY = 'stc_quarter_filters'
+
+const DEFAULT_QUARTER_FILTERS = {
+  search: '',
+  cycle: '',
+  dateFrom: '',
+  dateTo: '',
+  project: '',
+  section: '',
+  personId: '',
+  role: '',
+  review: '',
+  attendanceStatus: '',
+  absenceType: '',
+}
+
+const readStoredQuarterSelection = () => {
+  if (typeof window === 'undefined') return ['', '', '']
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(QUARTER_SELECTION_STORAGE_KEY) || 'null')
+    return Array.isArray(parsed) && parsed.length === 3
+      ? parsed.map((value) => String(value || ''))
+      : ['', '', '']
+  } catch {
+    return ['', '', '']
+  }
+}
+
+const readStoredQuarterFilters = () => {
+  if (typeof window === 'undefined') return DEFAULT_QUARTER_FILTERS
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(QUARTER_FILTERS_STORAGE_KEY) || 'null')
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return DEFAULT_QUARTER_FILTERS
+    return Object.fromEntries(
+      Object.keys(DEFAULT_QUARTER_FILTERS).map((key) => [key, String(parsed[key] || '')]),
+    )
+  } catch {
+    return DEFAULT_QUARTER_FILTERS
+  }
+}
+
 const chartTooltipStyle = {
   borderRadius: 12,
   border: '1px solid rgba(37,58,85,.16)',
@@ -125,27 +168,25 @@ function Kpi({ icon: Icon, label, value, helper }) {
 export default function QuarterReportPage() {
   const { cycles } = useCycle()
   const feedback = useFeedback()
-  const [selectedKeys, setSelectedKeys] = useState(['', '', ''])
+  const [selectedKeys, setSelectedKeys] = useState(readStoredQuarterSelection)
   const [exporting, setExporting] = useState(false)
-  const [filters, setFilters] = useState({
-    search: '',
-    cycle: '',
-    dateFrom: '',
-    dateTo: '',
-    project: '',
-    section: '',
-    personId: '',
-    role: '',
-    review: '',
-    attendanceStatus: '',
-    absenceType: '',
-  })
+  const [filters, setFilters] = useState(readStoredQuarterFilters)
 
   useEffect(() => {
     if (cycles.length >= 3 && selectedKeys.every((value) => !value)) {
       setSelectedKeys(cycles.slice(0, 3).map((cycle) => cycle.month_key))
     }
   }, [cycles, selectedKeys])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(QUARTER_SELECTION_STORAGE_KEY, JSON.stringify(selectedKeys))
+  }, [selectedKeys])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(QUARTER_FILTERS_STORAGE_KEY, JSON.stringify(filters))
+  }, [filters])
 
   const selectedCycles = useMemo(() => {
     const map = new Map(cycles.map((cycle) => [cycle.month_key, cycle]))
@@ -203,19 +244,7 @@ export default function QuarterReportPage() {
 
   const setFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }))
 
-  const resetFilters = () => setFilters({
-    search: '',
-    cycle: '',
-    dateFrom: '',
-    dateTo: '',
-    project: '',
-    section: '',
-    personId: '',
-    role: '',
-    review: '',
-    attendanceStatus: '',
-    absenceType: '',
-  })
+  const resetFilters = () => setFilters({ ...DEFAULT_QUARTER_FILTERS })
 
   const activeFilterCount = useMemo(
     () => Object.values(filters).filter((value) => String(value || '').trim()).length,
