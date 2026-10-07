@@ -5079,15 +5079,16 @@ body{
 
 .submission-success-next-step strong{
   color:var(--brand-navy);
-  font-size:10px;
+  font-size:13px;
   font-weight:900;
+  line-height:1.5;
 }
 
 .submission-success-next-step span{
   color:var(--muted);
-  font-size:8px;
-  font-weight:650;
-  line-height:1.7;
+  font-size:10.5px;
+  font-weight:700;
+  line-height:1.8;
 }
 
 .submission-success-actions{
@@ -5097,10 +5098,10 @@ body{
 }
 
 .submission-success-actions .btn{
-  min-height:68px;
+  min-height:78px;
   justify-content:flex-start;
-  gap:11px;
-  padding:11px 14px;
+  gap:12px;
+  padding:13px 15px;
   text-align:right;
 }
 
@@ -5110,14 +5111,15 @@ body{
 }
 
 .submission-success-actions .btn strong{
-  font-size:10.5px;
+  font-size:13px;
+  line-height:1.45;
 }
 
 .submission-success-actions .btn small{
-  font-size:7.8px;
-  font-weight:650;
-  line-height:1.55;
-  opacity:.82;
+  font-size:10px;
+  font-weight:700;
+  line-height:1.65;
+  opacity:.9;
 }
 
 .submission-success-repeat{
@@ -5131,16 +5133,16 @@ body{
 .submission-success-repeat::after{
   content:"بدون إعادة إدخال";
   position:absolute;
-  top:-10px;
+  top:-11px;
   inset-inline-end:12px;
-  padding:3px 8px;
+  padding:4px 10px;
   border:1px solid color-mix(in srgb,var(--brand-gold) 75%,#8c6700);
   border-radius:999px;
   background:var(--brand-gold);
   color:#253A55;
-  font-size:7px;
+  font-size:9px;
   font-weight:900;
-  line-height:1.2;
+  line-height:1.25;
   box-shadow:0 4px 10px rgba(0,0,0,.09);
 }
 
@@ -5150,8 +5152,9 @@ body{
 }
 
 .submission-success-repeat strong{
-  font-size:11.5px!important;
+  font-size:14px!important;
   font-weight:900;
+  line-height:1.45;
 }
 
 .submission-success-repeat:hover{
