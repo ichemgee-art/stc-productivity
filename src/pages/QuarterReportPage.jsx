@@ -79,7 +79,7 @@ const sumRows = (rows) => {
 }
 
 const sumAttendance = (rows) => {
-  const effective = rows.filter((row) => row.status !== 'upcoming' && !row.is_friday)
+  const effective = rows.filter((row) => row.status !== 'upcoming')
   const present = effective.filter((row) => row.status === 'present').length
   const absent = effective.filter((row) => row.status === 'absent').length
   const total = present + absent
