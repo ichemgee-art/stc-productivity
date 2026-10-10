@@ -8,7 +8,7 @@ import EmptyState from './EmptyState'
 import ExportButtons from './ExportButtons'
 import { smartIncludes } from '../lib/smartSearch'
 
-const statusLabel = (row) => row.status === 'present' ? 'حاضر' : row.status === 'absent' ? 'غياب' : 'قادم'
+const statusLabel = (row) => row.status === 'present' ? (row.is_friday ? 'حاضر (جمعة)' : 'حاضر') : row.status === 'absent' ? 'غياب' : 'قادم'
 const absenceLabel = (type) => type === 'excused' ? 'غياب بإذن' : type === 'unexcused' ? 'غياب بدون إذن' : '—'
 
 export default function PersonDetailsModal({ person, selectedCycle, monthKey, onClose }) {
