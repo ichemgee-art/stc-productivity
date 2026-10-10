@@ -424,8 +424,6 @@ with (security_invoker = true)
 as
 select
   s.id,
-  s.project_id,
-  s.section_id,
   s.submitted_at,
   s.work_date,
   s.engineer_names_snapshot as engineers,
@@ -451,7 +449,9 @@ select
   s.price_missing,
   s.source,
   coalesce(sn.note, '') as note,
-  s.updated_at
+  s.updated_at,
+  s.project_id,
+  s.section_id
 from public.submissions s
 left join public.submission_notes sn on sn.submission_id = s.id;
 
