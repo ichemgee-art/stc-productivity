@@ -10,6 +10,12 @@ import ExportButtons from '../components/ExportButtons'
 import { smartIncludes } from '../lib/smartSearch'
 import { useFeedback } from '../context/FeedbackContext'
 
+const attendanceStatusLabel = (row) => {
+  if (row.status === 'present') return row.is_friday ? 'حاضر (جمعة)' : 'حاضر'
+  if (row.status === 'absent') return 'غياب'
+  return 'قادم'
+}
+
 export default function AttendancePage() {
   const { monthKey } = useCycle()
   const { permissions } = useAuth()
@@ -67,7 +73,7 @@ export default function AttendancePage() {
       'الشخص': row.person_name,
       'الدور': roleLabels[row.role],
       'التاريخ': date(row.attendance_date),
-      'الحالة': row.status === 'present' ? 'حاضر' : row.status === 'absent' ? 'غياب' : 'قادم',
+      'الحالة': attendanceStatusLabel(row),
       'نوع الغياب': row.absence_type === 'excused' ? 'غياب بإذن' : row.absence_type === 'unexcused' ? 'غياب بدون إذن' : '—',
       'الجمعة': row.is_friday ? 'نعم' : 'لا',
       'الملاحظة': row.note || '',
@@ -93,7 +99,7 @@ export default function AttendancePage() {
             <thead><tr><th>الشخص</th><th>الدور</th><th>التاريخ</th><th>الحالة</th><th>نوع الغياب</th><th>الملاحظة</th></tr></thead>
             <tbody>{filtered.map((row) => {
               const key = `${row.person_id}-${row.attendance_date}`
-              return <tr key={key}><td className="strong-cell">{row.person_name}</td><td>{roleLabels[row.role]}</td><td>{date(row.attendance_date)} {row.is_friday ? <span className="count-chip">جمعة</span> : null}</td><td><span className={`status-pill ${row.status === 'present' ? 'success' : row.status === 'absent' ? 'danger' : 'neutral'}`}>{row.status === 'present' ? 'حاضر' : row.status === 'absent' ? 'غياب' : 'قادم'}</span></td><td><select disabled={!permissions.canManageAttendance || row.status !== 'absent' || absenceMutation.isPending} value={row.absence_type || ''} onChange={(e) => absenceMutation.mutate({ personId: row.person_id, attendanceDate: row.attendance_date, type: e.target.value })}><option value="">غير محدد</option><option value="excused">غياب بإذن</option><option value="unexcused">غياب بدون إذن</option></select></td><td><AttendanceNoteCell row={row} editable={permissions.canManageAttendance} onSave={(note) => noteMutation.mutateAsync({ personId: row.person_id, attendanceDate: row.attendance_date, note })} /></td></tr>
+              return <tr key={key}><td className="strong-cell">{row.person_name}</td><td>{roleLabels[row.role]}</td><td>{date(row.attendance_date)} {row.is_friday ? <span className="count-chip">جمعة</span> : null}</td><td><span className={`status-pill ${row.status === 'present' ? 'success' : row.status === 'absent' ? 'danger' : 'neutral'}`}>{attendanceStatusLabel(row)}</span></td><td><select disabled={!permissions.canManageAttendance || row.status !== 'absent' || absenceMutation.isPending} value={row.absence_type || ''} onChange={(e) => absenceMutation.mutate({ personId: row.person_id, attendanceDate: row.attendance_date, type: e.target.value })}><option value="">غير محدد</option><option value="excused">غياب بإذن</option><option value="unexcused">غياب بدون إذن</option></select></td><td><AttendanceNoteCell row={row} editable={permissions.canManageAttendance} onSave={(note) => noteMutation.mutateAsync({ personId: row.person_id, attendanceDate: row.attendance_date, note })} /></td></tr>
             })}</tbody>
           </table>
           {!filtered.length ? (
