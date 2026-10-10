@@ -63,7 +63,7 @@ const sanitizeContext = (input: any) => ({
     })),
 })
 
-async function loadPersonNames(req: Request) {
+async function loadAuthorizedPrivacyContext(req: Request) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
   const authorization = req.headers.get('authorization') || ''
@@ -72,23 +72,54 @@ async function loadPersonNames(req: Request) {
     throw new Error('privacy guard unavailable')
   }
 
-  const response = await fetch(`${supabaseUrl}/rest/v1/people?select=name`, {
-    headers: {
-      apikey: anonKey,
-      Authorization: authorization,
-      Accept: 'application/json',
-    },
+  const commonHeaders = {
+    apikey: anonKey,
+    Authorization: authorization,
+    Accept: 'application/json',
+  }
+
+  const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: commonHeaders,
     signal: AbortSignal.timeout(5_000),
   })
 
-  if (!response.ok) {
-    throw new Error(`privacy guard HTTP ${response.status}`)
+  if (!userResponse.ok) {
+    throw new Error(`auth guard HTTP ${userResponse.status}`)
   }
 
-  const rows = await response.json()
-  return (Array.isArray(rows) ? rows : [])
+  const user = await userResponse.json()
+  const userId = String(user?.id || '').trim()
+  if (!userId) throw new Error('auth guard missing user')
+
+  const [profileResponse, peopleResponse] = await Promise.all([
+    fetch(`${supabaseUrl}/rest/v1/profiles?select=app_role&user_id=eq.${encodeURIComponent(userId)}&limit=1`, {
+      headers: commonHeaders,
+      signal: AbortSignal.timeout(5_000),
+    }),
+    fetch(`${supabaseUrl}/rest/v1/people?select=name`, {
+      headers: commonHeaders,
+      signal: AbortSignal.timeout(5_000),
+    }),
+  ])
+
+  if (!profileResponse.ok || !peopleResponse.ok) {
+    throw new Error(`privacy guard HTTP ${profileResponse.status}/${peopleResponse.status}`)
+  }
+
+  const profileRows = await profileResponse.json()
+  const role = String(Array.isArray(profileRows) ? profileRows[0]?.app_role || '' : '')
+  if (!['admin', 'data_entry', 'viewer'].includes(role)) {
+    const error = new Error('application access required')
+    ;(error as any).code = 'NO_APP_ROLE'
+    throw error
+  }
+
+  const peopleRows = await peopleResponse.json()
+  const personNames = (Array.isArray(peopleRows) ? peopleRows : [])
     .map((row: any) => String(row?.name || '').trim())
     .filter(Boolean)
+
+  return { role, personNames }
 }
 
 Deno.serve(async (req: Request) => {
@@ -140,12 +171,16 @@ Deno.serve(async (req: Request) => {
 
   let personNames: string[]
   try {
-    personNames = await loadPersonNames(req)
-  } catch {
+    const privacyContext = await loadAuthorizedPrivacyContext(req)
+    personNames = privacyContext.personNames
+  } catch (error) {
+    const noRole = (error as any)?.code === 'NO_APP_ROLE'
     return new Response(JSON.stringify({
-      error: 'تعذر تفعيل حاجز الخصوصية. تم إيقاف طلب AI بدلًا من إرسال بيانات غير محمية.',
+      error: noRole
+        ? 'الحساب غير مصرح له باستخدام النظام.'
+        : 'تعذر تفعيل حاجز الخصوصية. تم إيقاف طلب AI بدلًا من إرسال بيانات غير محمية.',
     }), {
-      status: 503,
+      status: noRole ? 403 : 503,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
