@@ -172,14 +172,17 @@ export default function DashboardPage() {
     const currentStart = selectedCycle.cycle_start
     const currentEnd = selectedCycle.cycle_end
     const currentCutoff = today < currentStart ? currentStart : minIso(today, currentEnd) || currentEnd
-    const elapsedDays = Math.max(1, Math.min(daysBetween(currentStart, currentCutoff), daysBetween(currentStart, currentEnd)))
+    const currentElapsedDays = Math.max(1, Math.min(daysBetween(currentStart, currentCutoff), daysBetween(currentStart, currentEnd)))
+    const previousCycleDays = Math.max(1, daysBetween(previousBounds.cycle_start, previousBounds.cycle_end))
+    const elapsedDays = Math.min(currentElapsedDays, previousCycleDays)
+    const comparableCurrentCutoff = minIso(addDays(currentStart, elapsedDays - 1), currentCutoff) || currentCutoff
     const previousCutoff = minIso(addDays(previousBounds.cycle_start, elapsedDays - 1), previousBounds.cycle_end) || previousBounds.cycle_end
 
-    const currentComparable = currentRows.filter((row) => row.work_date <= currentCutoff)
+    const currentComparable = currentRows.filter((row) => row.work_date <= comparableCurrentCutoff)
     const previousComparable = previousRows.filter((row) => row.work_date <= previousCutoff)
-    const currentOpsComparable = currentOps.filter((row) => row.work_date <= currentCutoff)
+    const currentOpsComparable = currentOps.filter((row) => row.work_date <= comparableCurrentCutoff)
     const previousOpsComparable = previousOps.filter((row) => row.work_date <= previousCutoff)
-    const currentAttendanceComparable = currentAttendance.filter((row) => row.attendance_date <= currentCutoff)
+    const currentAttendanceComparable = currentAttendance.filter((row) => row.attendance_date <= comparableCurrentCutoff)
     const previousAttendanceComparable = previousAttendance.filter((row) => row.attendance_date <= previousCutoff)
 
     const currentSummary = summarizeRows(currentComparable)
