@@ -185,7 +185,7 @@ export default function ExecutiveReportPage() {
   const hasDateRange = Boolean(dateFrom || dateTo)
 
   const projectNames = useMemo(
-    () => [...new Set(allRows.map((row) => row.project).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar')),
+    () => [...new Set(allRows.map((row) => row.project_current_name || row.project).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar')),
     [allRows],
   )
 
@@ -224,7 +224,7 @@ export default function ExecutiveReportPage() {
     const normalizedProject = normalizeSearch(effectiveProject)
     const rows = allRows
       .filter((row) => {
-        if (normalizeSearch(row.project) !== normalizedProject) return false
+        if (normalizeSearch(row.project_current_name || row.project) !== normalizedProject) return false
         const workDate = String(row.work_date || '').slice(0, 10)
         if (dateFrom && workDate < dateFrom) return false
         if (dateTo && workDate > dateTo) return false

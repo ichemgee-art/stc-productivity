@@ -12,12 +12,20 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: react-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
+    name: Security, tests and production build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -30,6 +38,9 @@ jobs:
 
       - name: Audit high severity dependencies
         run: npm audit --audit-level=high
+
+      - name: Verify patched source-map dependency
+        run: npm ls source-map-js
 
       - name: Logic tests
         run: npm test
