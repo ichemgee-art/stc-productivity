@@ -6,10 +6,12 @@ import { appService } from '../services/appService'
 import { monthName } from '../lib/format'
 
 const starterQuestions = [
-  'مين أعلى فني في الدورة دي؟',
   'إيه المشاريع اللي إنتاجيتها أقل؟',
-  'كام إجمالي مستحقات فريق التنفيذ؟',
+  'أنهي القطاعات حققت أعلى عدد أمتار؟',
+  'اديني ملخص تشغيلي للدورة الحالية.',
 ]
+
+const SENSITIVE_AI_PATTERN = /(مستحق|استحقاق|أجر|مرتب|راتب|حضور|غياب|غائب|إجاز|عامل|فني|مساعد|مهندس|شخص|اسم|مين|attendance|absence|salary|wage|worker|technician|assistant|engineer)/i
 
 export default function AIAssistant() {
   const { monthKey, selectedCycle } = useCycle()
@@ -17,26 +19,12 @@ export default function AIAssistant() {
   const [question, setQuestion] = useState('')
   const [sending, setSending] = useState(false)
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'اسألني عن الإنتاجية، المشاريع، الحضور أو مستحقات فريق التنفيذ في الدورة المعروضة.' },
+    { role: 'assistant', text: 'اسألني عن الإنتاجية والمشاريع والقطاعات في الدورة المعروضة. بيانات الأفراد والحضور والمستحقات لا يتم إرسالها للـAI.' },
   ])
 
   const rowsQuery = useQuery({
     queryKey: ['cycle-data', 'ai-rows', monthKey],
     queryFn: () => appService.productivityRows(selectedCycle.cycle_start, selectedCycle.cycle_end),
-    enabled: Boolean(open && selectedCycle),
-    staleTime: 30_000,
-  })
-
-  const attendanceQuery = useQuery({
-    queryKey: ['cycle-data', 'ai-attendance', monthKey],
-    queryFn: () => appService.attendance(monthKey),
-    enabled: Boolean(open && monthKey),
-    staleTime: 30_000,
-  })
-
-  const peopleOpsQuery = useQuery({
-    queryKey: ['cycle-data', 'ai-people-ops', monthKey],
-    queryFn: () => appService.cyclePersonOperations(selectedCycle.cycle_start, selectedCycle.cycle_end),
     enabled: Boolean(open && selectedCycle),
     staleTime: 30_000,
   })
@@ -50,9 +38,6 @@ export default function AIAssistant() {
 
   const context = useMemo(() => {
     const rows = rowsQuery.data || []
-    const attendance = attendanceQuery.data || []
-    const operations = peopleOpsQuery.data || []
-    const refs = refsQuery.data || {}
 
     return {
       cycle: {
@@ -65,9 +50,6 @@ export default function AIAssistant() {
         operationCount: rows.length,
         meters: rows.reduce((sum, row) => sum + Number(row.meters || 0), 0),
         productivityValue: rows.reduce((sum, row) => sum + Number(row.total || 0), 0),
-        laborDues: operations.reduce((sum, row) => sum + Number(row.share_amount || 0), 0),
-        presentDays: attendance.filter((row) => row.status === 'present').length,
-        absentDays: attendance.filter((row) => row.status === 'absent').length,
       },
       operations: rows.slice(0, 500).map((row) => ({
         date: row.work_date,
@@ -76,42 +58,31 @@ export default function AIAssistant() {
         meters: Number(row.meters || 0),
         pricePerMeter: Number(row.price_per_meter || 0),
         total: Number(row.total || 0),
-        engineers: row.engineers,
-        technicians: row.technicians,
-        assistants: row.assistants,
-        workers: row.workers,
         review: row.review_status,
-        note: row.note,
       })),
-      peopleOperations: operations.slice(0, 2500).map((row) => ({
-        name: row.person_name,
-        role: row.role,
-        date: row.work_date,
-        project: row.project,
-        meters: Number(row.meters || 0),
-        earnings: Number(row.share_amount || 0),
-      })),
-      attendance: attendance.slice(0, 2500).map((row) => ({
-        name: row.person_name,
-        role: row.role,
-        date: row.attendance_date,
-        status: row.status,
-        absenceType: row.absence_type,
-        note: row.note,
-      })),
-      masterData: {
-        projects: (refs.projects || []).map((row) => row.name),
-        sections: (refs.sections || []).map((row) => ({ name: row.name, price: row.price_per_meter })),
-        people: (refs.people || []).map((row) => ({ name: row.name, role: row.role, active: row.active })),
-      },
     }
-  }, [monthKey, selectedCycle, rowsQuery.data, attendanceQuery.data, peopleOpsQuery.data, refsQuery.data])
+  }, [monthKey, selectedCycle, rowsQuery.data])
 
-  const dataLoading = rowsQuery.isLoading || attendanceQuery.isLoading || peopleOpsQuery.isLoading || refsQuery.isLoading
+  const dataLoading = rowsQuery.isLoading || refsQuery.isLoading
 
   const send = async (preset = '') => {
     const text = (preset || question).trim()
     if (!text || sending || !selectedCycle) return
+
+    const personNames = (refsQuery.data?.people || [])
+      .map((person) => String(person.name || '').trim())
+      .filter(Boolean)
+    const normalizedText = text.toLocaleLowerCase('ar-EG')
+    const mentionsPerson = personNames.some((name) => normalizedText.includes(name.toLocaleLowerCase('ar-EG')))
+
+    if (mentionsPerson || SENSITIVE_AI_PATTERN.test(text)) {
+      setMessages((current) => [...current, {
+        role: 'assistant',
+        text: 'حفاظًا على خصوصية الشركة، بيانات الأفراد والحضور والغياب والمستحقات لا يتم إرسالها إلى Gemini. أقدر أحلل لك الإنتاجية والمشاريع والقطاعات فقط.',
+      }])
+      setQuestion('')
+      return
+    }
 
     const nextUser = { role: 'user', text }
     setMessages((current) => [...current, nextUser])
@@ -150,7 +121,7 @@ export default function AIAssistant() {
           <header className="ai-panel__head">
             <div className="ai-panel__identity">
               <span><Sparkles size={18} /></span>
-              <div><strong>مساعد الإنتاجية الذكي</strong><small>Gemini · بيانات الدورة الحالية فقط</small></div>
+              <div><strong>مساعد الإنتاجية الذكي</strong><small>Gemini · بيانات تشغيلية فقط بدون بيانات أفراد</small></div>
             </div>
             <button className="icon-btn small" type="button" onClick={() => setOpen(false)}><X size={17} /></button>
           </header>
