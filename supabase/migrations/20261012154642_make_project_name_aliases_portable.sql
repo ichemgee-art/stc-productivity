@@ -1,0 +1,3 @@
+-- Production follow-up migration retained for history.
+-- Portability changes are folded into 20261012154457_protect_canonical_project_names.sql
+-- for clean rebuilds without hard-coded generated project IDs.

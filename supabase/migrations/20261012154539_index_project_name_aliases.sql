@@ -1,0 +1,3 @@
+-- Production follow-up migration retained for history.
+-- The portable project-name protection migration already stores aliases by canonical name,
+-- so no foreign-key helper index is required on a fresh database.

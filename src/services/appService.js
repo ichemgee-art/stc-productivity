@@ -260,6 +260,10 @@ export const appService = {
     }))
   },
 
+  async deleteProject(id) {
+    return unwrap(await supabase.rpc('admin_delete_project', { p_id: id }))
+  },
+
   async sections() {
     return fetchAll((from, to) => supabase
       .from('sections')
