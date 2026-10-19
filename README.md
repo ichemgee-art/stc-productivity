@@ -33,7 +33,10 @@ Set:
 ```env
 VITE_SUPABASE_URL=...
 VITE_SUPABASE_PUBLISHABLE_KEY=...
+VITE_ACCOUNT_REQUEST_URL=https://YOUR_INTERNAL_REQUEST_URL
 ```
+
+`VITE_ACCOUNT_REQUEST_URL` controls the public “request access” CTA. It may point to an internal request page or a configured `mailto:` link. Do not commit personal or sensitive email addresses. If the variable is omitted, the UI opens a recipient-less `mailto:` draft whose body contains the documented `[SUPPORT_EMAIL]` placeholder rather than exposing a real address.
 
 ## Vercel
 
@@ -53,3 +56,30 @@ The cycle selector reads `public.v_available_cycles`, which derives available 26
 ## Legacy frontend
 
 The original single-file implementation remains under `ichem/index.html` on the repository and is intentionally kept as a rollback/reference version during migration.
+
+
+## Pre-login visual tour
+
+The public login experience includes a demo-only visual tour. It must never contain production screenshots or real operational data.
+
+Current placeholder assets live in:
+
+- `public/tour/dashboard.svg`
+- `public/tour/teams-attendance.svg`
+- `public/tour/projects-sectors.svg`
+- `public/tour/reports.svg`
+
+These SVGs contain fictional names, projects, values, and a “بيانات توضيحية” watermark.
+
+### Replacing placeholders with real product imagery
+
+1. Capture the product only in a safe demo environment.
+2. Replace every person name, project name, amount, email, phone number, and note with fictional values.
+3. Blur any remaining potentially identifying information.
+4. Add a visible “بيانات توضيحية” watermark.
+5. Export as WebP or AVIF with a fixed aspect ratio close to 1200×760.
+6. Put the optimized files under `public/tour/`.
+7. Update the image paths in `src/components/prelogin/VisualTour.jsx` while keeping descriptive Arabic alt text.
+8. Do not add a tour video unless it is captioned or silent, user-initiated, and ships with a poster image.
+
+The tour lightbox is keyboard accessible: it traps focus, closes with Escape or backdrop click, and restores focus to the card that opened it.

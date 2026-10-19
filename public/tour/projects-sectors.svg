@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="t d">
+<title id="t">المشاريع والقطاعات توضيحية</title><desc id="d">موك أب بمشاريع وقطاعات وهمية</desc>
+<rect width="1200" height="760" rx="28" fill="#F7F9FC"/><rect x="34" y="34" width="1132" height="692" rx="22" fill="#fff" stroke="#D9E0E8"/>
+<text x="1110" y="82" font-family="Arial" font-size="26" font-weight="700" fill="#253A55" text-anchor="end">المشاريع والقطاعات</text>
+<text x="1110" y="112" font-family="Arial" font-size="15" fill="#64748B" text-anchor="end">بيانات تشغيلية وهمية فقط</text>
+<rect x="78" y="150" width="500" height="510" rx="18" fill="#fff" stroke="#D9E0E8"/><rect x="606" y="150" width="516" height="510" rx="18" fill="#fff" stroke="#D9E0E8"/>
+<text x="544" y="190" font-family="Arial" font-size="18" font-weight="700" fill="#253A55" text-anchor="end">المشاريع</text>
+<text x="1088" y="190" font-family="Arial" font-size="18" font-weight="700" fill="#253A55" text-anchor="end">القطاعات</text>
+<g font-family="Arial"><g><rect x="102" y="220" width="452" height="86" rx="12" fill="#F7F9FC"/><text x="526" y="252" font-size="16" font-weight="700" fill="#253A55" text-anchor="end">مشروع ألف</text><text x="526" y="278" font-size="13" fill="#64748B" text-anchor="end">24 عملية · نشط</text></g>
+<g><rect x="102" y="324" width="452" height="86" rx="12" fill="#F7F9FC"/><text x="526" y="356" font-size="16" font-weight="700" fill="#253A55" text-anchor="end">مشروع باء</text><text x="526" y="382" font-size="13" fill="#64748B" text-anchor="end">16 عملية · نشط</text></g>
+<g><rect x="102" y="428" width="452" height="86" rx="12" fill="#F7F9FC"/><text x="526" y="460" font-size="16" font-weight="700" fill="#253A55" text-anchor="end">مشروع جيم</text><text x="526" y="486" font-size="13" fill="#64748B" text-anchor="end">9 عمليات · نشط</text></g>
+<g><rect x="630" y="220" width="468" height="86" rx="12" fill="#FFF8E6"/><text x="1070" y="252" font-size="16" font-weight="700" fill="#253A55" text-anchor="end">قطاع A</text><text x="1070" y="278" font-size="13" fill="#64748B" text-anchor="end">سعر توضيحي · 25 ج.م</text></g>
+<g><rect x="630" y="324" width="468" height="86" rx="12" fill="#F7F9FC"/><text x="1070" y="356" font-size="16" font-weight="700" fill="#253A55" text-anchor="end">قطاع B</text><text x="1070" y="382" font-size="13" fill="#64748B" text-anchor="end">سعر توضيحي · 30 ج.م</text></g>
+<g><rect x="630" y="428" width="468" height="86" rx="12" fill="#F7F9FC"/><text x="1070" y="460" font-size="16" font-weight="700" fill="#253A55" text-anchor="end">قطاع C</text><text x="1070" y="486" font-size="13" fill="#64748B" text-anchor="end">سعر توضيحي · 18 ج.م</text></g></g>
+<text x="1098" y="704" font-family="Arial" font-size="18" font-weight="700" fill="#253A55" opacity=".12" text-anchor="end">بيانات توضيحية</text></svg>

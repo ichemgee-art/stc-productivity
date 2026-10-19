@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="t d">
+<title id="t">متابعة الفرق والحضور توضيحية</title><desc id="d">موك أب بأسماء وأرقام وهمية</desc>
+<rect width="1200" height="760" rx="28" fill="#F7F9FC"/><rect x="34" y="34" width="1132" height="692" rx="22" fill="#fff" stroke="#D9E0E8"/>
+<text x="1110" y="82" font-family="Arial" font-size="26" font-weight="700" fill="#253A55" text-anchor="end">متابعة الفرق والحضور</text>
+<text x="1110" y="112" font-family="Arial" font-size="15" fill="#64748B" text-anchor="end">أسماء وهمية للاستخدام التوضيحي</text>
+<g><rect x="78" y="150" width="250" height="108" rx="16" fill="#EEF8F3" stroke="#B8E0CA"/><rect x="350" y="150" width="250" height="108" rx="16" fill="#FFF0F0" stroke="#F0C2C2"/><rect x="622" y="150" width="250" height="108" rx="16" fill="#FFF8E6" stroke="#EED79E"/><rect x="894" y="150" width="228" height="108" rx="16" fill="#F4F7FA" stroke="#D9E0E8"/>
+<text x="300" y="190" font-family="Arial" font-size="14" fill="#64748B" text-anchor="end">حضور</text><text x="300" y="226" font-family="Arial" font-size="28" font-weight="700" fill="#1F8A5B" text-anchor="end">42</text>
+<text x="572" y="190" font-family="Arial" font-size="14" fill="#64748B" text-anchor="end">غياب</text><text x="572" y="226" font-family="Arial" font-size="28" font-weight="700" fill="#D64545" text-anchor="end">6</text>
+<text x="844" y="190" font-family="Arial" font-size="14" fill="#64748B" text-anchor="end">بإذن</text><text x="844" y="226" font-family="Arial" font-size="28" font-weight="700" fill="#B67A00" text-anchor="end">4</text>
+<text x="1094" y="190" font-family="Arial" font-size="14" fill="#64748B" text-anchor="end">نسبة الحضور</text><text x="1094" y="226" font-family="Arial" font-size="28" font-weight="700" fill="#253A55" text-anchor="end">87.5%</text></g>
+<rect x="78" y="292" width="1044" height="372" rx="16" fill="#fff" stroke="#D9E0E8"/>
+<g font-family="Arial" font-size="14" fill="#253A55"><text x="1082" y="334" text-anchor="end" font-weight="700">الموظف</text><text x="850" y="334" text-anchor="end" font-weight="700">الدور</text><text x="620" y="334" text-anchor="end" font-weight="700">الحالة</text><text x="390" y="334" text-anchor="end" font-weight="700">الملاحظة</text></g>
+<g stroke="#E6EAF0"><line x1="98" y1="352" x2="1102" y2="352"/><line x1="98" y1="428" x2="1102" y2="428"/><line x1="98" y1="504" x2="1102" y2="504"/><line x1="98" y1="580" x2="1102" y2="580"/></g>
+<g font-family="Arial" font-size="15" fill="#253A55"><text x="1082" y="396" text-anchor="end">موظف 01</text><text x="850" y="396" text-anchor="end">فني</text><text x="620" y="396" text-anchor="end" fill="#1F8A5B">حاضر</text><text x="390" y="396" text-anchor="end" fill="#64748B">—</text>
+<text x="1082" y="472" text-anchor="end">موظف 02</text><text x="850" y="472" text-anchor="end">مساعد</text><text x="620" y="472" text-anchor="end" fill="#B67A00">غياب بإذن</text><text x="390" y="472" text-anchor="end" fill="#64748B">ملاحظة توضيحية</text>
+<text x="1082" y="548" text-anchor="end">موظف 03</text><text x="850" y="548" text-anchor="end">عامل</text><text x="620" y="548" text-anchor="end" fill="#D64545">غياب بدون إذن</text><text x="390" y="548" text-anchor="end" fill="#64748B">—</text>
+<text x="1082" y="624" text-anchor="end">موظف 04</text><text x="850" y="624" text-anchor="end">مهندس</text><text x="620" y="624" text-anchor="end" fill="#1F8A5B">حاضر</text><text x="390" y="624" text-anchor="end" fill="#64748B">—</text></g>
+<text x="1098" y="704" font-family="Arial" font-size="18" font-weight="700" fill="#253A55" opacity=".12" text-anchor="end">بيانات توضيحية</text></svg>
