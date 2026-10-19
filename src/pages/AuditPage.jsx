@@ -6,6 +6,7 @@ import { useFeedback } from '../context/FeedbackContext'
 import { smartIncludes } from '../lib/smartSearch'
 import { date, money, number, roleLabels } from '../lib/format'
 import EmptyState from '../components/EmptyState'
+import PageIntro from '../components/PageIntro'
 
 const actionLabels = {
   create: 'إضافة',
@@ -226,14 +227,12 @@ export default function AuditPage() {
 
   return (
     <div className="page-stack">
-      <section className="management-hero audit-hero">
-        <div>
-          <span className="eyebrow">AUDIT TRAIL</span>
-          <h2>سجل التعديلات</h2>
-          <p>تتبع كامل لما تم تغييره، من نفذه، والقيم قبل وبعد. الاسترجاع متاح فقط للأحداث الآمنة والقابلة للعكس.</p>
-        </div>
-        <div className="audit-hero__icon"><ShieldCheck size={30} /></div>
-      </section>
+      <PageIntro
+        eyebrow="الحوكمة والتتبع"
+        title="سجل التعديلات"
+        description="تتبع واضح لكل تغيير، من نفذه، وما الذي تغير قبل وبعد، مع استرجاع آمن للأحداث القابلة للعكس."
+        actions={<div className="page-intro-icon"><ShieldCheck size={24} /></div>}
+      />
 
       <section className="panel">
         <div className="filters-bar audit-filters">
