@@ -5340,3 +5340,207 @@ html[data-theme="dark"] .review-complete-stat strong{
   }
   .review-confetti{display:none!important}
 }
+
+
+/* HR-first employee details */
+.modal-card.modal-hr{
+  width:min(1480px,98vw);
+}
+.hr-person-report{display:grid;gap:16px}
+.hr-person-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(300px,360px);
+  gap:14px;
+  align-items:stretch;
+  padding:18px;
+  border:1px solid color-mix(in srgb,var(--brand-navy) 12%,var(--brand-white));
+  border-radius:18px;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--brand-navy) 5%,var(--brand-white)),var(--brand-white) 58%);
+}
+.hr-person-profile{display:flex;align-items:center;gap:14px;min-width:0}
+.hr-person-avatar{
+  width:58px;height:58px;flex:0 0 58px;display:grid;place-items:center;
+  border-radius:17px;background:var(--brand-navy);color:var(--brand-white);
+  font-size:22px;font-weight:900;box-shadow:0 10px 24px rgba(37,58,85,.16)
+}
+.hr-person-copy{min-width:0}
+.hr-eyebrow{display:block;margin-bottom:3px;color:var(--muted);font-size:10px;font-weight:800}
+.hr-person-copy h2{margin:0;color:var(--brand-navy);font-size:22px;line-height:1.4}
+.hr-person-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:7px}
+.hr-person-meta span{
+  display:inline-flex;align-items:center;min-height:27px;padding:4px 9px;
+  border-radius:999px;background:var(--brand-white);border:1px solid var(--border);
+  color:var(--muted);font-size:10px;font-weight:700
+}
+.hr-due-card{
+  display:flex;flex-direction:column;justify-content:center;padding:16px 18px;
+  border-radius:15px;background:var(--brand-navy);color:var(--brand-white);
+  box-shadow:0 12px 28px rgba(37,58,85,.14)
+}
+.hr-due-card span{font-size:11px;color:rgba(255,255,255,.72);font-weight:700}
+.hr-due-card strong{margin-top:4px;font-size:28px;line-height:1.25;direction:rtl}
+.hr-due-card small{margin-top:7px;color:rgba(255,255,255,.68);font-size:10px}
+
+.hr-kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.hr-kpi-card{
+  min-width:0;min-height:92px;display:flex;align-items:center;gap:11px;padding:13px;
+  border:1px solid var(--border);border-radius:14px;background:var(--brand-white)
+}
+.hr-kpi-icon{
+  width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;border-radius:12px;
+  background:color-mix(in srgb,var(--brand-navy) 6%,var(--brand-white));color:var(--brand-navy)
+}
+.hr-kpi-card>div:last-child{min-width:0}
+.hr-kpi-card span,.hr-kpi-card strong,.hr-kpi-card small{display:block}
+.hr-kpi-card span{color:var(--muted);font-size:10px;font-weight:700}
+.hr-kpi-card strong{margin-top:2px;color:var(--brand-navy);font-size:20px;line-height:1.25}
+.hr-kpi-card small{margin-top:4px;color:var(--muted);font-size:9px;line-height:1.5}
+.hr-kpi-card.attendance-rate{
+  border-color:color-mix(in srgb,var(--brand-gold) 34%,var(--brand-white));
+  background:color-mix(in srgb,var(--brand-gold) 7%,var(--brand-white))
+}
+.hr-kpi-card.attendance-rate .hr-kpi-icon{background:color-mix(in srgb,var(--brand-gold) 18%,var(--brand-white))}
+.hr-kpi-card.success{border-color:var(--success-border);background:var(--success-soft)}
+.hr-kpi-card.success .hr-kpi-icon{background:var(--brand-white);color:var(--success)}
+.hr-kpi-card.danger{border-color:var(--danger-border);background:var(--danger-soft)}
+.hr-kpi-card.danger .hr-kpi-icon{background:var(--brand-white);color:var(--danger)}
+
+.hr-tabs{
+  display:flex;align-items:center;gap:6px;padding:5px;width:max-content;max-width:100%;
+  border:1px solid var(--border);border-radius:13px;
+  background:color-mix(in srgb,var(--brand-navy) 4%,var(--brand-white))
+}
+.hr-tabs button{
+  min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:8px 14px;border:0;border-radius:9px;background:transparent;color:var(--muted);
+  font-size:11px;font-weight:800
+}
+.hr-tabs button span{
+  min-width:23px;height:20px;display:inline-grid;place-items:center;padding:0 6px;border-radius:999px;
+  background:color-mix(in srgb,var(--brand-navy) 8%,var(--brand-white));color:var(--brand-navy);font-size:9px
+}
+.hr-tabs button.active{background:var(--brand-white);color:var(--brand-navy);box-shadow:0 4px 14px rgba(37,58,85,.08)}
+.hr-tabs button.active span{background:var(--brand-navy);color:var(--brand-white)}
+
+.hr-details-toolbar{
+  display:grid;
+  grid-template-columns:minmax(230px,1.5fr) repeat(2,minmax(135px,.75fr)) repeat(2,minmax(125px,.68fr)) auto;
+  align-items:end;gap:9px;padding:12px;border-radius:15px;
+  background:color-mix(in srgb,var(--brand-navy) 2.5%,var(--brand-white))
+}
+.hr-filter-search,.hr-filter-field{display:grid;gap:5px;min-width:0}
+.hr-filter-search>span,.hr-filter-field>span{color:var(--muted);font-size:9px;font-weight:800}
+.hr-filter-search .input-with-icon{min-width:0}
+.hr-filter-search input,.hr-filter-field select,.hr-filter-field input{
+  width:100%;min-height:40px;border:1px solid color-mix(in srgb,var(--brand-navy) 14%,var(--brand-white));
+  border-radius:10px;background:var(--brand-white);color:var(--brand-navy);padding:9px 10px;font-size:11px
+}
+.hr-filter-search input{padding-inline-start:34px}
+.hr-toolbar-actions{display:flex;align-items:center;gap:7px;min-height:40px}
+.hr-toolbar-actions .export-actions.compact{margin:0}
+.hr-toolbar-actions .btn{white-space:nowrap}
+
+.hr-visited-projects,.hr-details-section{border-radius:15px;box-shadow:0 4px 14px rgba(37,58,85,.025)}
+.hr-subsection-title{padding:13px 15px;align-items:flex-start;background:color-mix(in srgb,var(--brand-navy) 2%,var(--brand-white))}
+.hr-subsection-title>div:first-child{min-width:0}
+.hr-subsection-title h4{font-size:13px}
+.hr-subsection-title p{margin:3px 0 0;color:var(--muted);font-size:9px;line-height:1.6}
+.hr-section-total{display:grid;justify-items:end;gap:1px}
+.hr-section-total span{font-size:9px}
+.hr-section-total strong{color:var(--brand-navy);font-size:15px}
+.hr-visited-projects .project-chip-list{gap:8px;padding:11px 13px}
+.hr-visited-projects .project-chip{
+  min-height:36px;padding:8px 11px;border-radius:10px;transition:.16s ease
+}
+.hr-visited-projects .project-chip:hover{border-color:color-mix(in srgb,var(--brand-gold) 55%,var(--brand-white));transform:translateY(-1px)}
+.hr-visited-projects .project-chip.active{
+  border-color:var(--brand-gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand-gold) 18%,transparent)
+}
+
+.hr-attendance-legend{display:flex;gap:7px;flex-wrap:wrap;padding:11px 13px 0}
+.hr-attendance-legend span{
+  display:inline-flex;align-items:center;min-height:29px;padding:5px 9px;border-radius:999px;
+  border:1px solid var(--border);font-size:9px;font-weight:800;background:var(--brand-white)
+}
+.hr-attendance-legend .legend-present{color:var(--success);border-color:var(--success-border);background:var(--success-soft)}
+.hr-attendance-legend .legend-excused{color:var(--warning);border-color:var(--warning-border);background:var(--warning-soft)}
+.hr-attendance-legend .legend-unexcused{color:var(--danger);border-color:var(--danger-border);background:var(--danger-soft)}
+.hr-attendance-legend .legend-upcoming{color:var(--muted)}
+
+.hr-absence-overview{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:11px 13px 13px
+}
+.hr-absence-card{
+  overflow:hidden;border:1px solid var(--border);border-radius:13px;background:var(--brand-white)
+}
+.hr-absence-card.excused{border-color:var(--warning-border)}
+.hr-absence-card.unexcused{border-color:var(--danger-border)}
+.hr-absence-card header{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-bottom:1px solid var(--border)
+}
+.hr-absence-card.excused header{background:var(--warning-soft)}
+.hr-absence-card.unexcused header{background:var(--danger-soft)}
+.hr-absence-card header span{display:block;color:var(--brand-navy);font-size:11px;font-weight:900}
+.hr-absence-card header small{display:block;margin-top:2px;color:var(--muted);font-size:8px}
+.hr-absence-card header strong{
+  min-width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:var(--brand-white);
+  color:var(--brand-navy);font-size:12px
+}
+.hr-absence-days{display:grid;gap:0}
+.hr-absence-day{
+  display:grid;grid-template-columns:105px minmax(0,1fr);gap:10px;align-items:center;
+  padding:9px 12px;border-bottom:1px solid color-mix(in srgb,var(--brand-navy) 8%,var(--brand-white))
+}
+.hr-absence-day:last-child{border-bottom:0}
+.hr-absence-day b{font-size:10px;color:var(--brand-navy)}
+.hr-absence-day p{margin:0;color:var(--muted);font-size:9px;line-height:1.6;overflow-wrap:anywhere}
+.hr-absence-empty{padding:13px;color:var(--muted);font-size:9px}
+
+.hr-table-wrap{border-top:1px solid var(--border)}
+.hr-readable-table th{
+  position:sticky;top:0;z-index:1;background:color-mix(in srgb,var(--brand-navy) 5%,var(--brand-white));
+  color:var(--brand-navy);font-size:10px
+}
+.hr-readable-table td{vertical-align:middle;font-size:11px}
+.hr-readable-table tbody tr:nth-child(even){background:color-mix(in srgb,var(--brand-navy) 1.8%,var(--brand-white))}
+.hr-readable-table tbody tr:hover{background:color-mix(in srgb,var(--brand-gold) 5%,var(--brand-white))}
+.hr-date-cell{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--muted);font-weight:700}
+.hr-money-cell{color:var(--brand-navy);white-space:nowrap}
+.attendance-table .attendance-row.is-absent{background:color-mix(in srgb,var(--danger) 3%,var(--brand-white))}
+.attendance-table .attendance-row.is-present{background:color-mix(in srgb,var(--success) 2%,var(--brand-white))}
+.hr-absence-excused{color:var(--warning);font-weight:800}
+.hr-absence-unexcused{color:var(--danger);font-weight:800}
+.friday-label{
+  display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
+  background:color-mix(in srgb,var(--brand-gold) 10%,var(--brand-white));
+  border:1px solid color-mix(in srgb,var(--brand-gold) 30%,var(--brand-white));
+  color:var(--brand-navy);font-size:9px;font-weight:800
+}
+
+@media(max-width:1280px){
+  .modal-card.modal-hr{width:min(1180px,98vw)}
+  .hr-kpi-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .hr-details-toolbar{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .hr-filter-search{grid-column:span 2}
+  .hr-toolbar-actions{grid-column:span 3;justify-content:flex-start}
+}
+@media(max-width:760px){
+  .modal-backdrop:has(.modal-hr){padding:0}
+  .modal-card.modal-hr{width:100vw;max-height:100vh;border-radius:0}
+  .hr-person-hero{grid-template-columns:1fr;padding:13px}
+  .hr-person-avatar{width:48px;height:48px;flex-basis:48px;border-radius:14px;font-size:18px}
+  .hr-person-copy h2{font-size:18px}
+  .hr-due-card strong{font-size:23px}
+  .hr-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .hr-kpi-card{min-height:86px;padding:10px}
+  .hr-kpi-card strong{font-size:17px}
+  .hr-tabs{width:100%}
+  .hr-tabs button{flex:1;padding-inline:8px}
+  .hr-details-toolbar{display:flex;flex-direction:column;align-items:stretch}
+  .hr-filter-search,.hr-filter-field{width:100%}
+  .hr-toolbar-actions{width:100%;flex-wrap:wrap}
+  .hr-absence-overview{grid-template-columns:1fr}
+  .hr-absence-day{grid-template-columns:90px minmax(0,1fr)}
+  .hr-table-wrap{overflow:auto}
+  .hr-readable-table{min-width:820px}
+}
