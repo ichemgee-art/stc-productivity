@@ -8,6 +8,7 @@ import { date, number } from '../lib/format'
 import Modal from '../components/Modal'
 import EmptyState from '../components/EmptyState'
 import ExportButtons from '../components/ExportButtons'
+import PageIntro from '../components/PageIntro'
 import { smartIncludes } from '../lib/smartSearch'
 
 export default function ProjectsPage() {
@@ -96,8 +97,14 @@ export default function ProjectsPage() {
 
   return (
     <div className="page-stack">
+      <PageIntro
+        eyebrow="إدارة البيانات الأساسية"
+        title="إدارة المشاريع"
+        description="إضافة وتعديل وتعطيل وحذف المشاريع بأمان مع الحفاظ على التاريخ التشغيلي."
+        actions={permissions.canManageProjects ? <button className="btn btn-primary" onClick={() => setEditing({ id: null, name: '', active: true })}><Plus size={16} /> إضافة مشروع</button> : null}
+      />
       <section className="panel" ref={exportRef}>
-        <div className="filters-bar"><div className="input-with-icon grow"><Search size={16} /><input placeholder="بحث باسم المشروع..." value={queryText} onChange={(e) => setQueryText(e.target.value)} /></div><select value={activeFilter} onChange={(e) => setActiveFilter(e.target.value)}><option value="">كل الحالات</option><option value="active">نشط</option><option value="inactive">معطل</option></select><ExportButtons filename="projects-filtered" excelSheets={excelSheets} pdfTarget={exportRef} compact />{permissions.canManageProjects ? <button className="btn btn-primary" onClick={() => setEditing({ id: null, name: '', active: true })}><Plus size={16} /> إضافة مشروع</button> : null}</div>
+        <div className="filters-bar"><div className="input-with-icon grow"><Search size={16} /><input placeholder="بحث باسم المشروع..." value={queryText} onChange={(e) => setQueryText(e.target.value)} /></div><select value={activeFilter} onChange={(e) => setActiveFilter(e.target.value)}><option value="">كل الحالات</option><option value="active">نشط</option><option value="inactive">معطل</option></select><ExportButtons filename="projects-filtered" excelSheets={excelSheets} pdfTarget={exportRef} compact /></div>
         <div className="data-table-wrap"><table className="data-table"><thead><tr><th>المشروع</th><th>الحالة</th><th>مرات الاستخدام</th><th>آخر استخدام</th>{permissions.canManageProjects ? <th>إدارة</th> : null}</tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td className="strong-cell">{row.name}</td><td><span className={`status-pill ${row.active ? 'success' : 'neutral'}`}>{row.active ? 'نشط' : 'معطل'}</span></td><td>{number(row.use_count)}</td><td>{date(row.last_used)}</td>{permissions.canManageProjects ? <td><div className="row-actions project-actions"><button className="btn btn-ghost btn-sm" type="button" onClick={() => setEditing(row)}><Pencil size={15} /> تعديل</button><button className="btn btn-danger-soft btn-sm" type="button" disabled={deleteMutation.isPending} onClick={() => removeProject(row)}><Trash2 size={15} /> حذف</button></div></td> : null}</tr>)}</tbody></table>{!rows.length ? (
     <EmptyState
       title={(query.data || []).length ? 'مفيش مشاريع مطابقة للفلاتر' : 'لسه مفيش مشاريع'}

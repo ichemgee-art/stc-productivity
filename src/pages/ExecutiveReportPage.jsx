@@ -424,7 +424,7 @@ export default function ExecutiveReportPage() {
     <div className="page-stack executive-report-page project-history-report-page">
       <section className="project-history-search no-print">
         <div className="project-history-search__copy">
-          <span className="eyebrow">PROJECT FULL HISTORY</span>
+          <span className="eyebrow">السجل التاريخي للمشروع</span>
           <h2>حصر كامل بالمشروع</h2>
           <p>اكتب اسم المشروع، والنظام يجمع كل عملياته من أول يوم مسجل لآخر يوم عبر كل الدورات والشهور.</p>
         </div>

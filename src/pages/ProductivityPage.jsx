@@ -1,20 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { CheckCircle2, Pencil, Pin, Search, Trash2, XCircle } from 'lucide-react'
+import { CheckCircle2, Columns3, Pencil, Pin, RotateCcw, Rows3, Save, Search, SlidersHorizontal, Trash2, X, XCircle } from 'lucide-react'
 import { useCycle } from '../context/CycleContext'
 import { useAuth } from '../context/AuthContext'
 import { appService } from '../services/appService'
-import { date, money, monthName, number } from '../lib/format'
+import { date, money, number } from '../lib/format'
 import EmptyState from '../components/EmptyState'
 import Modal from '../components/Modal'
 import SubmissionForm from '../components/SubmissionForm'
 import ExportButtons from '../components/ExportButtons'
 import { useFeedback } from '../context/FeedbackContext'
 import { smartIncludes } from '../lib/smartSearch'
-import { playFeedbackSound } from '../lib/feedbackSound'
 
 const PRODUCTIVITY_PIN_KEY = 'stc_productivity_pinned_column'
+const PRODUCTIVITY_COLUMNS_KEY = 'stc_productivity_hidden_columns'
+const PRODUCTIVITY_DENSITY_KEY = 'stc_productivity_table_density'
+const PRODUCTIVITY_SAVED_VIEW_KEY = 'stc_productivity_saved_view'
 const PRODUCTIVITY_PIN_COLUMNS = [
   { key: 'date', label: 'التاريخ' },
   { key: 'project', label: 'المشروع' },
@@ -50,10 +52,15 @@ export default function ProductivityPage() {
   const [section, setSection] = useState('')
   const [review, setReview] = useState(routeReview)
   const [pinnedColumn, setPinnedColumn] = useState(getInitialPinnedColumn)
+  const [density, setDensity] = useState(() => typeof window === 'undefined' ? 'comfortable' : (window.localStorage.getItem(PRODUCTIVITY_DENSITY_KEY) || 'comfortable'))
+  const [hiddenColumns, setHiddenColumns] = useState(() => {
+    if (typeof window === 'undefined') return new Set()
+    try { return new Set(JSON.parse(window.localStorage.getItem(PRODUCTIVITY_COLUMNS_KEY) || '[]')) } catch { return new Set() }
+  })
+  const [showColumnMenu, setShowColumnMenu] = useState(false)
   const [editing, setEditing] = useState(null)
   const [editInitial, setEditInitial] = useState(null)
   const [error, setError] = useState('')
-  const [reviewCelebration, setReviewCelebration] = useState(null)
   const exportRef = useRef(null)
 
   const rowsQuery = useQuery({
@@ -73,6 +80,14 @@ export default function ProductivityPage() {
   useEffect(() => {
     window.localStorage.setItem(PRODUCTIVITY_PIN_KEY, pinnedColumn)
   }, [pinnedColumn])
+
+  useEffect(() => {
+    window.localStorage.setItem(PRODUCTIVITY_DENSITY_KEY, density)
+  }, [density])
+
+  useEffect(() => {
+    window.localStorage.setItem(PRODUCTIVITY_COLUMNS_KEY, JSON.stringify([...hiddenColumns]))
+  }, [hiddenColumns])
 
   const pinClass = (key, base = '') => [base, pinnedColumn === key ? 'productivity-pinned-column' : ''].filter(Boolean).join(' ')
 
@@ -127,15 +142,10 @@ export default function ProductivityPage() {
       await invalidate()
 
       if (completedAllReviews) {
-        setReviewCelebration({
-          cycle: monthName(monthKey),
-          operations: rows.length,
-        })
-        playFeedbackSound('success')
+        feedback.success('اكتملت مراجعة الدورة', `تم اعتماد جميع عمليات الدورة (${rows.length} عملية).`)
         return
       }
 
-      if (!variables.reviewed) setReviewCelebration(null)
       feedback.success(variables.reviewed ? 'تم اعتماد المراجعة' : 'تم إلغاء المراجعة', 'تم تحديث حالة العملية بنجاح.')
     },
     onError: (err) => feedback.error('تعذر تحديث المراجعة', err.message || 'حدث خطأ غير متوقع'),
@@ -210,137 +220,186 @@ export default function ProductivityPage() {
     try { await deleteMutation.mutateAsync(row.id) } catch (err) { setError(err.message) }
   }
 
+  const isColumnVisible = (key) => !hiddenColumns.has(key)
+  const toggleColumn = (key) => setHiddenColumns((current) => {
+    const next = new Set(current)
+    if (next.has(key)) next.delete(key)
+    else next.add(key)
+    return next
+  })
+
+  const clearFilters = () => {
+    setQueryText('')
+    setProject('')
+    setSection('')
+    setReview('')
+  }
+
+  const activeFilters = [
+    queryText ? { key: 'search', label: `بحث: ${queryText}`, clear: () => setQueryText('') } : null,
+    project ? { key: 'project', label: `المشروع: ${project}`, clear: () => setProject('') } : null,
+    section ? { key: 'section', label: `القطاع: ${section}`, clear: () => setSection('') } : null,
+    review ? { key: 'review', label: review === 'reviewed' ? 'تمت المراجعة' : 'لم تتم المراجعة', clear: () => setReview('') } : null,
+  ].filter(Boolean)
+
+  const saveView = () => {
+    window.localStorage.setItem(PRODUCTIVITY_SAVED_VIEW_KEY, JSON.stringify({
+      queryText, project, section, review, pinnedColumn, density, hiddenColumns: [...hiddenColumns],
+    }))
+    feedback.success('تم حفظ العرض', 'سيتم الاحتفاظ بالفلاتر والأعمدة وطريقة عرض الجدول على هذا الجهاز.')
+  }
+
+  const restoreView = () => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(PRODUCTIVITY_SAVED_VIEW_KEY) || 'null')
+      if (!saved) return feedback.alert('لا يوجد عرض محفوظ', 'اضبط الفلاتر والأعمدة ثم اضغط «حفظ العرض».')
+      setQueryText(saved.queryText || '')
+      setProject(saved.project || '')
+      setSection(saved.section || '')
+      setReview(saved.review || '')
+      setPinnedColumn(saved.pinnedColumn || '')
+      setDensity(saved.density || 'comfortable')
+      setHiddenColumns(new Set(saved.hiddenColumns || []))
+      feedback.success('تم استعادة العرض', 'تم تطبيق الفلاتر وإعدادات الجدول المحفوظة.')
+    } catch {
+      feedback.error('تعذر استعادة العرض', 'إعدادات العرض المحفوظة غير صالحة.')
+    }
+  }
+
   if (!selectedCycle || rowsQuery.isLoading || refsQuery.isLoading) return <div className="page-loader">جاري تحميل البيانات المحسوبة...</div>
   if (rowsQuery.isError || refsQuery.isError) return <div className="page-error">{rowsQuery.error?.message || refsQuery.error?.message || 'تعذر تحميل البيانات المحسوبة'}</div>
 
   return (
     <div className="page-stack">
-      <section className="productivity-export-toolbar">
+      <section className="productivity-export-toolbar productivity-page-toolbar">
         <div className="productivity-export-toolbar__copy">
-          <strong>لوحة الإنتاجية</strong>
-          <span>تصدير البيانات المعروضة حاليًا بنفس الفلاتر المطبقة</span>
+          <strong>عمليات الدورة</strong>
+          <span>ابحث وراجع وخصص الجدول بالطريقة المناسبة لشغلك.</span>
         </div>
-        <ExportButtons
-          filename={`productivity-${monthKey}`}
-          excelSheets={excelSheets}
-          pdfTarget={exportRef}
-        />
+        <div className="productivity-toolbar-actions">
+          <button className="btn btn-ghost btn-sm" type="button" onClick={saveView}><Save size={15} /> حفظ العرض</button>
+          <button className="btn btn-ghost btn-sm" type="button" onClick={restoreView}><RotateCcw size={15} /> استعادة</button>
+          <ExportButtons filename={`productivity-${monthKey}`} excelSheets={excelSheets} pdfTarget={exportRef} />
+        </div>
       </section>
 
-      <section className="summary-line">
+      <section className="summary-line productivity-summary">
         <div><span>النتائج المعروضة</span><strong>{number(filtered.length)} عملية</strong></div>
         <div><span>إجمالي الأمتار</span><strong>{number(totals.meters)} م</strong></div>
         <div><span>إجمالي الإنتاجية</span><strong>{money(totals.total)}</strong></div>
       </section>
 
-      <section className="panel" ref={exportRef}>
-        <div className="filters-bar">
+      <section className="panel productivity-workspace" ref={exportRef}>
+        <div className="filters-bar productivity-filters">
           <div className="input-with-icon grow"><Search size={16} /><input value={queryText} onChange={(e) => setQueryText(e.target.value)} placeholder="بحث في المشروع، القطاع، الفريق أو الملاحظات..." /></div>
           <select value={project} onChange={(e) => setProject(e.target.value)}><option value="">كل المشاريع</option>{projects.map((item) => <option key={item}>{item}</option>)}</select>
           <select value={section} onChange={(e) => setSection(e.target.value)}><option value="">كل القطاعات</option>{sections.map((item) => <option key={item}>{item}</option>)}</select>
           <select value={review} onChange={(e) => setReview(e.target.value)}><option value="">كل حالات المراجعة</option><option value="reviewed">تمت المراجعة</option><option value="not_reviewed">لم تتم المراجعة</option></select>
-          <label className="pin-column-control" title="ثبّت عمود أثناء السكرول العرضي">
-            <Pin size={15} />
-            <select value={pinnedColumn} onChange={(e) => setPinnedColumn(e.target.value)} aria-label="تثبيت عمود">
-              <option value="">بدون تثبيت</option>
-              {PRODUCTIVITY_PIN_COLUMNS.filter((item) => item.key !== 'management' || permissions.isAdmin).map((item) => (
-                <option key={item.key} value={item.key}>تثبيت: {item.label}</option>
-              ))}
-            </select>
-          </label>
+
+          <div className="table-view-controls">
+            <label className="pin-column-control" title="ثبّت عمود أثناء السكرول العرضي">
+              <Pin size={15} />
+              <select value={pinnedColumn} onChange={(e) => setPinnedColumn(e.target.value)} aria-label="تثبيت عمود">
+                <option value="">بدون تثبيت</option>
+                {PRODUCTIVITY_PIN_COLUMNS.filter((item) => item.key !== 'management' || permissions.isAdmin).map((item) => (
+                  <option key={item.key} value={item.key}>تثبيت: {item.label}</option>
+                ))}
+              </select>
+            </label>
+
+            <div className="column-picker-wrap">
+              <button className="btn btn-ghost btn-sm" type="button" onClick={() => setShowColumnMenu((value) => !value)}><Columns3 size={15} /> الأعمدة</button>
+              {showColumnMenu ? (
+                <>
+                  <button className="floating-backdrop" type="button" aria-label="إغلاق اختيار الأعمدة" onClick={() => setShowColumnMenu(false)} />
+                  <div className="column-picker-popover">
+                    <header><strong>الأعمدة الظاهرة</strong><small>خصص الجدول حسب مهمتك الحالية.</small></header>
+                    {PRODUCTIVITY_PIN_COLUMNS.filter((item) => item.key !== 'management' || permissions.isAdmin).map((item) => (
+                      <label key={item.key}><input type="checkbox" checked={isColumnVisible(item.key)} onChange={() => toggleColumn(item.key)} /><span>{item.label}</span></label>
+                    ))}
+                  </div>
+                </>
+              ) : null}
+            </div>
+
+            <button className="btn btn-ghost btn-sm density-toggle" type="button" onClick={() => setDensity((value) => value === 'compact' ? 'comfortable' : 'compact')} title="تغيير كثافة الجدول">
+              {density === 'compact' ? <Rows3 size={15} /> : <SlidersHorizontal size={15} />}
+              {density === 'compact' ? 'مريح' : 'مضغوط'}
+            </button>
+          </div>
         </div>
+
+        {activeFilters.length ? (
+          <div className="active-filter-bar">
+            <span>الفلاتر النشطة</span>
+            <div>{activeFilters.map((item) => <button type="button" key={item.key} onClick={item.clear}>{item.label}<X size={13} /></button>)}</div>
+            <button className="clear-all-filters" type="button" onClick={clearFilters}>مسح الكل</button>
+          </div>
+        ) : null}
+
         {error ? <div className="inline-error">{error}</div> : null}
+
         <div className="data-table-wrap productivity-scroll">
-          <table className="data-table">
+          <table className={`data-table productivity-table density-${density}`}>
             <thead><tr>
-              <th className={pinClass('date')}>التاريخ</th>
-              <th className={pinClass('project')}>المشروع</th>
-              <th className={pinClass('engineers')}>المهندسين</th>
-              <th className={pinClass('technicians')}>الفنيين</th>
-              <th className={pinClass('assistants')}>المساعدين</th>
-              <th className={pinClass('workers')}>العمال</th>
-              <th className={pinClass('section')}>القطاع</th>
-              <th className={pinClass('meters')}>الأمتار</th>
-              <th className={pinClass('price')}>سعر المتر</th>
-              <th className={pinClass('total')}>الإجمالي</th>
-              <th className={pinClass('review')}>المراجعة</th>
-              {permissions.isAdmin ? <th className={pinClass('management')}>إدارة</th> : null}
-              <th className={pinClass('notes')}>ملاحظات</th>
+              {isColumnVisible('date') ? <th className={pinClass('date')}>التاريخ</th> : null}
+              {isColumnVisible('project') ? <th className={pinClass('project')}>المشروع</th> : null}
+              {isColumnVisible('engineers') ? <th className={pinClass('engineers')}>المهندسين</th> : null}
+              {isColumnVisible('technicians') ? <th className={pinClass('technicians')}>الفنيين</th> : null}
+              {isColumnVisible('assistants') ? <th className={pinClass('assistants')}>المساعدين</th> : null}
+              {isColumnVisible('workers') ? <th className={pinClass('workers')}>العمال</th> : null}
+              {isColumnVisible('section') ? <th className={pinClass('section')}>القطاع</th> : null}
+              {isColumnVisible('meters') ? <th className={pinClass('meters')}>الأمتار</th> : null}
+              {isColumnVisible('price') ? <th className={pinClass('price')}>سعر المتر</th> : null}
+              {isColumnVisible('total') ? <th className={pinClass('total')}>الإجمالي</th> : null}
+              {isColumnVisible('review') ? <th className={pinClass('review')}>المراجعة</th> : null}
+              {permissions.isAdmin && isColumnVisible('management') ? <th className={pinClass('management')}>إدارة</th> : null}
+              {isColumnVisible('notes') ? <th className={pinClass('notes')}>ملاحظات</th> : null}
             </tr></thead>
             <tbody>
               {filtered.map((row) => (
                 <tr key={row.id}>
-                  <td className={pinClass('date')}>{date(row.work_date)}</td>
-                  <td className={pinClass('project', 'strong-cell')}>{row.project}</td>
-                  <td className={pinClass('engineers')}>{row.engineers || '—'}</td>
-                  <td className={pinClass('technicians')}>{row.technicians || '—'}{row.technician_count ? <small className="count-chip">{row.technician_count}</small> : null}</td>
-                  <td className={pinClass('assistants')}>{row.assistants || '—'}{row.assistant_count ? <small className="count-chip">{row.assistant_count}</small> : null}</td>
-                  <td className={pinClass('workers')}>{row.workers || '—'}{row.worker_count ? <small className="count-chip">{row.worker_count}</small> : null}</td>
-                  <td className={pinClass('section')}>{row.section}</td>
-                  <td className={pinClass('meters')}>{number(row.meters)}</td>
-                  <td className={pinClass('price')}>{money(row.price_per_meter)}</td>
-                  <td className={pinClass('total', 'strong-cell')}>{money(row.total)}</td>
-                  <td className={pinClass('review')}><span className={`status-pill ${row.review_status === 'reviewed' ? 'success' : 'warning'}`}>{row.review_status === 'reviewed' ? 'تمت المراجعة' : 'لم تتم'}</span></td>
-                  {permissions.isAdmin ? <td className={pinClass('management')}><div className="row-actions"><button className="icon-btn small" title="تعديل" onClick={() => beginEdit(row)}><Pencil size={15} /></button><button className="icon-btn small" title={row.review_status === 'reviewed' ? 'إلغاء المراجعة' : 'اعتماد المراجعة'} onClick={() => reviewMutation.mutate({ id: row.id, reviewed: row.review_status !== 'reviewed' })}>{row.review_status === 'reviewed' ? <XCircle size={15} /> : <CheckCircle2 size={15} />}</button><button className="icon-btn small danger" title="حذف" onClick={() => remove(row)}><Trash2 size={15} /></button></div></td> : null}
-                  <td className={pinClass('notes', 'operation-note-column')}>
-                    <SubmissionNoteCell
-                      row={row}
-                      editable={permissions.canEditSubmissionNotes}
-                      saving={noteMutation.isPending && noteMutation.variables?.id === row.id}
-                      onSave={(id, note) => noteMutation.mutateAsync({ id, note })}
-                    />
-                  </td>
+                  {isColumnVisible('date') ? <td className={pinClass('date')}>{date(row.work_date)}</td> : null}
+                  {isColumnVisible('project') ? <td className={pinClass('project', 'strong-cell')}>{row.project}</td> : null}
+                  {isColumnVisible('engineers') ? <td className={pinClass('engineers')}>{row.engineers || '—'}</td> : null}
+                  {isColumnVisible('technicians') ? <td className={pinClass('technicians')}>{row.technicians || '—'}{row.technician_count ? <small className="count-chip">{row.technician_count}</small> : null}</td> : null}
+                  {isColumnVisible('assistants') ? <td className={pinClass('assistants')}>{row.assistants || '—'}{row.assistant_count ? <small className="count-chip">{row.assistant_count}</small> : null}</td> : null}
+                  {isColumnVisible('workers') ? <td className={pinClass('workers')}>{row.workers || '—'}{row.worker_count ? <small className="count-chip">{row.worker_count}</small> : null}</td> : null}
+                  {isColumnVisible('section') ? <td className={pinClass('section')}>{row.section}</td> : null}
+                  {isColumnVisible('meters') ? <td className={pinClass('meters')}>{number(row.meters)}</td> : null}
+                  {isColumnVisible('price') ? <td className={pinClass('price')}>{money(row.price_per_meter)}</td> : null}
+                  {isColumnVisible('total') ? <td className={pinClass('total', 'strong-cell')}>{money(row.total)}</td> : null}
+                  {isColumnVisible('review') ? <td className={pinClass('review')}><span className={`status-pill ${row.review_status === 'reviewed' ? 'success' : 'warning'}`}>{row.review_status === 'reviewed' ? 'تمت المراجعة' : 'لم تتم'}</span></td> : null}
+                  {permissions.isAdmin && isColumnVisible('management') ? <td className={pinClass('management')}><div className="row-actions"><button className="icon-btn small" title="تعديل" onClick={() => beginEdit(row)}><Pencil size={15} /></button><button className="icon-btn small" title={row.review_status === 'reviewed' ? 'إلغاء المراجعة' : 'اعتماد المراجعة'} onClick={() => reviewMutation.mutate({ id: row.id, reviewed: row.review_status !== 'reviewed' })}>{row.review_status === 'reviewed' ? <XCircle size={15} /> : <CheckCircle2 size={15} />}</button><button className="icon-btn small danger" title="حذف" onClick={() => remove(row)}><Trash2 size={15} /></button></div></td> : null}
+                  {isColumnVisible('notes') ? (
+                    <td className={pinClass('notes', 'operation-note-column')}>
+                      <SubmissionNoteCell
+                        row={row}
+                        editable={permissions.canEditSubmissionNotes}
+                        saving={noteMutation.isPending && noteMutation.variables?.id === row.id}
+                        onSave={(id, note) => noteMutation.mutateAsync({ id, note })}
+                      />
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
           </table>
+
           {!filtered.length ? (
             <EmptyState
               title={rows.length ? 'مفيش نتائج مطابقة للفلاتر' : 'الدورة دي لسه مفيهاش عمليات'}
               description={rows.length ? 'غيّر البحث أو الفلاتر عشان تظهر العمليات.' : 'ابدأ بإضافة أول عملية إنتاجية للدورة الحالية.'}
               actionLabel={rows.length ? 'مسح الفلاتر' : permissions.canCreateSubmission ? 'إدخال أول عملية' : ''}
               actionTo={!rows.length && permissions.canCreateSubmission ? '/productivity/new' : ''}
-              onAction={rows.length ? () => { setQueryText(''); setProject(''); setSection(''); setReview('') } : undefined}
-              hint={rows.length ? 'البيانات موجودة، لكن الفلاتر الحالية مخفية النتائج.' : 'أول عملية هتبدأ تظهر تلقائيًا في الـDashboard والتقارير.'}
+              onAction={rows.length ? clearFilters : undefined}
+              hint={rows.length ? 'البيانات موجودة، لكن الفلاتر الحالية مخفية النتائج.' : 'أول عملية هتبدأ تظهر تلقائيًا في لوحة الإنتاجية والتقارير.'}
             />
           ) : null}
         </div>
       </section>
 
-      {reviewCelebration ? (
-        <div className="review-complete-backdrop" role="presentation">
-          <div className="review-confetti" aria-hidden="true">
-            {Array.from({ length: 24 }, (_, index) => (
-              <i
-                key={index}
-                style={{
-                  left: `${4 + ((index * 17) % 92)}%`,
-                  animationDelay: `${(index % 8) * 0.07}s`,
-                  animationDuration: `${1.55 + (index % 5) * 0.13}s`,
-                  transform: `rotate(${(index * 29) % 180}deg)`,
-                }}
-              />
-            ))}
-          </div>
-          <section className="review-complete-modal" role="dialog" aria-modal="true" aria-labelledby="review-complete-title">
-            <div className="review-complete-check" aria-hidden="true">
-              <CheckCircle2 size={92} strokeWidth={1.7} />
-            </div>
-            <span className="review-complete-eyebrow">REVIEW COMPLETED</span>
-            <h2 id="review-complete-title">تمت مراجعة كل البيانات</h2>
-            <p>خلصت مراجعة جميع عمليات {reviewCelebration.cycle} بنجاح.</p>
-            <div className="review-complete-stat">
-              <span>إجمالي العمليات المُراجَعة</span>
-              <strong>{number(reviewCelebration.operations)} عملية</strong>
-            </div>
-            <button className="btn btn-primary review-complete-close" type="button" onClick={() => setReviewCelebration(null)}>
-              <CheckCircle2 size={18} /> تمام
-            </button>
-          </section>
-        </div>
-      ) : null}
-
-      <Modal open={Boolean(editing)} title="تعديل عملية الإنتاجية" onClose={() => { setEditing(null); setEditInitial(null) }} width="xl">
+      <Modal open={Boolean(editing)} title="تعديل عملية الإنتاجية" onClose={() => { setEditing(null); setEditInitial(null) }} width="drawer">
         {!editInitial || refsQuery.isLoading ? <div className="page-loader">جاري تحميل بيانات العملية...</div> : <SubmissionForm references={refsQuery.data} initial={editInitial} onSubmit={update} submitting={updateMutation.isPending} mode="edit" />}
       </Modal>
     </div>
