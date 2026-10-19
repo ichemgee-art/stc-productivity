@@ -22,6 +22,7 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
   const [team, setTeam] = useState(initial?.team || emptyTeam)
   const [submitMode, setSubmitMode] = useState('save')
   const [formError, setFormError] = useState('')
+  const [projectOpen, setProjectOpen] = useState(false)
 
   const matchedSection = references.sections.find((item) => item.name === form.section)
   const section = matchedSection || (
@@ -74,6 +75,12 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
     () => references.projects.filter((item) => item.active || (mode === 'edit' && item.name === form.project)),
     [references.projects, mode, form.project],
   )
+  const projectSuggestions = useMemo(() => {
+    const q = form.project.trim().toLocaleLowerCase('ar')
+    return projectOptions
+      .filter((item) => !q || item.name.toLocaleLowerCase('ar').includes(q))
+      .slice(0, 8)
+  }, [projectOptions, form.project])
 
   const personName = (id) => references.people.find((person) => person.id === id)?.name || '—'
   const teamNames = useMemo(() => ({
@@ -86,12 +93,11 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
   const dateValid = Boolean(form.work_date && (!businessToday || form.work_date <= businessToday))
   const projectValid = Boolean(form.project.trim() && form.project.trim().length <= 200)
   const ready = Boolean(dateValid && projectValid && form.section && metersValid)
+  const operationReady = Boolean(dateValid && projectValid && form.section && metersValid)
+  const teamSelected = Object.values(team).some((items) => items.length > 0)
   const steps = {
-    date: dateValid,
-    project: projectValid,
-    section: Boolean(form.section),
-    meters: metersValid,
-    team: true,
+    operation: operationReady,
+    team: teamSelected,
     review: ready,
   }
 
@@ -171,13 +177,10 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
 
   return (
     <form ref={formRef} className="submission-form" onSubmit={submit} noValidate>
-      <div className="entry-flow" aria-label="ترتيب إدخال الإنتاجية">
-        <span className={steps.date ? 'completed' : ''}><b>{steps.date ? <Check size={13} /> : '1'}</b> التاريخ</span>
-        <span className={steps.project ? 'completed' : ''}><b>{steps.project ? <Check size={13} /> : '2'}</b> المشروع</span>
-        <span className={steps.section ? 'completed' : ''}><b>{steps.section ? <Check size={13} /> : '3'}</b> القطاع</span>
-        <span className={steps.meters ? 'completed' : ''}><b>{steps.meters ? <Check size={13} /> : '4'}</b> الأمتار</span>
-        <span className={steps.team ? 'completed' : ''}><b>{steps.team ? <Check size={13} /> : '5'}</b> فريق العمل</span>
-        <span className={steps.review ? 'completed' : ''}><b>{steps.review ? <Check size={13} /> : '6'}</b> مراجعة وحفظ</span>
+      <div className="entry-flow entry-flow-simple" aria-label="مراحل إدخال الإنتاجية">
+        <span className={steps.operation ? 'completed' : ''}><b>{steps.operation ? <Check size={13} /> : '1'}</b><span><strong>بيانات العملية</strong><small>التاريخ · المشروع · القطاع · الأمتار</small></span></span>
+        <span className={steps.team ? 'completed' : ''}><b>{steps.team ? <Check size={13} /> : '2'}</b><span><strong>فريق التنفيذ</strong><small>{teamSelected ? 'تم اختيار الفريق' : 'اختياري حسب العملية'}</small></span></span>
+        <span className={steps.review ? 'completed' : ''}><b>{steps.review ? <Check size={13} /> : '3'}</b><span><strong>مراجعة وحفظ</strong><small>{ready ? 'جاهزة للحفظ' : 'راجع البيانات المطلوبة'}</small></span></span>
       </div>
 
       <section className="form-section">
@@ -190,12 +193,36 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
             <span>التاريخ</span>
             <input type="date" max={businessToday || undefined} required value={form.work_date} onChange={(e) => setField('work_date', e.target.value)} />
           </label>
-          <label className="field">
+          <label className="field project-combobox-field">
             <span>المشروع</span>
-            <input list="project-options" maxLength={200} required value={form.project} onChange={(e) => setField('project', e.target.value)} placeholder="اختار أو اكتب مشروع جديد" />
-            <datalist id="project-options">
-              {projectOptions.map((project) => <option key={project.id} value={project.name} />)}
-            </datalist>
+            <div className="project-combobox">
+              <input
+                maxLength={200}
+                required
+                autoComplete="off"
+                value={form.project}
+                onFocus={() => setProjectOpen(true)}
+                onBlur={() => window.setTimeout(() => setProjectOpen(false), 120)}
+                onChange={(e) => { setField('project', e.target.value); setProjectOpen(true) }}
+                placeholder="ابحث عن مشروع أو اكتب اسم جديد"
+              />
+              {projectOpen ? (
+                <div className="project-combobox-menu">
+                  {projectSuggestions.length ? projectSuggestions.map((project) => (
+                    <button type="button" key={project.id} onMouseDown={(e) => e.preventDefault()} onClick={() => { setField('project', project.name); setProjectOpen(false) }}>
+                      <strong>{project.name}</strong>
+                      <small>مشروع موجود</small>
+                    </button>
+                  )) : (
+                    <div className="project-combobox-new">
+                      <strong>اسم مشروع جديد</strong>
+                      <small>سيتم التحقق من الاسم ومنع التكرار عند الحفظ.</small>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+            <small className="field-helper">اختار من المشاريع الموجودة أو اكتب اسم جديد عند الحاجة.</small>
           </label>
           <label className="field">
             <span>القطاع</span>
