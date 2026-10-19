@@ -87,6 +87,11 @@ export default function PersonDetailsModal({ person, selectedCycle, monthKey, on
     return [...map.entries()].sort((a, b) => b[1] - a[1])
   }, [data.operations])
 
+  const absenceBreakdown = useMemo(() => ({
+    excused: data.attendance.filter((row) => row.status === 'absent' && row.absence_type === 'excused'),
+    unexcused: data.attendance.filter((row) => row.status === 'absent' && row.absence_type === 'unexcused'),
+  }), [data.attendance])
+
   const clearFilters = () => {
     setSearch('')
     setProject('')
@@ -122,7 +127,7 @@ export default function PersonDetailsModal({ person, selectedCycle, monthKey, on
   ]
 
   return (
-    <Modal open={Boolean(person)} title={`ملف الموظف — ${person?.name || ''}`} onClose={onClose} width="xl">
+    <Modal open={Boolean(person)} title={`ملف الموظف — ${person?.name || ''}`} onClose={onClose} width="hr">
       {query.isLoading ? <div className="page-loader">جاري تحميل ملف الموظف...</div> : query.isError ? <div className="page-error">{query.error?.message || 'تعذر تحميل تفاصيل الشخص'}</div> : (
         <div className="person-details-report hr-person-report" ref={printRef}>
           <section className="hr-person-hero no-pdf-break">
@@ -272,6 +277,44 @@ export default function PersonDetailsModal({ person, selectedCycle, monthKey, on
                 <span className="legend-excused">غياب بإذن: {number(stats.excused)}</span>
                 <span className="legend-unexcused">غياب بدون إذن: {number(stats.unexcused)}</span>
                 <span className="legend-upcoming">قادم: {number(stats.upcoming)}</span>
+              </div>
+
+              <div className="hr-absence-overview no-pdf-break">
+                <article className="hr-absence-card excused">
+                  <header>
+                    <div>
+                      <span>الغياب بإذن</span>
+                      <small>التواريخ والملاحظات المسجلة</small>
+                    </div>
+                    <strong>{number(absenceBreakdown.excused.length)}</strong>
+                  </header>
+                  <div className="hr-absence-days">
+                    {absenceBreakdown.excused.length ? absenceBreakdown.excused.map((row) => (
+                      <div className="hr-absence-day" key={`excused-${row.attendance_date}`}>
+                        <b>{date(row.attendance_date)}</b>
+                        <p>{row.note || 'لا توجد ملاحظة مسجلة'}</p>
+                      </div>
+                    )) : <div className="hr-absence-empty">لا يوجد غياب بإذن في هذه الدورة.</div>}
+                  </div>
+                </article>
+
+                <article className="hr-absence-card unexcused">
+                  <header>
+                    <div>
+                      <span>الغياب بدون إذن</span>
+                      <small>التواريخ والملاحظات المسجلة</small>
+                    </div>
+                    <strong>{number(absenceBreakdown.unexcused.length)}</strong>
+                  </header>
+                  <div className="hr-absence-days">
+                    {absenceBreakdown.unexcused.length ? absenceBreakdown.unexcused.map((row) => (
+                      <div className="hr-absence-day" key={`unexcused-${row.attendance_date}`}>
+                        <b>{date(row.attendance_date)}</b>
+                        <p>{row.note || 'لا توجد ملاحظة مسجلة'}</p>
+                      </div>
+                    )) : <div className="hr-absence-empty">لا يوجد غياب بدون إذن في هذه الدورة.</div>}
+                  </div>
+                </article>
               </div>
 
               <div className="data-table-wrap compact-table hr-table-wrap">
