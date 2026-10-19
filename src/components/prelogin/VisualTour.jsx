@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import TourCard from './TourCard'
 import TourLightbox from './TourLightbox'
 
+// Demo-only assets. Replace with fully anonymized WebP/AVIF product imagery when approved.
 const tourItems = [
   {
     id: 'dashboard',
