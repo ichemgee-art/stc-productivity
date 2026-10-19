@@ -222,13 +222,13 @@ export default function ComparisonPage() {
   return (
     <div className="page-stack" ref={printRef}>
       <section className="comparison-hero">
-        <div><span className="eyebrow">مقارنة تشغيلية</span><h2>مقارنة الشهور</h2><p>مقارنة تشغيلية شاملة بين دورتين: الإنتاجية، المشاريع، القطاعات، الحضور والغياب وأداء الأفراد.</p></div>
+        <div><span className="eyebrow">MONTH-TO-MONTH</span><h2>مقارنة الشهور</h2><p>مقارنة تشغيلية شاملة بين دورتين: الإنتاجية، المشاريع، القطاعات، الحضور والغياب وأداء الأفراد.</p></div>
         <ArrowLeftRight size={34} />
       </section>
 
       <section className="comparison-controls" data-html2canvas-ignore="true">
         <label><span>الشهر السابق</span><select value={previousKey} onChange={(e) => setPreviousKey(e.target.value)}>{cycles.map((cycle) => <option key={cycle.month_key} value={cycle.month_key}>{monthName(cycle.month_key)}</option>)}</select></label>
-        <span className="comparison-vs">مقابل</span>
+        <span className="comparison-vs">VS</span>
         <label><span>الشهر الحالي</span><select value={currentKey} onChange={(e) => setCurrentKey(e.target.value)}>{cycles.map((cycle) => <option key={cycle.month_key} value={cycle.month_key}>{monthName(cycle.month_key)}</option>)}</select></label>
         <ExportButtons filename={`comparison-${previousKey}-vs-${currentKey}`} excelSheets={excelSheets} pdfTarget={printRef} compact />
       </section>

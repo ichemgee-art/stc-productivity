@@ -9,7 +9,6 @@ import Modal from '../components/Modal'
 import EmptyState from '../components/EmptyState'
 import PersonDetailsModal from '../components/PersonDetailsModal'
 import { useFeedback } from '../context/FeedbackContext'
-import PageIntro from '../components/PageIntro'
 
 export default function PeoplePage({ role = 'engineer' }) {
   const { monthKey, selectedCycle } = useCycle()
@@ -160,12 +159,10 @@ export default function PeoplePage({ role = 'engineer' }) {
 
   return (
     <div className="page-stack">
-      <PageIntro
-        eyebrow="ملف الفريق"
-        title={rolePlural[role]}
-        description="ملخص سريع للـHR: المستحقات، الحضور، الغياب وأحدث الملاحظات لكل شخص."
-        actions={permissions.canManagePeople ? <button className="btn btn-primary" onClick={() => setEditing({ id: null, name: '', role, active: true })}><Plus size={17} /> إضافة اسم</button> : null}
-      />
+      <section className="people-headline">
+        <div><span className="eyebrow">TEAM PERFORMANCE</span><h2>{rolePlural[role]}</h2><p>ملخص سريع للـHR: المستحقات، الحضور، الغياب وأحدث الملاحظات لكل شخص.</p></div>
+        {permissions.canManagePeople ? <button className="btn btn-primary" onClick={() => setEditing({ id: null, name: '', role, active: true })}><Plus size={17} /> إضافة اسم</button> : null}
+      </section>
 
       <section className="people-grid people-grid-pro">
         {rows.map((person) => {

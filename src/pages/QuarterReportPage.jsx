@@ -604,7 +604,7 @@ export default function QuarterReportPage() {
     <div className="page-stack executive-report-page quarter-report-page">
       <section className="quarter-selector no-print">
         <div className="quarter-selector__copy">
-          <span className="eyebrow">تحليل ربع سنوي</span>
+          <span className="eyebrow">QUARTER CALCULATOR</span>
           <h2>حساب الكوارتر</h2>
           <p>اختار 3 دورات مختلفة، والنظام يجمع التشغيل والأفراد والحضور والمستحقات في تقرير واحد.</p>
         </div>

@@ -10,7 +10,6 @@ import EmptyState from '../components/EmptyState'
 import ExportButtons from '../components/ExportButtons'
 import { useFeedback } from '../context/FeedbackContext'
 import { smartIncludes } from '../lib/smartSearch'
-import PageIntro from '../components/PageIntro'
 
 export default function SectionsPage() {
   const { permissions } = useAuth()
@@ -105,12 +104,14 @@ export default function SectionsPage() {
 
   return (
     <div className="page-stack">
-      <PageIntro
-        eyebrow="إدارة البيانات الأساسية"
-        title="إدارة القطاعات والأسعار"
-        description="تحكم في القطاعات وسعر المتر والحالة التشغيلية مع الحفاظ على الأسعار التاريخية."
-        actions={permissions.canManageSections ? <button className="btn btn-primary management-add-btn" onClick={() => setEditing({ id: null, name: '', price_per_meter: 0, active: true })}><Plus size={18} /> إضافة قطاع جديد</button> : null}
-      />
+      <section className="management-hero">
+        <div>
+          <span className="eyebrow">SECTION MANAGEMENT</span>
+          <h2>إدارة القطاعات والأسعار</h2>
+          <p>أضف قطاع جديد، عدّل الاسم أو سعر المتر، عطّل القطاع أو احذفه بأمان من نفس الشاشة.</p>
+        </div>
+        {permissions.canManageSections ? <button className="btn btn-primary management-add-btn" onClick={() => setEditing({ id: null, name: '', price_per_meter: 0, active: true })}><Plus size={18} /> إضافة قطاع جديد</button> : null}
+      </section>
       <section className="panel" ref={exportRef}>
         <div className="filters-bar"><div className="input-with-icon grow"><Search size={16} /><input placeholder="بحث باسم القطاع..." value={queryText} onChange={(e) => setQueryText(e.target.value)} /></div><select value={activeFilter} onChange={(e) => setActiveFilter(e.target.value)}><option value="">كل الحالات</option><option value="active">نشط</option><option value="inactive">معطل</option></select><ExportButtons filename={`sections-${monthKey}`} excelSheets={excelSheets} pdfTarget={exportRef} compact /></div>
         <div className="data-table-wrap"><table className="data-table"><thead><tr><th>القطاع</th><th>سعر المتر الحالي</th><th>الحالة</th><th>مهام الدورة</th><th>أمتار الدورة</th><th>إيراد الدورة</th>{permissions.canManageSections ? <th>إدارة</th> : null}</tr></thead><tbody>{rows.map((row) => { const stats = statMap.get(row.name) || {}; return <tr key={row.id}><td className="strong-cell">{row.name}</td><td>{money(row.price_per_meter)}</td><td><span className={`status-pill ${row.active ? 'success' : 'neutral'}`}>{row.active ? 'نشط' : 'معطل'}</span></td><td>{number(stats.tasks)}</td><td>{number(stats.meters)}</td><td>{money(stats.revenue)}</td>{permissions.canManageSections ? <td><div className="row-actions section-actions"><button className="btn btn-ghost btn-sm" type="button" onClick={() => setEditing(row)}><Pencil size={15} /> تعديل</button><button className="btn btn-danger-soft btn-sm" type="button" onClick={() => removeSection(row)}><Trash2 size={15} /> حذف</button></div></td> : null}</tr> })}</tbody></table>{!rows.length ? (

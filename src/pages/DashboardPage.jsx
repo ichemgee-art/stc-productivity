@@ -402,7 +402,7 @@ export default function DashboardPage() {
     <div className="page-stack management-dashboard">
       <section className="hero-strip dashboard-hero management-dashboard-hero">
         <div>
-          <span className="eyebrow">ملخص الإدارة</span>
+          <span className="eyebrow">MANAGEMENT DASHBOARD</span>
           <h2>لوحة الإدارة التنفيذية</h2>
           <p>مقارنة حتى اليوم {view.elapsedDays} من الدورة مع نفس عدد الأيام من {monthName(view.previousKey)} — عشان المقارنة ما تتظلمش بسبب دورة غير مكتملة.</p>
         </div>
