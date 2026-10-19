@@ -36,7 +36,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=...
 VITE_ACCOUNT_REQUEST_URL=https://YOUR_INTERNAL_REQUEST_URL
 ```
 
-`VITE_ACCOUNT_REQUEST_URL` controls the public “request access” CTA. It may point to an internal request page or a configured `mailto:` link. Do not commit personal or sensitive email addresses. If the variable is omitted, the UI falls back to a documented `[SUPPORT_EMAIL]` placeholder rather than exposing a real address.
+`VITE_ACCOUNT_REQUEST_URL` controls the public “request access” CTA. It may point to an internal request page or a configured `mailto:` link. Do not commit personal or sensitive email addresses. If the variable is omitted, the UI opens a recipient-less `mailto:` draft whose body contains the documented `[SUPPORT_EMAIL]` placeholder rather than exposing a real address.
 
 ## Vercel
 
