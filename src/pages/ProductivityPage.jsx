@@ -5,14 +5,13 @@ import { CheckCircle2, Columns3, Pencil, Pin, RotateCcw, Rows3, Save, Search, Sl
 import { useCycle } from '../context/CycleContext'
 import { useAuth } from '../context/AuthContext'
 import { appService } from '../services/appService'
-import { date, money, monthName, number } from '../lib/format'
+import { date, money, number } from '../lib/format'
 import EmptyState from '../components/EmptyState'
 import Modal from '../components/Modal'
 import SubmissionForm from '../components/SubmissionForm'
 import ExportButtons from '../components/ExportButtons'
 import { useFeedback } from '../context/FeedbackContext'
 import { smartIncludes } from '../lib/smartSearch'
-import { playFeedbackSound } from '../lib/feedbackSound'
 
 const PRODUCTIVITY_PIN_KEY = 'stc_productivity_pinned_column'
 const PRODUCTIVITY_COLUMNS_KEY = 'stc_productivity_hidden_columns'
@@ -62,7 +61,6 @@ export default function ProductivityPage() {
   const [editing, setEditing] = useState(null)
   const [editInitial, setEditInitial] = useState(null)
   const [error, setError] = useState('')
-  const [reviewCelebration, setReviewCelebration] = useState(null)
   const exportRef = useRef(null)
 
   const rowsQuery = useQuery({
@@ -144,15 +142,10 @@ export default function ProductivityPage() {
       await invalidate()
 
       if (completedAllReviews) {
-        setReviewCelebration({
-          cycle: monthName(monthKey),
-          operations: rows.length,
-        })
-        playFeedbackSound('success')
+        feedback.success('اكتملت مراجعة الدورة', `تم اعتماد جميع عمليات الدورة (${rows.length} عملية).`)
         return
       }
 
-      if (!variables.reviewed) setReviewCelebration(null)
       feedback.success(variables.reviewed ? 'تم اعتماد المراجعة' : 'تم إلغاء المراجعة', 'تم تحديث حالة العملية بنجاح.')
     },
     onError: (err) => feedback.error('تعذر تحديث المراجعة', err.message || 'حدث خطأ غير متوقع'),
@@ -405,39 +398,6 @@ export default function ProductivityPage() {
           ) : null}
         </div>
       </section>
-
-      {reviewCelebration ? (
-        <div className="review-complete-backdrop" role="presentation">
-          <div className="review-confetti" aria-hidden="true">
-            {Array.from({ length: 24 }, (_, index) => (
-              <i
-                key={index}
-                style={{
-                  left: `${4 + ((index * 17) % 92)}%`,
-                  animationDelay: `${(index % 8) * 0.07}s`,
-                  animationDuration: `${1.55 + (index % 5) * 0.13}s`,
-                  transform: `rotate(${(index * 29) % 180}deg)`,
-                }}
-              />
-            ))}
-          </div>
-          <section className="review-complete-modal" role="dialog" aria-modal="true" aria-labelledby="review-complete-title">
-            <div className="review-complete-check" aria-hidden="true">
-              <CheckCircle2 size={92} strokeWidth={1.7} />
-            </div>
-            <span className="review-complete-eyebrow">REVIEW COMPLETED</span>
-            <h2 id="review-complete-title">تمت مراجعة كل البيانات</h2>
-            <p>خلصت مراجعة جميع عمليات {reviewCelebration.cycle} بنجاح.</p>
-            <div className="review-complete-stat">
-              <span>إجمالي العمليات المُراجَعة</span>
-              <strong>{number(reviewCelebration.operations)} عملية</strong>
-            </div>
-            <button className="btn btn-primary review-complete-close" type="button" onClick={() => setReviewCelebration(null)}>
-              <CheckCircle2 size={18} /> تمام
-            </button>
-          </section>
-        </div>
-      ) : null}
 
       <Modal open={Boolean(editing)} title="تعديل عملية الإنتاجية" onClose={() => { setEditing(null); setEditInitial(null) }} width="drawer">
         {!editInitial || refsQuery.isLoading ? <div className="page-loader">جاري تحميل بيانات العملية...</div> : <SubmissionForm references={refsQuery.data} initial={editInitial} onSubmit={update} submitting={updateMutation.isPending} mode="edit" />}
