@@ -78,7 +78,7 @@ export default function TourLightbox({ item, onClose, restoreFocusTo }) {
           </button>
         </header>
         <figure className="tour-lightbox__figure">
-          <img src={item.image} alt={item.alt} width="1200" height="760" decoding="async" />
+          <img src={item.image} alt={item.alt} width="1200" height="760" loading="lazy" decoding="async" />
         </figure>
       </section>
     </div>
