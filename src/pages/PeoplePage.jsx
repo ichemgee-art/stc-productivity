@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { MessageSquareText, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, BriefcaseBusiness, CalendarCheck2, CalendarX2, CircleDollarSign, MessageSquareText, Pencil, Plus, Ruler, Trash2 } from 'lucide-react'
 import { appService } from '../services/appService'
 import { useCycle } from '../context/CycleContext'
 import { useAuth } from '../context/AuthContext'
@@ -18,30 +18,82 @@ export default function PeoplePage({ role = 'engineer' }) {
   const [editing, setEditing] = useState(null)
   const [details, setDetails] = useState(null)
 
-
-  const statsQuery = useQuery({ queryKey: ['cycle-data', 'people-stats', monthKey, role], queryFn: () => appService.personStats(monthKey, role), enabled: Boolean(monthKey) })
+  const statsQuery = useQuery({
+    queryKey: ['cycle-data', 'people-stats', monthKey, role],
+    queryFn: () => appService.personStats(monthKey, role),
+    enabled: Boolean(monthKey),
+  })
   const notesQuery = useQuery({
     queryKey: ['cycle-data', 'person-notes', monthKey, role],
     queryFn: () => appService.personNotes(role, selectedCycle.cycle_start, selectedCycle.cycle_end),
     enabled: Boolean(selectedCycle),
+  })
+  const attendanceQuery = useQuery({
+    queryKey: ['cycle-data', 'attendance', monthKey],
+    queryFn: () => appService.attendance(monthKey),
+    enabled: Boolean(monthKey),
   })
   const peopleQuery = useQuery({ queryKey: ['people', role], queryFn: () => appService.people(role) })
 
   const rows = useMemo(() => {
     const statsMap = new Map((statsQuery.data || []).map((row) => [row.person_id, row]))
     const notesMap = new Map()
+    const attendanceMap = new Map()
+
     ;(notesQuery.data || []).forEach((note) => {
       const current = notesMap.get(note.person_id) || []
       current.push(note)
       notesMap.set(note.person_id, current)
     })
 
-    return (peopleQuery.data || []).map((person) => ({
-      ...person,
-      ...(statsMap.get(person.id) || { tasks: 0, meters: 0, earnings: 0, present_days: 0, absent_days: 0, upcoming_days: 0, pool_percent: 0 }),
-      operation_notes: notesMap.get(person.id) || [],
-    }))
-  }, [statsQuery.data, notesQuery.data, peopleQuery.data])
+    ;(attendanceQuery.data || []).forEach((row) => {
+      const current = attendanceMap.get(row.person_id) || []
+      current.push(row)
+      attendanceMap.set(row.person_id, current)
+    })
+
+    return (peopleQuery.data || []).map((person) => {
+      const stats = statsMap.get(person.id) || { tasks: 0, meters: 0, earnings: 0, present_days: 0, absent_days: 0, upcoming_days: 0, pool_percent: 0 }
+      const operationNotes = notesMap.get(person.id) || []
+      const attendanceRows = attendanceMap.get(person.id) || []
+      const attendanceNotes = attendanceRows
+        .filter((row) => row.note)
+        .map((row) => ({
+          note: row.note,
+          note_date: row.attendance_date,
+          kind: row.status === 'absent' ? 'ملاحظة غياب' : 'ملاحظة حضور',
+          project: '',
+        }))
+
+      const operationNoteCandidates = operationNotes
+        .filter((note) => note.note)
+        .map((note) => ({
+          note: note.note,
+          note_date: note.work_date,
+          kind: 'ملاحظة عملية',
+          project: note.project || '',
+        }))
+
+      const noteCandidates = [...operationNoteCandidates, ...attendanceNotes]
+        .sort((a, b) => String(b.note_date || '').localeCompare(String(a.note_date || '')))
+
+      const present = Number(stats.present_days || 0)
+      const absent = Number(stats.absent_days || 0)
+      const completedDays = present + absent
+
+      return {
+        ...person,
+        ...stats,
+        operation_notes: operationNotes,
+        excused_absence_days: attendanceRows.filter((row) => row.status === 'absent' && row.absence_type === 'excused').length,
+        unexcused_absence_days: attendanceRows.filter((row) => row.status === 'absent' && row.absence_type === 'unexcused').length,
+        friday_present_days: attendanceRows.filter((row) => row.status === 'present' && row.is_friday).length,
+        attendance_rate: completedDays ? (present / completedDays) * 100 : 0,
+        latest_note: noteCandidates[0] || null,
+        notes_count: noteCandidates.length,
+      }
+    })
+  }, [statsQuery.data, notesQuery.data, attendanceQuery.data, peopleQuery.data])
 
   const refreshPeople = async () => {
     await queryClient.invalidateQueries({ queryKey: ['people'] })
@@ -100,81 +152,123 @@ export default function PeoplePage({ role = 'engineer' }) {
 
   const showDetails = (person) => setDetails(person)
 
-  const loading = statsQuery.isLoading || notesQuery.isLoading || peopleQuery.isLoading
-  const loadError = statsQuery.error || notesQuery.error || peopleQuery.error
+  const loading = statsQuery.isLoading || notesQuery.isLoading || attendanceQuery.isLoading || peopleQuery.isLoading
+  const loadError = statsQuery.error || notesQuery.error || attendanceQuery.error || peopleQuery.error
   if (loading) return <div className="page-loader">جاري تحميل بيانات {rolePlural[role] || 'الأفراد'}...</div>
   if (loadError) return <div className="page-error">{loadError.message || 'تعذر تحميل بيانات الأفراد'}</div>
 
   return (
     <div className="page-stack">
       <section className="people-headline">
-        <div><span className="eyebrow">TEAM PERFORMANCE</span><h2>{rolePlural[role]}</h2><p>أداء كل شخص في الدورة المعروضة مع الحضور والغياب والمستحقات.</p></div>
+        <div><span className="eyebrow">TEAM PERFORMANCE</span><h2>{rolePlural[role]}</h2><p>ملخص سريع للـHR: المستحقات، الحضور، الغياب وأحدث الملاحظات لكل شخص.</p></div>
         {permissions.canManagePeople ? <button className="btn btn-primary" onClick={() => setEditing({ id: null, name: '', role, active: true })}><Plus size={17} /> إضافة اسم</button> : null}
       </section>
+
       <section className="people-grid people-grid-pro">
-        {rows.map((person) => (
-          <article className={`person-profile-card ${!person.active ? 'inactive' : ''}`} key={person.id}>
-            <div className="person-profile-top">
-              <div className="person-profile-main">
-                <div className="person-avatar-pro">{person.name.slice(0, 1)}</div>
-                <div className="person-profile-copy">
-                  <strong>{person.name}</strong>
-                  <div><span className="role-badge">{roleLabels[role]}</span><span className={`availability-dot ${person.active ? 'active' : ''}`}>{person.active ? 'نشط' : 'معطل'}</span></div>
-                </div>
-              </div>
-              {permissions.canManagePeople ? (
-                <div className="card-head-actions">
-                  <button className="icon-btn small" title="تعديل" onClick={() => setEditing(person)}><Pencil size={16} /></button>
-                  <button className="icon-btn small danger" title="حذف" onClick={() => removePerson(person)}><Trash2 size={16} /></button>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="person-kpi-primary">
-              <div><span>عدد العمليات</span><strong>{number(person.tasks)}</strong></div>
-              <div><span>إجمالي الأمتار</span><strong>{number(person.meters)} <small>م</small></strong></div>
-              <div className="earnings-kpi"><span>المستحق</span><strong>{money(person.earnings)}</strong></div>
-            </div>
-
-            <div className="person-attendance-row">
-              <div className="attendance-stat present"><span>أيام الحضور</span><strong>{number(person.present_days)}</strong></div>
-              <div className="attendance-stat absent"><span>أيام الغياب</span><strong>{number(person.absent_days)}</strong></div>
-              <div className="pool-stat"><span>نسبة Pool</span><strong>{number(person.pool_percent)}%</strong></div>
-            </div>
-
-            {person.operation_notes.length ? (
-              <div className="person-operation-notes">
-                <div className="person-operation-notes__head">
-                  <span><MessageSquareText size={15} /> ملاحظات العمليات</span>
-                  <b>{person.operation_notes.length}</b>
-                </div>
-                <div className="person-operation-notes__list">
-                  {person.operation_notes.map((note) => (
-                    <div className="person-operation-note" key={note.submission_id}>
-                      <p>{note.note}</p>
-                      <small>{note.project || 'بدون مشروع'} · {date(note.work_date)}</small>
+        {rows.map((person) => {
+          const hasEngineerZeroDues = person.role === 'engineer' && Number(person.earnings || 0) === 0
+          return (
+            <article className={`person-profile-card person-hr-card ${!person.active ? 'inactive' : ''}`} key={person.id}>
+              <header className="person-profile-top person-hr-card__header">
+                <div className="person-profile-main">
+                  <div className="person-avatar-pro">{person.name.slice(0, 1)}</div>
+                  <div className="person-profile-copy">
+                    <strong>{person.name}</strong>
+                    <div>
+                      <span className="role-badge">{roleLabels[role]}</span>
+                      <span className={`availability-dot ${person.active ? 'active' : ''}`}>{person.active ? 'نشط' : 'معطل'}</span>
                     </div>
-                  ))}
+                  </div>
                 </div>
-                {person.operation_notes.length > 2 ? <span className="person-operation-notes__more">مرّر داخل الملاحظات لعرض الكل</span> : null}
-              </div>
-            ) : null}
 
-            <button className="person-details-cta" type="button" onClick={() => showDetails(person)}>
-              <span>عرض الملف التشغيلي الكامل</span>
-              <small>العمليات · المشاريع · الملاحظات · الحضور · الغياب · الفلاتر</small>
-            </button>
-          </article>
-        ))}
+                {permissions.canManagePeople ? (
+                  <div className="card-head-actions person-card-admin-actions" aria-label="إدارة الشخص">
+                    <button className="icon-btn small" title="تعديل البيانات" aria-label="تعديل البيانات" onClick={() => setEditing(person)}><Pencil size={15} /></button>
+                    <button className="icon-btn small danger" title="حذف الاسم" aria-label="حذف الاسم" onClick={() => removePerson(person)}><Trash2 size={15} /></button>
+                  </div>
+                ) : null}
+              </header>
+
+              <section className={`person-earnings-hero ${hasEngineerZeroDues ? 'is-zero-engineer' : ''}`}>
+                <div className="person-earnings-hero__icon"><CircleDollarSign size={21} /></div>
+                <div className="person-earnings-hero__copy">
+                  <span>مستحق الدورة</span>
+                  {hasEngineerZeroDues ? <strong className="person-no-dues">لا يوجد مستحق إنتاجية</strong> : <strong>{money(person.earnings)}</strong>}
+                  <small>{Number(person.tasks || 0) ? `${number(person.tasks)} عملية · ${number(person.meters)} م` : 'لا توجد عمليات مسجلة في الدورة'}</small>
+                </div>
+                {Number(person.pool_percent || 0) > 0 ? <span className="person-pool-badge">Pool {number(person.pool_percent)}%</span> : null}
+              </section>
+
+              <section className="person-hr-attendance">
+                <div className="person-attendance-rate">
+                  <span>نسبة الحضور</span>
+                  <strong>{number(person.attendance_rate, 1)}%</strong>
+                </div>
+
+                <div className="person-attendance-box is-present">
+                  <div className="person-attendance-box__icon"><CalendarCheck2 size={18} /></div>
+                  <div>
+                    <span>الحضور</span>
+                    <strong>{number(person.present_days)} يوم</strong>
+                    <small>{person.friday_present_days ? `منها ${number(person.friday_present_days)} جمعة` : 'أيام الحضور المسجلة'}</small>
+                  </div>
+                </div>
+
+                <div className="person-attendance-box is-absent">
+                  <div className="person-attendance-box__icon"><CalendarX2 size={18} /></div>
+                  <div>
+                    <span>الغياب</span>
+                    <strong>{number(person.absent_days)} يوم</strong>
+                    <small><b>{number(person.excused_absence_days)} بإذن</b><i>·</i><b>{number(person.unexcused_absence_days)} بدون إذن</b></small>
+                  </div>
+                </div>
+              </section>
+
+              <section className="person-work-strip" aria-label="ملخص الإنتاجية">
+                <span><BriefcaseBusiness size={15} /><b>{number(person.tasks)}</b> عملية</span>
+                <span><Ruler size={15} /><b>{number(person.meters)}</b> م</span>
+              </section>
+
+              {person.latest_note ? (
+                <section className="person-latest-note">
+                  <div className="person-latest-note__head">
+                    <span><MessageSquareText size={15} /> آخر ملاحظة</span>
+                    {person.notes_count > 1 ? <b>+{number(person.notes_count - 1)}</b> : null}
+                  </div>
+                  <p>{person.latest_note.note}</p>
+                  <small>
+                    {person.latest_note.kind}
+                    {person.latest_note.project ? ` · ${person.latest_note.project}` : ''}
+                    {person.latest_note.note_date ? ` · ${date(person.latest_note.note_date)}` : ''}
+                  </small>
+                </section>
+              ) : (
+                <section className="person-latest-note is-empty">
+                  <div className="person-latest-note__head"><span><MessageSquareText size={15} /> الملاحظات</span></div>
+                  <p>لا توجد ملاحظات مسجلة خلال الدورة.</p>
+                </section>
+              )}
+
+              <button className="person-details-cta person-hr-card__cta" type="button" onClick={() => showDetails(person)}>
+                <div>
+                  <span>عرض ملف الموظف</span>
+                  <small>المستحقات · العمليات · الحضور والغياب · الملاحظات</small>
+                </div>
+                <ArrowLeft size={18} />
+              </button>
+            </article>
+          )
+        })}
+
         {!rows.length ? (
-    <EmptyState
-      title={`لسه مفيش ${rolePlural[role] || 'أفراد'}`}
-      description="أضف أول اسم عشان يظهر في فريق التنفيذ والحضور والتقارير."
-      actionLabel={permissions.canManagePeople ? 'إضافة أول اسم' : ''}
-      onAction={permissions.canManagePeople ? () => setEditing({ id: null, name: '', role, active: true }) : undefined}
-      hint="الأسماء النشطة فقط بتظهر للاختيار في عمليات الإنتاجية الجديدة."
-    />
-  ) : null}
+          <EmptyState
+            title={`لسه مفيش ${rolePlural[role] || 'أفراد'}`}
+            description="أضف أول اسم عشان يظهر في فريق التنفيذ والحضور والتقارير."
+            actionLabel={permissions.canManagePeople ? 'إضافة أول اسم' : ''}
+            onAction={permissions.canManagePeople ? () => setEditing({ id: null, name: '', role, active: true }) : undefined}
+            hint="الأسماء النشطة فقط بتظهر للاختيار في عمليات الإنتاجية الجديدة."
+          />
+        ) : null}
       </section>
 
       <Modal open={Boolean(editing)} title={editing?.id ? 'تعديل بيانات الشخص' : 'إضافة اسم جديد'} onClose={() => setEditing(null)}>
