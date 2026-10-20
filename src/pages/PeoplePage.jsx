@@ -10,6 +10,13 @@ import EmptyState from '../components/EmptyState'
 import PersonDetailsModal from '../components/PersonDetailsModal'
 import { useFeedback } from '../context/FeedbackContext'
 
+const roleAvatars = {
+  engineer: '/avatars/engineer.png',
+  technician: '/avatars/technician.png',
+  assistant: '/avatars/assistant-technician.png',
+  worker: '/avatars/worker.png',
+}
+
 export default function PeoplePage({ role = 'engineer' }) {
   const { monthKey, selectedCycle } = useCycle()
   const { permissions } = useAuth()
@@ -171,7 +178,18 @@ export default function PeoplePage({ role = 'engineer' }) {
             <article className={`person-profile-card person-hr-card ${!person.active ? 'inactive' : ''}`} key={person.id}>
               <header className="person-profile-top person-hr-card__header">
                 <div className="person-profile-main">
-                  <div className="person-avatar-pro">{person.name.slice(0, 1)}</div>
+                  <div className="person-avatar-pro">
+                    {Object.hasOwn(roleAvatars, person.role) ? (
+                      <img
+                        src={roleAvatars[person.role]}
+                        alt={`صورة رمزية — ${roleLabels[person.role]} — ${person.name}`}
+                        width={52}
+                        height={52}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : person.name.slice(0, 1)}
+                  </div>
                   <div className="person-profile-copy">
                     <strong>{person.name}</strong>
                     <div>

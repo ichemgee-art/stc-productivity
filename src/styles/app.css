@@ -5585,11 +5585,18 @@ html[data-theme="dark"] .review-complete-stat strong{
 }
 .person-hr-card .person-avatar-pro{
   width:52px;height:52px;
+  overflow:hidden;
   border-radius:16px;
   background:color-mix(in srgb,var(--brand-navy) 4%,var(--brand-white));
   border-color:color-mix(in srgb,var(--brand-navy) 12%,var(--brand-white));
   color:var(--brand-gold);
   box-shadow:none;
+}
+.person-hr-card .person-avatar-pro img{
+  display:block;
+  width:100%;height:100%;
+  object-fit:cover;
+  border-radius:inherit;
 }
 .person-hr-card .role-badge{
   background:color-mix(in srgb,var(--brand-navy) 4%,var(--brand-white));
