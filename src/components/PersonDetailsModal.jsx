@@ -7,6 +7,7 @@ import Modal from './Modal'
 import EmptyState from './EmptyState'
 import ExportButtons from './ExportButtons'
 import { smartIncludes } from '../lib/smartSearch'
+import PersonAvatar from './PersonAvatar'
 
 const statusLabel = (row) => row.status === 'present' ? (row.is_friday ? 'حاضر (جمعة)' : 'حاضر') : row.status === 'absent' ? 'غياب' : 'قادم'
 const absenceLabel = (type) => type === 'excused' ? 'غياب بإذن' : type === 'unexcused' ? 'غياب بدون إذن' : '—'
@@ -132,7 +133,9 @@ export default function PersonDetailsModal({ person, selectedCycle, monthKey, on
         <div className="person-details-report hr-person-report" ref={printRef}>
           <section className="hr-person-hero no-pdf-break">
             <div className="hr-person-profile">
-              <div className="hr-person-avatar">{(person?.name || 'م').trim().charAt(0)}</div>
+              <div className="hr-person-avatar">
+                <PersonAvatar person={person} size={58}>{(person?.name || 'م').trim().charAt(0)}</PersonAvatar>
+              </div>
               <div className="hr-person-copy">
                 <span className="hr-eyebrow">ملخص الموارد البشرية</span>
                 <h2>{person?.name}</h2>
