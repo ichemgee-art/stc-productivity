@@ -83,3 +83,33 @@ These SVGs contain fictional names, projects, values, and a “بيانات تو
 8. Do not add a tour video unless it is captioned or silent, user-initiated, and ships with a poster image.
 
 The tour lightbox is keyboard accessible: it traps focus, closes with Escape or backdrop click, and restores focus to the card that opened it.
+
+
+## Supabase Data API grants
+
+Supabase stops auto-exposing newly created `public` tables to the Data API for existing projects on **2026-10-30**. This repository intentionally uses explicit Postgres grants.
+
+For every future migration that creates a table in `public`, treat these as one change:
+
+1. Create the table.
+2. Add the minimum explicit `GRANT`s needed by `anon`, `authenticated`, and/or `service_role`.
+3. Enable RLS.
+4. Add the required RLS policies.
+5. If the table uses an identity/serial sequence, grant sequence privileges only to roles that legitimately insert.
+
+Do not rely on default privileges. In this application, browser users normally have table `SELECT` access only; writes are performed through controlled RPCs. Never grant `anon` access unless the feature explicitly requires public access.
+
+Example:
+
+```sql
+create table public.example (...);
+
+grant select on public.example to authenticated;
+grant all privileges on public.example to service_role;
+
+alter table public.example enable row level security;
+
+-- Add the least-privilege policies required by the feature.
+```
+
+The migration `20261021062737_data_api_explicit_grants_20261021.sql` adopts the post-October-30 behavior for future objects created by `postgres` and preserves the current grants on existing application tables.
