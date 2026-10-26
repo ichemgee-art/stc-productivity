@@ -180,9 +180,8 @@ export default function AuditPage() {
   const restoreMutation = useMutation({
     mutationFn: appService.restoreAuditEvent,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['audit-log'] })
-      await queryClient.invalidateQueries({ queryKey: ['cycle-data'] })
-      await queryClient.invalidateQueries({ queryKey: ['person-full-details'] })
+      await queryClient.invalidateQueries()
+      await queryClient.refetchQueries({ type: 'active' })
       feedback.success('تم الاسترجاع', 'تمت إعادة البيانات السابقة وتسجيل عملية الاسترجاع في السجل.')
     },
     onError: (err) => feedback.error('تعذر الاسترجاع', err.message || 'حدث خطأ غير متوقع'),
