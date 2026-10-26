@@ -15,15 +15,19 @@ export default function NotificationCenter() {
   const [open, setOpen] = useState(false)
 
   const rowsQuery = useQuery({
-    queryKey: ['cycle-data', 'notification-rows', monthKey],
+    queryKey: ['cycle-data', 'productivity', monthKey],
     queryFn: () => appService.productivityRows(selectedCycle.cycle_start, selectedCycle.cycle_end),
     enabled: Boolean(selectedCycle),
+    refetchOnWindowFocus: true,
+    refetchInterval: 60_000,
   })
 
   const attendanceQuery = useQuery({
-    queryKey: ['cycle-data', 'notification-attendance', monthKey],
+    queryKey: ['cycle-data', 'attendance', monthKey],
     queryFn: () => appService.attendance(monthKey),
     enabled: Boolean(monthKey),
+    refetchOnWindowFocus: true,
+    refetchInterval: 60_000,
   })
 
   const items = useMemo(() => {
@@ -134,7 +138,16 @@ export default function NotificationCenter() {
       <button
         className={`icon-btn notification-trigger ${count ? 'has-alerts' : ''}`}
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={async () => {
+          const nextOpen = !open
+          setOpen(nextOpen)
+          if (nextOpen) {
+            await Promise.all([
+              rowsQuery.refetch(),
+              attendanceQuery.refetch(),
+            ])
+          }
+        }}
         title="التنبيهات"
         aria-label="التنبيهات"
         aria-expanded={open}
