@@ -258,3 +258,340 @@ html[data-theme="dark"] .project-progress-table tbody tr.is-linked td{background
   .progress-table-toolbar__actions select,.progress-table-toolbar__actions .btn{width:100%}
   .progress-table-scroll{max-height:none}
 }
+
+
+/* Project progress readability + editing UX — 2026-10-26 */
+.project-progress-page{
+  font-size:12px;
+}
+.progress-table-toolbar{
+  margin-bottom:14px;
+}
+.progress-table-toolbar__title strong{
+  font-size:19px;
+  line-height:1.45;
+}
+.progress-table-toolbar__title small{
+  margin-top:4px;
+  font-size:10px;
+  line-height:1.6;
+}
+.progress-table-toolbar__title>span{
+  padding:6px 9px;
+  font-size:8px;
+}
+.progress-table-toolbar__actions{
+  gap:10px;
+}
+.progress-table-toolbar__actions select,
+.progress-search input{
+  min-height:42px;
+  font-size:11px;
+}
+.progress-table-toolbar__actions .btn{
+  min-height:42px;
+  font-size:11px;
+  padding-inline:15px;
+}
+.progress-live-hint{
+  padding:13px 15px;
+}
+.progress-live-hint span{
+  font-size:10.5px;
+  line-height:1.75;
+}
+
+.project-progress-table{
+  min-width:2390px;
+  font-size:11.5px;
+}
+.project-progress-table th,
+.project-progress-table td{
+  padding:12px 12px;
+}
+.project-progress-table thead th{
+  font-size:11px;
+  line-height:1.7;
+}
+.project-progress-table thead tr:first-child th{height:48px}
+.project-progress-table thead tr:nth-child(2) th{top:48px;height:46px}
+.project-progress-table tbody td{
+  min-height:54px;
+  line-height:1.75;
+}
+.project-progress-table th:nth-child(1),
+.project-progress-table th:nth-child(2),
+.project-progress-table th:nth-child(3),
+.project-progress-table td:nth-child(1),
+.project-progress-table td:nth-child(2),
+.project-progress-table td:nth-child(3){width:126px}
+.project-progress-table th:nth-child(4),
+.project-progress-table td:nth-child(4){width:72px}
+.project-progress-table th:nth-child(5),
+.project-progress-table td:nth-child(5){width:260px}
+.project-progress-table th:nth-child(6),
+.project-progress-table td:nth-child(6){width:190px}
+.project-progress-table th:nth-child(7),
+.project-progress-table th:nth-child(8),
+.project-progress-table th:nth-child(9),
+.project-progress-table td:nth-child(7),
+.project-progress-table td:nth-child(8),
+.project-progress-table td:nth-child(9){width:132px}
+.project-progress-table th:nth-child(10),
+.project-progress-table td:nth-child(10){width:350px}
+.project-progress-table th:nth-child(11),
+.project-progress-table td:nth-child(11){width:225px}
+.project-progress-table th:nth-child(12),
+.project-progress-table td:nth-child(12){width:285px}
+.project-progress-table th:nth-child(13),
+.project-progress-table td:nth-child(13){width:380px}
+.progress-project-cell strong{
+  display:block;
+  color:var(--brand-navy);
+  font-size:12px;
+  font-weight:900;
+  line-height:1.7;
+}
+.progress-project-cell>small{
+  margin-top:6px;
+  font-size:8px;
+}
+.progress-metric-cell strong{
+  font-size:13px;
+}
+.progress-metric-cell>small{
+  margin-top:5px;
+  padding:3px 7px;
+  font-size:7px;
+}
+.progress-long-cell,
+.progress-notes-cell{
+  font-size:11.5px;
+  line-height:1.8;
+}
+
+.progress-actions-head,
+.progress-row-actions{
+  position:sticky!important;
+  left:0;
+  width:108px!important;
+  min-width:108px!important;
+  max-width:108px!important;
+  z-index:12!important;
+}
+.progress-actions-head{
+  background:var(--brand-navy)!important;
+  color:var(--brand-gold)!important;
+  box-shadow:5px 0 12px rgba(37,58,85,.12);
+}
+.progress-row-actions{
+  background:#fff!important;
+  box-shadow:5px 0 12px rgba(37,58,85,.08);
+}
+.project-progress-table tbody tr.is-linked .progress-row-actions{
+  background:color-mix(in srgb,var(--success) 1.8%,#fff)!important;
+}
+.project-progress-table tbody tr:hover .progress-row-actions{
+  background:#f8fafc!important;
+}
+.progress-edit-btn{
+  width:100%;
+  min-height:38px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border:1px solid color-mix(in srgb,var(--brand-gold) 42%,var(--brand-white));
+  border-radius:9px;
+  background:color-mix(in srgb,var(--brand-gold) 9%,var(--brand-white));
+  color:var(--brand-navy);
+  font-size:10px;
+  font-weight:900;
+  cursor:pointer;
+  transition:.15s ease;
+}
+.progress-edit-btn svg{color:#a77700}
+.progress-edit-btn:hover{
+  transform:translateY(-1px);
+  border-color:var(--brand-gold);
+  background:color-mix(in srgb,var(--brand-gold) 17%,var(--brand-white));
+}
+
+.progress-entry-form{
+  gap:18px;
+  max-width:1180px;
+  margin-inline:auto;
+}
+.progress-form-guide{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  padding:12px;
+  border:1px solid color-mix(in srgb,var(--brand-navy) 10%,var(--brand-white));
+  border-radius:16px;
+  background:color-mix(in srgb,var(--brand-navy) 2%,var(--brand-white));
+}
+.progress-form-guide>div{
+  min-width:0;
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr);
+  column-gap:9px;
+  align-items:center;
+  padding:11px 12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--brand-white);
+}
+.progress-form-guide>div>span{
+  grid-row:1/3;
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:var(--brand-navy);
+  color:var(--brand-gold);
+  font-size:12px;
+  font-weight:900;
+}
+.progress-form-guide strong{
+  color:var(--brand-navy);
+  font-size:11.5px;
+  line-height:1.5;
+}
+.progress-form-guide small{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.6;
+}
+.progress-form-error{
+  margin:0;
+  padding:12px 14px;
+  border-color:var(--danger-border);
+  background:var(--danger-soft);
+  color:var(--danger);
+  font-size:11px;
+  font-weight:800;
+}
+.progress-form-card{
+  padding:22px;
+  border-radius:18px;
+}
+.progress-form-heading{
+  margin-bottom:20px;
+  padding-bottom:15px;
+}
+.progress-form-heading>div>span{
+  width:36px;
+  height:36px;
+  border-radius:11px;
+  font-size:11px;
+}
+.progress-form-heading h3{
+  font-size:17px;
+  line-height:1.5;
+}
+.progress-form-heading p{
+  max-width:620px;
+  font-size:10.5px;
+  line-height:1.8;
+}
+.progress-entry-form .field{
+  gap:8px;
+  margin-bottom:4px;
+}
+.progress-entry-form .field>span{
+  font-size:12px;
+  line-height:1.55;
+}
+.progress-entry-form .field input,
+.progress-entry-form .field select,
+.progress-entry-form .field textarea{
+  min-height:46px;
+  border-radius:11px;
+  padding:11px 12px;
+  font-size:12px;
+  line-height:1.7;
+}
+.progress-entry-form .field textarea{
+  min-height:96px;
+  resize:vertical;
+}
+.progress-entry-form .field input::placeholder,
+.progress-entry-form .field textarea::placeholder{
+  color:color-mix(in srgb,var(--muted) 78%,var(--brand-white));
+  opacity:1;
+}
+.progress-required{
+  color:var(--danger);
+  font-size:12px;
+}
+.progress-field-hint{
+  margin-top:1px;
+  font-size:9.5px;
+  line-height:1.65;
+}
+.progress-readonly-metric,
+.progress-calculated-card{
+  min-height:108px;
+  padding:14px 16px;
+}
+.progress-readonly-metric span,
+.progress-calculated-card span{
+  font-size:10px;
+}
+.progress-readonly-metric strong,
+.progress-calculated-card strong{
+  font-size:23px;
+}
+.progress-readonly-metric small{
+  font-size:9px;
+}
+.progress-import-note{
+  padding:12px 14px;
+  font-size:10px;
+}
+.progress-form-actions{
+  position:sticky;
+  bottom:10px;
+  z-index:18;
+  padding:11px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:color-mix(in srgb,var(--brand-white) 92%,transparent);
+  backdrop-filter:blur(10px);
+  box-shadow:0 10px 30px rgba(37,58,85,.09);
+}
+.progress-form-actions .btn{
+  min-height:44px;
+  min-width:140px;
+  font-size:11px;
+}
+
+html[data-theme="dark"] .progress-row-actions{
+  background:var(--surface)!important;
+}
+html[data-theme="dark"] .project-progress-table tbody tr.is-linked .progress-row-actions{
+  background:color-mix(in srgb,var(--success) 8%,var(--surface))!important;
+}
+html[data-theme="dark"] .progress-form-guide,
+html[data-theme="dark"] .progress-form-guide>div{
+  background:var(--surface);
+  border-color:var(--border);
+}
+
+@media(max-width:1100px){
+  .progress-form-guide{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .project-progress-table{font-size:11px}
+  .progress-form-card{padding:16px}
+  .progress-form-heading h3{font-size:15px}
+  .progress-form-heading p{font-size:10px}
+  .progress-entry-form .field>span{font-size:11.5px}
+  .progress-entry-form .field input,
+  .progress-entry-form .field select,
+  .progress-entry-form .field textarea{font-size:12px}
+  .progress-form-actions{bottom:calc(var(--mobile-nav-height,70px) + 8px)}
+}

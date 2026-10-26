@@ -69,6 +69,7 @@ export default function ProjectProgressForm({
 
   const submit = async (event) => {
     event.preventDefault()
+    if (submitting) return
     setError('')
 
     if (!form.report_date) return setError('اختار تاريخ المتابعة')
@@ -99,7 +100,15 @@ export default function ProjectProgressForm({
   }
 
   return (
-    <form className="progress-entry-form" onSubmit={submit}>
+    <form className="progress-entry-form" onSubmit={submit} aria-busy={submitting}>
+      <div className="progress-form-guide" aria-label="خطوات تسجيل متابعة المشروع">
+        <div><span>1</span><strong>اختار المشروع</strong><small>حدد التاريخ والمشروع أو أضف مشروع يدوي.</small></div>
+        <div><span>2</span><strong>سجل الكميات</strong><small>أدخل كمية العقد وما قبل النظام عند الحاجة.</small></div>
+        <div><span>3</span><strong>أكمل واحفظ</strong><small>أضف المراجعات والموقف المالي والملاحظات.</small></div>
+      </div>
+
+      {error ? <div className="inline-error progress-form-error" role="alert">{error}</div> : null}
+
       <section className="progress-form-card">
         <div className="progress-form-heading">
           <div>
@@ -111,8 +120,8 @@ export default function ProjectProgressForm({
 
         <div className="progress-form-grid">
           <label className="field">
-            <span>تاريخ المتابعة</span>
-            <input type="date" max={businessToday || undefined} value={form.report_date} onChange={(e) => setField('report_date', e.target.value)} />
+            <span>تاريخ المتابعة <b className="progress-required">*</b></span>
+            <input required type="date" max={businessToday || undefined} value={form.report_date} onChange={(e) => setField('report_date', e.target.value)} />
           </label>
 
           <label className="field">
@@ -129,16 +138,16 @@ export default function ProjectProgressForm({
 
           {projectMode === 'linked' ? (
             <label className="field progress-field-wide">
-              <span>المشروع</span>
-              <select value={form.project_id} onChange={(e) => setField('project_id', e.target.value)}>
+              <span>المشروع <b className="progress-required">*</b></span>
+              <select required value={form.project_id} onChange={(e) => setField('project_id', e.target.value)}>
                 <option value="">اختار المشروع...</option>
                 {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
               </select>
             </label>
           ) : (
             <label className="field progress-field-wide">
-              <span>اسم المشروع</span>
-              <input value={form.project_name} onChange={(e) => setField('project_name', e.target.value)} placeholder="اكتب اسم المشروع كما تريد ظهوره في الجدول" maxLength={200} />
+              <span>اسم المشروع <b className="progress-required">*</b></span>
+              <input required value={form.project_name} onChange={(e) => setField('project_name', e.target.value)} placeholder="اكتب اسم المشروع كما تريد ظهوره في الجدول" maxLength={200} />
             </label>
           )}
 
@@ -234,8 +243,6 @@ export default function ProjectProgressForm({
       {initial?.source === 'excel_import' ? (
         <div className="progress-import-note"><FileSpreadsheet size={16} /> السجل ده مستورد من Excel، والنسخة الأصلية من أرقامه محفوظة للمراجعة.</div>
       ) : null}
-
-      {error ? <div className="inline-error">{error}</div> : null}
 
       <div className="progress-form-actions">
         {onCancel ? <button className="btn btn-ghost" type="button" onClick={onCancel}><X size={16} /> إلغاء</button> : null}

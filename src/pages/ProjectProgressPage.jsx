@@ -16,7 +16,13 @@ const displayDate = (value) => {
   return y && m && d ? `${d}/${m}/${y}` : value
 }
 
-const displayNumber = (value) => value == null || value === '' ? '—' : Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })
+const displayNumber = (value) => {
+  if (value == null || value === '') return '—'
+  const numeric = Number(value)
+  return Number.isFinite(numeric)
+    ? numeric.toLocaleString('en-US', { maximumFractionDigits: 2 })
+    : '—'
+}
 
 export default function ProjectProgressPage() {
   const { permissions } = useAuth()
@@ -114,6 +120,7 @@ export default function ProjectProgressPage() {
                 <th rowSpan="2">نوع التعاقد</th>
                 <th rowSpan="2">الطاقم المسئول عن استكمال الاعمال</th>
                 <th rowSpan="2">ملاحظات</th>
+                {permissions.canManageProjectProgress ? <th rowSpan="2" className="progress-actions-head">إجراء</th> : null}
               </tr>
               <tr>
                 <th>م. يحيي حسين</th>
@@ -132,12 +139,8 @@ export default function ProjectProgressPage() {
                   <td>{displayDate(row.review_abdelrahman_date)}</td>
                   <td className="progress-number-cell">{row.display_number ?? '—'}</td>
                   <td className="progress-project-cell">
-                    {permissions.canManageProjectProgress ? (
-                      <button type="button" onClick={() => setEditing(row)}>
-                        <span>{row.project || '—'}</span><Pencil size={13} />
-                      </button>
-                    ) : <strong>{row.project || '—'}</strong>}
-                    {row.source === 'excel_import' ? <small><FileSpreadsheet size={11} /> Excel</small> : null}
+                    <strong title={row.project || ''}>{row.project || '—'}</strong>
+                    {row.source === 'excel_import' ? <small><FileSpreadsheet size={12} /> Excel</small> : null}
                   </td>
                   <td>{row.location || '—'}</td>
                   <td className="progress-metric-cell">{displayNumber(row.contract_quantity)}</td>
@@ -154,6 +157,19 @@ export default function ProjectProgressPage() {
                   <td className="progress-long-cell">{row.contract_type || '—'}</td>
                   <td className="progress-long-cell">{row.responsible_team || '—'}</td>
                   <td className="progress-notes-cell">{row.notes || '—'}</td>
+                  {permissions.canManageProjectProgress ? (
+                    <td className="progress-row-actions">
+                      <button
+                        className="progress-edit-btn"
+                        type="button"
+                        onClick={() => setEditing(row)}
+                        aria-label={`تعديل متابعة ${row.project || 'المشروع'}`}
+                      >
+                        <Pencil size={15} />
+                        <span>تعديل</span>
+                      </button>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
