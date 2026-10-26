@@ -45,6 +45,7 @@ export default function AttendancePage() {
     onSuccess: async (_data, variables) => {
       setError('')
       await queryClient.invalidateQueries({ queryKey: ['cycle-data', 'attendance'] })
+      await queryClient.invalidateQueries({ queryKey: ['person-full-details'] })
       const label = variables.type === 'excused' ? 'غياب بإذن' : variables.type === 'unexcused' ? 'غياب بدون إذن' : 'غير محدد'
       feedback.success('تم تحديث نوع الغياب', `تم حفظ الحالة: ${label}.`)
     },
@@ -59,6 +60,7 @@ export default function AttendancePage() {
     onSuccess: async () => {
       setError('')
       await queryClient.invalidateQueries({ queryKey: ['cycle-data', 'attendance'] })
+      await queryClient.invalidateQueries({ queryKey: ['person-full-details'] })
     },
     onError: (err) => {
       const message = err.message || 'تعذر حفظ الملاحظة'
@@ -136,6 +138,22 @@ function AttendanceNoteCell({ row, editable, onSave }) {
     if (timerRef.current) window.clearTimeout(timerRef.current)
   }, [row.person_id, row.attendance_date])
 
+  const saveNow = async () => {
+    if (!editable) return
+    const next = value.trim()
+    if (timerRef.current) window.clearTimeout(timerRef.current)
+    if (next === lastSavedRef.current) return
+
+    setState('saving')
+    try {
+      await onSaveRef.current(next)
+      lastSavedRef.current = next
+      setState('saved')
+    } catch {
+      setState('error')
+    }
+  }
+
   useEffect(() => {
     if (!editable) return undefined
     const next = value.trim()
@@ -144,15 +162,8 @@ function AttendanceNoteCell({ row, editable, onSave }) {
     setState('dirty')
     if (timerRef.current) window.clearTimeout(timerRef.current)
 
-    timerRef.current = window.setTimeout(async () => {
-      setState('saving')
-      try {
-        await onSaveRef.current(next)
-        lastSavedRef.current = next
-        setState('saved')
-      } catch {
-        setState('error')
-      }
+    timerRef.current = window.setTimeout(() => {
+      saveNow()
     }, 900)
 
     return () => {
@@ -170,6 +181,7 @@ function AttendanceNoteCell({ row, editable, onSave }) {
         maxLength={1000}
         placeholder="اكتب ملاحظة..."
         onChange={(event) => setValue(event.target.value)}
+        onBlur={saveNow}
       />
       <small className={state === 'saved' ? 'saved' : state === 'error' ? 'error' : ''}>
         {state === 'saving'
