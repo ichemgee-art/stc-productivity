@@ -62,6 +62,17 @@ export default function NewSubmissionPage() {
       p_client_request_id: requestRef.current.id,
     })
 
+    const operationNote = String(form.note || '').trim()
+    if (operationNote) {
+      try {
+        await appService.saveSubmissionNote(result.id, operationNote)
+        await queryClient.invalidateQueries({ queryKey: ['cycle-data'] })
+        await queryClient.invalidateQueries({ queryKey: ['person-full-details'] })
+      } catch {
+        throw new Error('تم حفظ العملية، لكن تعذر حفظ الملاحظة. اضغط حفظ مرة أخرى لإكمال الملاحظة بدون إنشاء عملية مكررة.')
+      }
+    }
+
     requestRef.current = { fingerprint: null, id: null }
 
     const saved = {
