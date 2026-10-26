@@ -1,0 +1,179 @@
+import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Database, FileSpreadsheet, Pencil, Plus, Search } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { appService } from '../services/appService'
+import { useAuth } from '../context/AuthContext'
+import { useFeedback } from '../context/FeedbackContext'
+import Modal from '../components/Modal'
+import ProjectProgressForm from '../components/ProjectProgressForm'
+import EmptyState from '../components/EmptyState'
+import { smartIncludes } from '../lib/smartSearch'
+
+const displayDate = (value) => {
+  if (!value) return '—'
+  const [y, m, d] = String(value).split('-')
+  return y && m && d ? `${d}/${m}/${y}` : value
+}
+
+const displayNumber = (value) => value == null || value === '' ? '—' : Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })
+
+export default function ProjectProgressPage() {
+  const { permissions } = useAuth()
+  const feedback = useFeedback()
+  const queryClient = useQueryClient()
+  const [search, setSearch] = useState('')
+  const [source, setSource] = useState('')
+  const [editing, setEditing] = useState(null)
+
+  const rowsQuery = useQuery({
+    queryKey: ['project-progress', 'rows'],
+    queryFn: appService.projectProgressRows,
+  })
+  const refsQuery = useQuery({ queryKey: ['references'], queryFn: appService.references })
+  const productivityQuery = useQuery({
+    queryKey: ['project-progress', 'historical-productivity'],
+    queryFn: appService.historicalProductivityRows,
+  })
+
+  const projectMetersMap = useMemo(() => {
+    const projectByName = new Map((refsQuery.data?.projects || []).map((project) => [project.name, project.id]))
+    return (productivityQuery.data || []).reduce((map, row) => {
+      const projectId = projectByName.get(row.project)
+      if (!projectId) return map
+      map[projectId] = (map[projectId] || 0) + Number(row.meters || 0)
+      return map
+    }, {})
+  }, [refsQuery.data?.projects, productivityQuery.data])
+
+  const rows = rowsQuery.data || []
+  const filtered = useMemo(() => rows.filter((row) => {
+    if (source && row.execution_mode !== source) return false
+    return smartIncludes(
+      search,
+      row.display_number,
+      row.project,
+      row.location,
+      row.financial_status,
+      row.contract_type,
+      row.responsible_team,
+      row.notes,
+      row.contract_quantity,
+      row.executed_quantity,
+      row.execution_percent,
+    )
+  }), [rows, search, source])
+
+  const mutation = useMutation({
+    mutationFn: appService.saveProjectProgress,
+    onSuccess: async () => {
+      setEditing(null)
+      await queryClient.invalidateQueries({ queryKey: ['project-progress'] })
+      feedback.success('تم تحديث متابعة المشروع', 'كل الحسابات اتحدثت تلقائيًا.')
+    },
+    onError: (error) => feedback.error('تعذر حفظ التعديل', error.message || 'حدث خطأ غير متوقع'),
+  })
+
+  if (rowsQuery.isLoading || refsQuery.isLoading || productivityQuery.isLoading) return <div className="page-loader">جاري تحميل متابعة المشاريع...</div>
+  if (rowsQuery.isError || refsQuery.isError || productivityQuery.isError) return <div className="page-error">{rowsQuery.error?.message || refsQuery.error?.message || productivityQuery.error?.message || 'تعذر تحميل المتابعة'}</div>
+
+  return (
+    <div className="project-progress-page">
+      <section className="progress-table-toolbar">
+        <div className="progress-table-toolbar__title">
+          <span>PREVIEW</span>
+          <div><strong>متابعة المشاريع</strong><small>{filtered.length} صف · مستورد من Excel + تحديث حي من الإنتاجية</small></div>
+        </div>
+        <div className="progress-table-toolbar__actions">
+          <div className="input-with-icon progress-search"><Search size={16} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث في المشروع، الموقع، الملاحظات..." /></div>
+          <select value={source} onChange={(e) => setSource(e.target.value)}>
+            <option value="">كل مصادر التنفيذ</option>
+            <option value="linked">مرتبط بالإنتاجية</option>
+            <option value="manual">يدوي</option>
+          </select>
+          {permissions.canManageProjectProgress ? <Link className="btn btn-primary" to="/project-progress/new"><Plus size={16} /> تسجيل متابعة</Link> : null}
+        </div>
+      </section>
+
+      <section className="progress-live-hint">
+        <Database size={17} />
+        <span>أي صف مرتبط بمشروع في الإنتاجية يتحدث تلقائيًا. الرقم اليدوي التاريخي يضاف فوق إنتاجية السيستم من غير Double Counting.</span>
+      </section>
+
+      <section className="progress-table-panel">
+        <div className="progress-table-scroll">
+          <table className="project-progress-table">
+            <thead>
+              <tr>
+                <th colSpan="3" className="progress-group-head">اخر تاريخ مراجعة</th>
+                <th rowSpan="2">رقم</th>
+                <th rowSpan="2">المشروع</th>
+                <th rowSpan="2">الموقع</th>
+                <th colSpan="3" className="progress-group-head">موقف تنفيذي</th>
+                <th rowSpan="2">موقف المالي</th>
+                <th rowSpan="2">نوع التعاقد</th>
+                <th rowSpan="2">الطاقم المسئول عن استكمال الاعمال</th>
+                <th rowSpan="2">ملاحظات</th>
+              </tr>
+              <tr>
+                <th>م. يحيي حسين</th>
+                <th>م. مارينا سامي</th>
+                <th>م. عبدالرحمن حسين</th>
+                <th>كميات العقد</th>
+                <th>الكميات المنفذة</th>
+                <th>نسب التنفيذ %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row) => (
+                <tr key={row.id} className={row.execution_mode === 'linked' ? 'is-linked' : ''}>
+                  <td>{displayDate(row.review_yahya_date)}</td>
+                  <td>{displayDate(row.review_marina_date)}</td>
+                  <td>{displayDate(row.review_abdelrahman_date)}</td>
+                  <td className="progress-number-cell">{row.display_number ?? '—'}</td>
+                  <td className="progress-project-cell">
+                    {permissions.canManageProjectProgress ? (
+                      <button type="button" onClick={() => setEditing(row)}>
+                        <span>{row.project || '—'}</span><Pencil size={13} />
+                      </button>
+                    ) : <strong>{row.project || '—'}</strong>}
+                    {row.source === 'excel_import' ? <small><FileSpreadsheet size={11} /> Excel</small> : null}
+                  </td>
+                  <td>{row.location || '—'}</td>
+                  <td className="progress-metric-cell">{displayNumber(row.contract_quantity)}</td>
+                  <td className="progress-metric-cell">
+                    <strong>{displayNumber(row.executed_quantity)}</strong>
+                    <small className={row.execution_mode === 'linked' ? 'linked' : 'manual'}>
+                      {row.execution_mode === 'linked' ? 'تلقائي' : 'يدوي'}
+                    </small>
+                  </td>
+                  <td className={Number(row.execution_percent || 0) > 100 ? 'progress-percent over' : 'progress-percent'}>
+                    {row.execution_percent == null ? '—' : `${displayNumber(row.execution_percent)}%`}
+                  </td>
+                  <td className="progress-long-cell">{row.financial_status || '—'}</td>
+                  <td className="progress-long-cell">{row.contract_type || '—'}</td>
+                  <td className="progress-long-cell">{row.responsible_team || '—'}</td>
+                  <td className="progress-notes-cell">{row.notes || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {!filtered.length ? <EmptyState title="مفيش نتائج مطابقة" description="غيّر البحث أو الفلتر لعرض بيانات المتابعة." /> : null}
+      </section>
+
+      <Modal open={Boolean(editing)} title={editing ? `تعديل متابعة — ${editing.project || 'مشروع'}` : 'تعديل المتابعة'} onClose={() => setEditing(null)} width="xl">
+        {editing ? (
+          <ProjectProgressForm
+            references={refsQuery.data}
+            projectMetersMap={projectMetersMap}
+            initial={editing}
+            submitting={mutation.isPending}
+            onCancel={() => setEditing(null)}
+            onSubmit={(payload) => mutation.mutateAsync(payload)}
+          />
+        ) : null}
+      </Modal>
+    </div>
+  )
+}
