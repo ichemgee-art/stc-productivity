@@ -35,6 +35,18 @@ export default function NotificationCenter() {
     const attendance = attendanceQuery.data || []
     const notifications = []
 
+    if (rowsQuery.isError || attendanceQuery.isError) {
+      notifications.push({
+        id: 'load-error',
+        tone: 'danger',
+        icon: CircleAlert,
+        title: 'تعذر تحديث التنبيهات',
+        text: 'لم نتمكن من التحقق من أحدث البيانات. افتح مركز التنبيهات أو استخدم زر تحديث النظام للمحاولة مرة أخرى.',
+        to: '/',
+      })
+      return notifications
+    }
+
     const unreviewed = rows.filter((row) => row.review_status !== 'reviewed')
     if (unreviewed.length) {
       notifications.push({
@@ -98,7 +110,7 @@ export default function NotificationCenter() {
     }
 
     return notifications
-  }, [rowsQuery.data, attendanceQuery.data, rowsQuery.isLoading, attendanceQuery.isLoading])
+  }, [rowsQuery.data, attendanceQuery.data, rowsQuery.isLoading, attendanceQuery.isLoading, rowsQuery.isError, attendanceQuery.isError])
 
   const count = items.filter((item) => !item.passive).length
 

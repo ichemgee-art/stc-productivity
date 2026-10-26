@@ -33,7 +33,7 @@ export default function GlobalSearch() {
   }, [])
 
   const refsQuery = useQuery({
-    queryKey: ['global-search', 'references'],
+    queryKey: ['references'],
     queryFn: appService.references,
     enabled: open,
     staleTime: 60_000,

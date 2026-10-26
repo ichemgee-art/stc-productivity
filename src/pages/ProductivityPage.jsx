@@ -366,6 +366,22 @@ function SubmissionNoteCell({ row, editable, onSave }) {
     if (timerRef.current) window.clearTimeout(timerRef.current)
   }, [row.id])
 
+  const saveNow = async () => {
+    if (!editable) return
+    const next = value.trim()
+    if (timerRef.current) window.clearTimeout(timerRef.current)
+    if (next === lastSavedRef.current) return
+
+    setState('saving')
+    try {
+      await onSaveRef.current(row.id, next)
+      lastSavedRef.current = next
+      setState('saved')
+    } catch {
+      setState('error')
+    }
+  }
+
   useEffect(() => {
     if (!editable) return undefined
     const next = value.trim()
@@ -374,15 +390,8 @@ function SubmissionNoteCell({ row, editable, onSave }) {
     setState('dirty')
     if (timerRef.current) window.clearTimeout(timerRef.current)
 
-    timerRef.current = window.setTimeout(async () => {
-      setState('saving')
-      try {
-        await onSaveRef.current(row.id, next)
-        lastSavedRef.current = next
-        setState('saved')
-      } catch {
-        setState('error')
-      }
+    timerRef.current = window.setTimeout(() => {
+      saveNow()
     }, 900)
 
     return () => {
@@ -400,6 +409,7 @@ function SubmissionNoteCell({ row, editable, onSave }) {
         rows={2}
         placeholder="اكتب ملاحظة للعملية..."
         onChange={(event) => setValue(event.target.value)}
+        onBlur={saveNow}
       />
       <small className={state === 'error' ? 'error' : state === 'saved' ? 'saved' : ''}>
         {state === 'saving'
