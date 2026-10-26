@@ -27,9 +27,13 @@ export default function NewProjectProgressPage() {
 
   const mutation = useMutation({
     mutationFn: appService.saveProjectProgress,
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['project-progress'] })
-      feedback.success('تم حفظ متابعة المشروع', 'السجل ظهر في جدول متابعة المشاريع.')
+      feedback.success(
+        'تم تسجيل متابعة المشروع',
+        `تم حفظ ${variables.project_name || 'المشروع'} وظهر في جدول المتابعة.`,
+        3600,
+      )
     },
     onError: (error) => feedback.error('تعذر حفظ المتابعة', error.message || 'حدث خطأ غير متوقع'),
   })

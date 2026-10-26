@@ -766,3 +766,125 @@ html[data-theme="dark"] .progress-form-guide>div{
   }
   .progress-subsection-title span{text-align:right}
 }
+
+
+/* Project progress actions, exports and viewport density */
+.project-progress-page{
+  margin-top:-10px;
+}
+.progress-table-toolbar{
+  margin-bottom:8px;
+  gap:10px;
+}
+.progress-table-toolbar__actions{
+  flex-wrap:wrap;
+}
+.progress-table-toolbar__actions .export-actions{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  margin:0;
+  padding:0;
+  border:0;
+  background:transparent;
+}
+.progress-table-toolbar__actions .export-label{
+  display:none;
+}
+.progress-table-toolbar__actions .btn-export{
+  min-height:40px;
+  padding:8px 11px;
+  border-radius:10px;
+  font-size:10px;
+}
+.progress-live-hint{
+  margin-bottom:7px;
+  padding:8px 11px;
+  border-radius:11px;
+}
+.progress-live-hint span{
+  font-size:9.5px;
+  line-height:1.55;
+}
+.progress-table-scroll{
+  max-height:calc(100vh - 168px);
+}
+.progress-actions-head,
+.progress-row-actions{
+  position:static!important;
+  left:auto!important;
+  width:154px!important;
+  min-width:154px!important;
+  max-width:154px!important;
+  z-index:auto!important;
+  box-shadow:none!important;
+}
+.progress-actions-head{
+  background:var(--brand-navy)!important;
+  color:var(--brand-gold)!important;
+}
+.progress-row-actions{
+  background:#fff!important;
+}
+.project-progress-table tbody tr.is-linked .progress-row-actions{
+  background:color-mix(in srgb,var(--success) 1.8%,#fff)!important;
+}
+.progress-row-action-buttons{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  white-space:nowrap;
+}
+.progress-edit-btn,
+.progress-delete-btn{
+  min-width:65px;
+  min-height:36px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  padding:7px 9px;
+  border-radius:9px;
+  font-size:9.5px;
+  font-weight:900;
+  transition:.15s ease;
+}
+.progress-edit-btn{
+  border:1px solid color-mix(in srgb,var(--brand-gold) 42%,var(--brand-white));
+  background:color-mix(in srgb,var(--brand-gold) 9%,var(--brand-white));
+  color:var(--brand-navy);
+}
+.progress-delete-btn{
+  border:1px solid var(--danger-border);
+  background:var(--danger-soft);
+  color:var(--danger);
+}
+.progress-delete-btn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+.progress-delete-btn:hover:not(:disabled){
+  background:#FFE2E2;
+}
+html[data-theme="dark"] .progress-row-actions{
+  background:var(--surface)!important;
+}
+html[data-theme="dark"] .project-progress-table tbody tr.is-linked .progress-row-actions{
+  background:color-mix(in srgb,var(--success) 8%,var(--surface))!important;
+}
+
+@media(max-width:1100px){
+  .project-progress-page{margin-top:0}
+  .progress-table-toolbar__actions .export-actions{order:3}
+  .progress-table-scroll{max-height:calc(100vh - 245px)}
+}
+@media(max-width:760px){
+  .progress-table-toolbar__actions .export-actions{
+    width:100%;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .progress-table-toolbar__actions .btn-export{width:100%}
+  .progress-table-scroll{max-height:none}
+}

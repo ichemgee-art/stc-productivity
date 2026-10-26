@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Database, FileSpreadsheet, Pencil, Plus, Search } from 'lucide-react'
+import { Database, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { appService } from '../services/appService'
 import { useAuth } from '../context/AuthContext'
@@ -8,6 +8,7 @@ import { useFeedback } from '../context/FeedbackContext'
 import Modal from '../components/Modal'
 import ProjectProgressForm from '../components/ProjectProgressForm'
 import EmptyState from '../components/EmptyState'
+import ExportButtons from '../components/ExportButtons'
 import { smartIncludes } from '../lib/smartSearch'
 
 const displayDate = (value) => {
@@ -70,15 +71,65 @@ export default function ProjectProgressPage() {
     )
   }), [rows, search, source])
 
+  const excelSheets = useMemo(() => [{
+    name: 'متابعة المشاريع',
+    subtitle: `STC Productivity System · ${filtered.length} مشروع معروض`,
+    rows: filtered.map((row) => ({
+      'رقم': row.display_number ?? '',
+      'المشروع': row.project || '',
+      'الموقع': row.location || '',
+      'آخر مراجعة - م. يحيي حسين': displayDate(row.review_yahya_date),
+      'آخر مراجعة - م. مارينا سامي': displayDate(row.review_marina_date),
+      'آخر مراجعة - م. عبدالرحمن حسين': displayDate(row.review_abdelrahman_date),
+      'كميات العقد': row.contract_quantity == null ? '' : Number(row.contract_quantity),
+      'الكميات المنفذة': row.executed_quantity == null ? '' : Number(row.executed_quantity),
+      'نسبة التنفيذ %': row.execution_percent == null ? '' : Number(row.execution_percent),
+      'الموقف المالي': row.financial_status || '',
+      'نوع التعاقد': row.contract_type || '',
+      'الطاقم المسئول': row.responsible_team || '',
+      'ملاحظات': row.notes || '',
+    })),
+  }], [filtered])
+
   const mutation = useMutation({
     mutationFn: appService.saveProjectProgress,
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       setEditing(null)
       await queryClient.invalidateQueries({ queryKey: ['project-progress'] })
-      feedback.success('تم تحديث متابعة المشروع', 'كل الحسابات اتحدثت تلقائيًا.')
+      feedback.success(
+        'تم حفظ التعديل',
+        `تم تحديث متابعة ${variables.project_name || 'المشروع'} والحسابات اتحدثت تلقائيًا.`,
+      )
     },
     onError: (error) => feedback.error('تعذر حفظ التعديل', error.message || 'حدث خطأ غير متوقع'),
   })
+
+  const deleteMutation = useMutation({
+    mutationFn: appService.deleteProjectProgress,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['project-progress'] })
+      feedback.deleted('تم حذف المتابعة', 'تم حذف السجل من متابعة المشاريع بنجاح.')
+    },
+    onError: (error) => feedback.error('تعذر حذف المتابعة', error.message || 'حدث خطأ غير متوقع'),
+  })
+
+  const openEdit = (row) => {
+    setEditing(row)
+    feedback.info('وضع التعديل', `تم فتح متابعة ${row.project || 'المشروع'} للتعديل.`, 2200)
+  }
+
+  const remove = async (row) => {
+    const accepted = await feedback.confirm({
+      title: 'حذف متابعة المشروع؟',
+      message: 'الحذف نهائي لهذا السجل فقط ولن يحذف المشروع أو عمليات الإنتاجية.',
+      details: `${row.project || 'مشروع'} · رقم ${row.display_number ?? '—'}${row.source === 'excel_import' ? ' · مستورد من Excel' : ''}`,
+      confirmLabel: 'حذف المتابعة',
+      cancelLabel: 'إلغاء',
+      tone: 'danger',
+    })
+    if (!accepted) return
+    await deleteMutation.mutateAsync(row.id)
+  }
 
   if (rowsQuery.isLoading || refsQuery.isLoading || productivityQuery.isLoading) return <div className="page-loader">جاري تحميل متابعة المشاريع...</div>
   if (rowsQuery.isError || refsQuery.isError || productivityQuery.isError) return <div className="page-error">{rowsQuery.error?.message || refsQuery.error?.message || productivityQuery.error?.message || 'تعذر تحميل المتابعة'}</div>
@@ -97,6 +148,12 @@ export default function ProjectProgressPage() {
             <option value="linked">مرتبط بالإنتاجية</option>
             <option value="manual">يدوي</option>
           </select>
+          <ExportButtons
+            filename="project-progress"
+            excelSheets={excelSheets}
+            compact
+            showSuccess
+          />
           {permissions.canManageProjectProgress ? <Link className="btn btn-primary" to="/project-progress/new"><Plus size={16} /> تسجيل متابعة</Link> : null}
         </div>
       </section>
@@ -120,7 +177,7 @@ export default function ProjectProgressPage() {
                 <th rowSpan="2">نوع التعاقد</th>
                 <th rowSpan="2">الطاقم المسئول عن استكمال الاعمال</th>
                 <th rowSpan="2">ملاحظات</th>
-                {permissions.canManageProjectProgress ? <th rowSpan="2" className="progress-actions-head">إجراء</th> : null}
+                {(permissions.canManageProjectProgress || permissions.canDeleteProjectProgress) ? <th rowSpan="2" className="progress-actions-head">إجراءات</th> : null}
               </tr>
               <tr>
                 <th>م. يحيي حسين</th>
@@ -157,17 +214,33 @@ export default function ProjectProgressPage() {
                   <td className="progress-long-cell">{row.contract_type || '—'}</td>
                   <td className="progress-long-cell">{row.responsible_team || '—'}</td>
                   <td className="progress-notes-cell">{row.notes || '—'}</td>
-                  {permissions.canManageProjectProgress ? (
+                  {(permissions.canManageProjectProgress || permissions.canDeleteProjectProgress) ? (
                     <td className="progress-row-actions">
-                      <button
-                        className="progress-edit-btn"
-                        type="button"
-                        onClick={() => setEditing(row)}
-                        aria-label={`تعديل متابعة ${row.project || 'المشروع'}`}
-                      >
-                        <Pencil size={15} />
-                        <span>تعديل</span>
-                      </button>
+                      <div className="progress-row-action-buttons">
+                        {permissions.canManageProjectProgress ? (
+                          <button
+                            className="progress-edit-btn"
+                            type="button"
+                            onClick={() => openEdit(row)}
+                            aria-label={`تعديل متابعة ${row.project || 'المشروع'}`}
+                          >
+                            <Pencil size={15} />
+                            <span>تعديل</span>
+                          </button>
+                        ) : null}
+                        {permissions.canDeleteProjectProgress ? (
+                          <button
+                            className="progress-delete-btn"
+                            type="button"
+                            onClick={() => remove(row)}
+                            disabled={deleteMutation.isPending && deleteMutation.variables === row.id}
+                            aria-label={`حذف متابعة ${row.project || 'المشروع'}`}
+                          >
+                            <Trash2 size={15} />
+                            <span>{deleteMutation.isPending && deleteMutation.variables === row.id ? '...' : 'حذف'}</span>
+                          </button>
+                        ) : null}
+                      </div>
                     </td>
                   ) : null}
                 </tr>

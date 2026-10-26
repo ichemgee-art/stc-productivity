@@ -12,6 +12,7 @@ export const permissionsFor = (appRole) => ({
   canManageProjects: appRole === 'admin',
   canManageSections: appRole === 'admin',
   canManageProjectProgress: ['admin', 'data_entry'].includes(appRole),
+  canDeleteProjectProgress: appRole === 'admin',
   canSetActiveCycle: appRole === 'admin',
   canViewAudit: appRole === 'admin',
 })

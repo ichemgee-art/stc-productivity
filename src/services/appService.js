@@ -294,6 +294,10 @@ export const appService = {
       .range(from, to))
   },
 
+  async deleteProjectProgress(id) {
+    return unwrap(await supabase.rpc('delete_project_progress', { p_id: id }))
+  },
+
   async saveProjectProgress(payload) {
     const normalizeOptionalNumber = (value, label) => {
       if (value === '' || value == null) return null

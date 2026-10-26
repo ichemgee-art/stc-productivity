@@ -3,7 +3,7 @@ import { BarChart3, Download, FileSpreadsheet, FileText } from 'lucide-react'
 import { exportElementPdf, exportExcel, exportExecutiveExcel, exportTablePdf } from '../lib/exporters'
 import { useFeedback } from '../context/FeedbackContext'
 
-export default function ExportButtons({ filename, excelSheets, executiveExcel, pdfTarget, compact = false, hideQuickExcel = false }) {
+export default function ExportButtons({ filename, excelSheets, executiveExcel, pdfTarget, compact = false, hideQuickExcel = false, showSuccess = false }) {
   const [busy, setBusy] = useState('')
   const feedback = useFeedback()
 
@@ -11,6 +11,7 @@ export default function ExportButtons({ filename, excelSheets, executiveExcel, p
     setBusy('excel')
     try {
       await exportExcel({ filename, sheets: excelSheets })
+      if (showSuccess) feedback.success('تم تصدير Excel', 'تم تجهيز ملف Excel المنسق بنجاح.', 2800)
     } catch (error) {
       feedback.error('تعذر تصدير Excel', error.message || 'حدث خطأ أثناء إنشاء الملف')
     } finally {
@@ -47,6 +48,7 @@ export default function ExportButtons({ filename, excelSheets, executiveExcel, p
         const element = typeof pdfTarget === 'function' ? pdfTarget() : pdfTarget?.current || pdfTarget
         await exportElementPdf(element, filename)
       }
+      if (showSuccess) feedback.success('تم تجهيز PDF', 'تم فتح نسخة الطباعة الاحترافية للتقرير.', 2800)
     } catch (error) {
       feedback.error('تعذر تصدير PDF', error.message || 'حدث خطأ أثناء إنشاء الملف')
     } finally {
