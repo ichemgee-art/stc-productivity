@@ -888,3 +888,27 @@ html[data-theme="dark"] .project-progress-table tbody tr.is-linked .progress-row
   .progress-table-toolbar__actions .btn-export{width:100%}
   .progress-table-scroll{max-height:none}
 }
+
+
+/* Keep the actions header aligned with the sticky table header while rows scroll normally. */
+.progress-actions-head{
+  position:sticky!important;
+  top:0!important;
+  left:auto!important;
+  z-index:14!important;
+  width:154px!important;
+  min-width:154px!important;
+  max-width:154px!important;
+  background:var(--brand-navy)!important;
+  color:var(--brand-gold)!important;
+  box-shadow:none!important;
+}
+.progress-row-actions{
+  position:static!important;
+  left:auto!important;
+  z-index:auto!important;
+  width:154px!important;
+  min-width:154px!important;
+  max-width:154px!important;
+  box-shadow:none!important;
+}
