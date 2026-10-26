@@ -295,7 +295,23 @@ export const appService = {
   },
 
   async saveProjectProgress(payload) {
-    return unwrap(await supabase.rpc('save_project_progress', { p_payload: payload }))
+    const normalizeOptionalNumber = (value, label) => {
+      if (value === '' || value == null) return null
+      const parsed = Number(value)
+      if (!Number.isFinite(parsed)) throw new Error(`${label} يجب أن تكون رقمًا صحيحًا`)
+      return parsed
+    }
+
+    const normalizedPayload = {
+      ...payload,
+      contract_quantity: normalizeOptionalNumber(payload.contract_quantity, 'كميات العقد'),
+      historical_before_system: normalizeOptionalNumber(payload.historical_before_system, 'كميات ما قبل النظام') ?? 0,
+      manual_executed_quantity: payload.execution_mode === 'manual'
+        ? (normalizeOptionalNumber(payload.manual_executed_quantity, 'الكميات المنفذة') ?? 0)
+        : null,
+    }
+
+    return unwrap(await supabase.rpc('save_project_progress', { p_payload: normalizedPayload }))
   },
 
   async askAI(payload) {

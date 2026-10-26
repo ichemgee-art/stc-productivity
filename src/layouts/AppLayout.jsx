@@ -136,6 +136,7 @@ export default function AppLayout() {
               {selectedCycle?.is_active ? <span className="status-pill success">الحالية</span> : permissions.canSetActiveCycle ? <button className="btn btn-ghost btn-sm" disabled={settingActive} onClick={setAsActive}>{settingActive ? '...' : 'اعتماد'}</button> : null}
             </div>
             <div className="topbar-utility-actions">
+              <AIAssistant />
               <GlobalSearch />
               <NotificationCenter />
               <button className="icon-btn" type="button" onClick={toggleTheme} title={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'} aria-label={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}>
@@ -188,7 +189,6 @@ export default function AppLayout() {
           <MoreHorizontal size={20} /><span>المزيد</span>
         </button>
       </nav>
-      <AIAssistant />
     </div>
   )
 }
