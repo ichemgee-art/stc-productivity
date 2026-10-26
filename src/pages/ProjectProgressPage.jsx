@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Database, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { progressMetersById } from '../lib/projectProgress'
 import { appService } from '../services/appService'
 import { useAuth } from '../context/AuthContext'
 import { useFeedback } from '../context/FeedbackContext'
@@ -40,18 +41,10 @@ export default function ProjectProgressPage() {
   const refsQuery = useQuery({ queryKey: ['references'], queryFn: appService.references })
   const productivityQuery = useQuery({
     queryKey: ['project-progress', 'historical-productivity'],
-    queryFn: appService.historicalProductivityRows,
+    queryFn: appService.projectProgressProductivity,
   })
 
-  const projectMetersMap = useMemo(() => {
-    const projectByName = new Map((refsQuery.data?.projects || []).map((project) => [project.name, project.id]))
-    return (productivityQuery.data || []).reduce((map, row) => {
-      const projectId = projectByName.get(row.project)
-      if (!projectId) return map
-      map[projectId] = (map[projectId] || 0) + Number(row.meters || 0)
-      return map
-    }, {})
-  }, [refsQuery.data?.projects, productivityQuery.data])
+  const projectMetersMap = useMemo(() => progressMetersById(productivityQuery.data), [productivityQuery.data])
 
   const rows = rowsQuery.data || []
   const filtered = useMemo(() => rows.filter((row) => {

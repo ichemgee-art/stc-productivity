@@ -1,5 +1,8 @@
 import { supabase } from '../lib/supabase'
 
+import { queryClient } from '../lib/queryClient'
+import { invalidateProductivity } from '../lib/projectProgress'
+
 const PAGE_SIZE = 1000
 
 const unwrap = ({ data, error }) => {
@@ -143,11 +146,15 @@ export const appService = {
   },
 
   async createSubmission(payload) {
-    return unwrap(await supabase.rpc('create_productivity_submission', payload))
+    const result = unwrap(await supabase.rpc('create_productivity_submission', payload))
+    await invalidateProductivity(queryClient)
+    return result
   },
 
   async updateSubmission(payload) {
-    return unwrap(await supabase.rpc('update_productivity_submission', payload))
+    const result = unwrap(await supabase.rpc('update_productivity_submission', payload))
+    await invalidateProductivity(queryClient)
+    return result
   },
 
   async setReview(id, reviewed) {
@@ -162,7 +169,9 @@ export const appService = {
   },
 
   async deleteSubmission(id) {
-    return unwrap(await supabase.rpc('delete_productivity_submission', { p_submission_id: id }))
+    const result = unwrap(await supabase.rpc('delete_productivity_submission', { p_submission_id: id }))
+    await invalidateProductivity(queryClient)
+    return result
   },
 
   async personStats(monthKey, role) {
@@ -283,6 +292,10 @@ export const appService = {
 
   async deleteSection(id) {
     return unwrap(await supabase.rpc('admin_delete_section', { p_id: id }))
+  },
+
+  async projectProgressProductivity() {
+    return fetchAll((from, to) => supabase.from('submissions').select('id,project_id,meters').order('id').range(from, to))
   },
 
   async projectProgressRows() {

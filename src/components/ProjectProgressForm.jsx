@@ -1,5 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Building2, Calculator, Database, FileSpreadsheet, Link2, PenLine, Save, X } from 'lucide-react'
+
+import { useAuth } from '../context/AuthContext'
+import { progressRequest } from '../lib/projectProgress'
 
 const emptyForm = {
   report_date: '',
@@ -28,6 +31,12 @@ export default function ProjectProgressForm({
   submitting,
   onCancel,
 }) {
+  const { permissions } = useAuth()
+  const requestRef = useRef(null)
+  const busyRef = useRef(false)
+  const [saveAlias, setSaveAlias] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const originalName = initial?.original_project_name || initial?.project_name_snapshot || initial?.project || ''
   const businessToday = references?.businessToday || ''
   const initialLinked = Boolean(initial?.project_id)
   const [projectMode, setProjectMode] = useState(initial ? (initialLinked ? 'linked' : 'manual') : 'linked')
@@ -38,7 +47,7 @@ export default function ProjectProgressForm({
     review_marina_date: initial?.review_marina_date || '',
     review_abdelrahman_date: initial?.review_abdelrahman_date || '',
     project_id: initial?.project_id || '',
-    project_name: initialLinked ? '' : (initial?.project || initial?.project_name_snapshot || ''),
+    project_name: initial?.project || initial?.project_name_snapshot || '',
     location: initial?.location || '',
     contract_quantity: toInput(initial?.contract_quantity),
     historical_before_system: toInput(initial?.historical_before_system),
@@ -69,24 +78,30 @@ export default function ProjectProgressForm({
 
   const submit = async (event) => {
     event.preventDefault()
-    if (submitting) return
+    if (submitting || busyRef.current) return
     setError('')
 
     if (!form.report_date) return setError('اختار تاريخ المتابعة')
+    for (const key of ['report_date', 'review_yahya_date', 'review_marina_date', 'review_abdelrahman_date']) {
+      if (businessToday && form[key] > businessToday && form[key] !== initial?.[key]) return setError('لا يمكن تسجيل تاريخ متابعة أو مراجعة في المستقبل')
+    }
     if (projectMode === 'linked' && !form.project_id) return setError('اختار المشروع من قائمة المشاريع')
-    if (projectMode === 'manual' && !form.project_name.trim()) return setError('اكتب اسم المشروع الجديد')
+    if (projectMode === 'manual' && !form.project_name.trim() && !(initial?.source === 'excel_import' && initial?.legacy_excel_row)) return setError('اكتب اسم المشروع الجديد')
     if (form.contract_quantity !== '' && Number(form.contract_quantity) < 0) return setError('كميات العقد لا يمكن أن تكون سالبة')
     if (projectMode === 'linked' && Number(form.historical_before_system || 0) < 0) return setError('كميات ما قبل النظام لا يمكن أن تكون سالبة')
     if (projectMode === 'manual' && Number(form.manual_executed_quantity || 0) < 0) return setError('الكميات المنفذة لا يمكن أن تكون سالبة')
 
-    await onSubmit({
+    const payload = {
+      expected_updated_at: initial?.updated_at || null,
+      save_alias: saveAlias && permissions.isAdmin && projectMode === 'linked',
+      alias_name: originalName || form.project_name.trim(),
       id: initial?.id || null,
       report_date: form.report_date,
       review_yahya_date: form.review_yahya_date || '',
       review_marina_date: form.review_marina_date || '',
       review_abdelrahman_date: form.review_abdelrahman_date || '',
       project_id: projectMode === 'linked' ? form.project_id : '',
-      project_name: projectMode === 'manual' ? form.project_name.trim() : selectedProject?.name || '',
+      project_name: projectMode === 'manual' ? form.project_name.trim() : initial?.original_project_name || (initial?.source === 'excel_import' ? originalName : '') || selectedProject?.name || '',
       location: form.location.trim(),
       contract_quantity: form.contract_quantity === '' ? null : Number(form.contract_quantity),
       historical_before_system: projectMode === 'linked' ? Number(form.historical_before_system || 0) : 0,
@@ -96,7 +111,17 @@ export default function ProjectProgressForm({
       contract_type: form.contract_type.trim(),
       responsible_team: form.responsible_team.trim(),
       notes: form.notes.trim(),
-    })
+    }
+    requestRef.current = progressRequest(requestRef.current, payload)
+    busyRef.current = true
+    try {
+      await onSubmit({ ...payload, request_id: requestRef.current.id })
+      setSaved(true)
+    } catch (err) {
+      setError(err.message || 'تعذر حفظ المتابعة')
+    } finally {
+      busyRef.current = false
+    }
   }
 
   return (
@@ -166,9 +191,13 @@ export default function ProjectProgressForm({
           ) : (
             <label className="field progress-field-wide">
               <span>اسم المشروع <b className="progress-required">*</b></span>
-              <input required value={form.project_name} onChange={(e) => setField('project_name', e.target.value)} placeholder="اكتب اسم المشروع كما تريد ظهوره في الجدول" maxLength={200} />
+              <input required={!(initial?.source === 'excel_import' && initial?.legacy_excel_row)} value={form.project_name} onChange={(e) => setField('project_name', e.target.value)} placeholder="اكتب اسم المشروع كما تريد ظهوره في الجدول" maxLength={200} />
             </label>
           )}
+
+          {projectMode === 'linked' && permissions.isAdmin && (originalName || form.project_name.trim()) ? (
+            <label className="field progress-field-wide"><span><input type="checkbox" checked={saveAlias} onChange={(e) => setSaveAlias(e.target.checked)} /> ربط هذا الاسم بمشروع موجود وحفظ الربط للمستقبل</span><small>{originalName || form.project_name} — سيظل الاسم الأصلي محفوظًا. لا يتم نقل الكميات اليدوية إلى ما قبل النظام تلقائيًا.</small></label>
+          ) : null}
 
           {projectMode === 'linked' && selectedProject ? (
             <div className="progress-selected-project progress-field-wide">
@@ -238,6 +267,8 @@ export default function ProjectProgressForm({
         </div>
       </section>
 
+      {executionPercent > 100 ? <div role="status" className="progress-import-note">التنفيذ تجاوز كمية العقد بـ {(executionPercent - 100).toFixed(2)}%</div> : null}
+
       <section className="progress-form-card">
         <div className="progress-form-heading">
           <div>
@@ -292,6 +323,13 @@ export default function ProjectProgressForm({
       ) : null}
 
       <div className="progress-form-actions">
+        {!initial && saved ? <button className="btn btn-ghost" type="button" disabled={submitting} onClick={() => {
+          requestRef.current = null
+          setSaved(false)
+          setSaveAlias(false)
+          setForm({ ...emptyForm, report_date: businessToday })
+          setProjectMode('linked')
+        }}>تسجيل متابعة جديدة</button> : null}
         {onCancel ? <button className="btn btn-ghost" type="button" onClick={onCancel}><X size={16} /> إلغاء</button> : null}
         <button className="btn btn-primary" type="submit" disabled={submitting}>
           {projectMode === 'linked' ? <Link2 size={16} /> : <Save size={16} />}
