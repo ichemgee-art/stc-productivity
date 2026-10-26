@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Check, CheckCircle2, Layers3, LoaderCircle } from 'lucide-react'
+import { Check, CheckCircle2, Layers3, LoaderCircle, MessageSquareText } from 'lucide-react'
 import PeoplePicker from './PeoplePicker'
 import { number } from '../lib/format'
 import { calculateSubmissionPreview } from '../lib/calculations'
@@ -18,6 +18,7 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
     project: initial?.project || '',
     section: initial?.section || '',
     meters: initial?.meters ?? '',
+    note: initial?.note || '',
   })
   const [team, setTeam] = useState(initial?.team || emptyTeam)
   const [submitMode, setSubmitMode] = useState('save')
@@ -146,6 +147,7 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
       project: '',
       section: '',
       meters: '',
+      note: '',
     })
     setTeam(emptyTeam)
     setFormError('')
@@ -228,6 +230,33 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
         </div>
       </section>
 
+      {mode === 'create' ? (
+        <section className="form-section submission-note-section">
+          <div className="section-heading">
+            <div>
+              <span className="section-kicker">03</span>
+              <h3><MessageSquareText size={18} /> ملاحظة العملية</h3>
+            </div>
+            <p>اختياري — اكتب أي ملاحظة تخص تنفيذ اليوم، وستظهر في جدول الإنتاجية ونفس تقارير الأشخاص.</p>
+          </div>
+          <label className="field submission-note-field">
+            <span>ملاحظة اليوم</span>
+            <textarea
+              rows="3"
+              maxLength={2000}
+              value={form.note}
+              onChange={(e) => setField('note', e.target.value)}
+              placeholder="مثال: تم التأخير بسبب عدم التجهيز، تم حصر المخزن، انتظار اعتماد..."
+              aria-describedby="submission-note-help"
+            />
+            <small id="submission-note-help" className="submission-note-meta">
+              <span>يمكن تعديلها لاحقًا من عمود «ملاحظات».</span>
+              <b>{form.note.length}/2000</b>
+            </small>
+          </label>
+        </section>
+      ) : null}
+
       <section className="calc-preview">
         <div><span>سعر المتر</span><strong>{number(preview.price)}</strong></div>
         <div><span>إجمالي العملية</span><strong>{number(preview.total)}</strong></div>
@@ -238,7 +267,7 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
 
       <section className={`submission-review-card ${ready ? 'is-ready' : ''}`}>
         <div className="review-card-head">
-          <div><span className="section-kicker">03</span><div><h3>راجع العملية قبل الحفظ</h3><p>{ready ? 'البيانات الأساسية مكتملة — راجع الأسماء والأرقام ثم احفظ.' : 'أكمل البيانات المطلوبة ليصبح الملخص جاهزًا للحفظ.'}</p></div></div>
+          <div><span className="section-kicker">${mode === 'create' ? '04' : '03'}</span><div><h3>راجع العملية قبل الحفظ</h3><p>{ready ? 'البيانات الأساسية مكتملة — راجع الأسماء والأرقام ثم احفظ.' : 'أكمل البيانات المطلوبة ليصبح الملخص جاهزًا للحفظ.'}</p></div></div>
           <span className={`status-pill ${ready ? 'success' : 'warning'}`}>{ready ? 'جاهزة للحفظ' : 'غير مكتملة'}</span>
         </div>
         {mode === 'edit' ? <div className="form-hint">أي تعديل في بيانات العملية يعيد حالة المراجعة تلقائيًا إلى «لم تتم المراجعة» حتى يتم اعتمادها من جديد.</div> : null}
@@ -256,6 +285,12 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
           <div><span>المساعدين · {team.assistant.length}</span><p>{teamNames.assistant.join('، ') || 'بدون'}</p></div>
           <div><span>العمال · {team.worker.length}</span><p>{teamNames.worker.join('، ') || 'بدون'}</p></div>
         </div>
+        {mode === 'create' ? (
+          <div className={`review-operation-note ${form.note.trim() ? 'has-note' : ''}`}>
+            <span>ملاحظة العملية</span>
+            <p>{form.note.trim() || 'لا توجد ملاحظة — الحقل اختياري.'}</p>
+          </div>
+        ) : null}
       </section>
 
       {formError ? <div className="form-error">{formError}</div> : null}
