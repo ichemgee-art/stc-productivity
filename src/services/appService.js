@@ -285,6 +285,19 @@ export const appService = {
     return unwrap(await supabase.rpc('admin_delete_section', { p_id: id }))
   },
 
+  async projectProgressRows() {
+    return fetchAll((from, to) => supabase
+      .from('v_project_progress')
+      .select('*')
+      .order('display_number', { ascending: true, nullsFirst: false })
+      .order('legacy_excel_row', { ascending: true, nullsFirst: false })
+      .range(from, to))
+  },
+
+  async saveProjectProgress(payload) {
+    return unwrap(await supabase.rpc('save_project_progress', { p_payload: payload }))
+  },
+
   async askAI(payload) {
     const { data, error } = await supabase.functions.invoke('operations-ai', { body: payload })
     if (error) {
