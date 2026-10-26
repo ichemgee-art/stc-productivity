@@ -595,3 +595,174 @@ html[data-theme="dark"] .progress-form-guide>div{
   .progress-entry-form .field textarea{font-size:12px}
   .progress-form-actions{bottom:calc(var(--mobile-nav-height,70px) + 8px)}
 }
+
+
+/* Guided registration UX */
+.progress-field-label{
+  display:grid;
+  gap:3px;
+}
+.progress-field-label>span{
+  color:var(--brand-navy);
+  font-size:12px;
+  font-weight:800;
+}
+.progress-field-label>small{
+  color:var(--muted);
+  font-size:9.5px;
+  line-height:1.65;
+}
+.progress-mode-field{
+  display:grid;
+  gap:10px;
+}
+.progress-mode-selector{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.progress-mode-selector>button{
+  min-width:0;
+  min-height:86px;
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  padding:13px 14px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--brand-white);
+  color:var(--brand-navy);
+  text-align:right;
+  transition:.15s ease;
+}
+.progress-mode-selector>button:hover{
+  border-color:color-mix(in srgb,var(--brand-gold) 45%,var(--border));
+  background:color-mix(in srgb,var(--brand-gold) 4%,var(--brand-white));
+}
+.progress-mode-selector>button.is-active{
+  border-color:var(--brand-gold);
+  background:color-mix(in srgb,var(--brand-gold) 9%,var(--brand-white));
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--brand-gold) 12%,transparent);
+}
+.progress-mode-icon{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  background:color-mix(in srgb,var(--brand-navy) 6%,var(--brand-white));
+  color:var(--brand-navy);
+}
+.progress-mode-selector>button.is-active .progress-mode-icon{
+  background:var(--brand-navy);
+  color:var(--brand-gold);
+}
+.progress-mode-selector>button>span:last-child{
+  min-width:0;
+  display:grid;
+  gap:4px;
+}
+.progress-mode-selector strong{
+  font-size:11.5px;
+  line-height:1.55;
+}
+.progress-mode-selector small{
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.65;
+}
+
+.progress-selected-project{
+  min-height:72px;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto;
+  gap:11px;
+  align-items:center;
+  padding:12px 14px;
+  border:1px solid var(--success-border);
+  border-radius:13px;
+  background:var(--success-soft);
+}
+.progress-selected-project__icon{
+  width:44px;
+  height:44px;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  background:var(--brand-white);
+  color:var(--success);
+}
+.progress-selected-project>div{
+  min-width:0;
+  display:grid;
+  gap:2px;
+}
+.progress-selected-project small{
+  color:var(--muted);
+  font-size:8.5px;
+}
+.progress-selected-project strong{
+  color:var(--brand-navy);
+  font-size:12px;
+  line-height:1.5;
+}
+.progress-selected-project>div>span{
+  color:var(--muted);
+  font-size:9px;
+}
+.progress-selected-project b{
+  color:var(--brand-navy);
+}
+.progress-selected-project em{
+  padding:5px 8px;
+  border:1px solid var(--success-border);
+  border-radius:999px;
+  background:var(--brand-white);
+  color:var(--success);
+  font-size:8px;
+  font-style:normal;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.progress-subsection-title{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+  padding-inline:2px;
+}
+.progress-subsection-title--spaced{
+  margin-top:18px;
+  padding-top:16px;
+  border-top:1px solid var(--border);
+}
+.progress-subsection-title strong{
+  color:var(--brand-navy);
+  font-size:12px;
+}
+.progress-subsection-title span{
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.6;
+  text-align:left;
+}
+
+@media(max-width:760px){
+  .progress-mode-selector{grid-template-columns:1fr}
+  .progress-selected-project{
+    grid-template-columns:40px minmax(0,1fr);
+  }
+  .progress-selected-project em{
+    grid-column:2;
+    justify-self:start;
+  }
+  .progress-subsection-title{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:3px;
+  }
+  .progress-subsection-title span{text-align:right}
+}

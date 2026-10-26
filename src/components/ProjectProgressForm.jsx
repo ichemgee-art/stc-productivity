@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Calculator, Database, FileSpreadsheet, Link2, Save, X } from 'lucide-react'
+import { Building2, Calculator, Database, FileSpreadsheet, Link2, PenLine, Save, X } from 'lucide-react'
 
 const emptyForm = {
   report_date: '',
@@ -124,17 +124,35 @@ export default function ProjectProgressForm({
             <input required type="date" max={businessToday || undefined} value={form.report_date} onChange={(e) => setField('report_date', e.target.value)} />
           </label>
 
-          <label className="field">
-            <span>مصدر المشروع</span>
-            <select value={projectMode} onChange={(e) => {
-              const next = e.target.value
-              setProjectMode(next)
-              if (next === 'manual') setField('project_id', '')
-            }}>
-              <option value="linked">مشروع موجود في السيستم</option>
-              <option value="manual">مشروع جديد / إدخال يدوي</option>
-            </select>
-          </label>
+          <div className="progress-mode-field progress-field-wide">
+            <div className="progress-field-label">
+              <span>مصدر المشروع</span>
+              <small>اختار الطريقة اللي هتسجل بيها المشروع. الاختيار ده بيحدد طريقة حساب الكميات المنفذة.</small>
+            </div>
+            <div className="progress-mode-selector" role="group" aria-label="مصدر المشروع">
+              <button
+                className={projectMode === 'linked' ? 'is-active' : ''}
+                type="button"
+                aria-pressed={projectMode === 'linked'}
+                onClick={() => setProjectMode('linked')}
+              >
+                <span className="progress-mode-icon"><Database size={19} /></span>
+                <span><strong>مشروع موجود في السيستم</strong><small>الأفضل للمشاريع الحالية — التنفيذ يتحدث تلقائيًا من الإنتاجية.</small></span>
+              </button>
+              <button
+                className={projectMode === 'manual' ? 'is-active' : ''}
+                type="button"
+                aria-pressed={projectMode === 'manual'}
+                onClick={() => {
+                  setProjectMode('manual')
+                  setField('project_id', '')
+                }}
+              >
+                <span className="progress-mode-icon"><PenLine size={19} /></span>
+                <span><strong>مشروع جديد / إدخال يدوي</strong><small>استخدمه لو المشروع مش موجود في قائمة المشاريع الحالية.</small></span>
+              </button>
+            </div>
+          </div>
 
           {projectMode === 'linked' ? (
             <label className="field progress-field-wide">
@@ -143,6 +161,7 @@ export default function ProjectProgressForm({
                 <option value="">اختار المشروع...</option>
                 {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
               </select>
+              <small className="progress-field-hint">بعد اختيار المشروع، كميات الإنتاجية الخاصة به هتدخل تلقائيًا في الحساب.</small>
             </label>
           ) : (
             <label className="field progress-field-wide">
@@ -151,9 +170,22 @@ export default function ProjectProgressForm({
             </label>
           )}
 
+          {projectMode === 'linked' && selectedProject ? (
+            <div className="progress-selected-project progress-field-wide">
+              <span className="progress-selected-project__icon"><Building2 size={20} /></span>
+              <div>
+                <small>المشروع المختار</small>
+                <strong>{selectedProject.name}</strong>
+                <span>إنتاجية مسجلة حاليًا: <b>{productivityMeters.toLocaleString('en-US', { maximumFractionDigits: 2 })} م</b></span>
+              </div>
+              <em>مرتبط تلقائيًا</em>
+            </div>
+          ) : null}
+
           <label className="field progress-field-wide">
             <span>الموقع</span>
             <input value={form.location} onChange={(e) => setField('location', e.target.value)} placeholder="مثال: العاصمة الإدارية، التجمع، العلمين..." maxLength={300} />
+            <small className="progress-field-hint">اكتب موقع المشروع بشكل مختصر وواضح عشان البحث في الجدول يبقى أسهل.</small>
           </label>
         </div>
       </section>
@@ -164,13 +196,14 @@ export default function ProjectProgressForm({
             <span>02</span>
             <h3>الموقف التنفيذي</h3>
           </div>
-          <p>كميات العقد يدوي. الكميات المنفذة تتحدث تلقائيًا من الإنتاجية عند ربط المشروع.</p>
+          <p>أدخل كميات العقد فقط، والسيستم هيحسب المنفذ ونسبة التنفيذ تلقائيًا حسب نوع المشروع.</p>
         </div>
 
         <div className="progress-execution-grid">
           <label className="field">
             <span>كميات العقد</span>
-            <input type="number" min="0" step="0.01" value={form.contract_quantity} onChange={(e) => setField('contract_quantity', e.target.value)} placeholder="0.00" />
+            <input type="number" min="0" step="0.01" inputMode="decimal" value={form.contract_quantity} onChange={(e) => setField('contract_quantity', e.target.value)} placeholder="مثال: 1250" />
+            <small className="progress-field-hint">إجمالي الكمية المتعاقد عليها للمشروع.</small>
           </label>
 
           {projectMode === 'linked' ? (
@@ -209,9 +242,14 @@ export default function ProjectProgressForm({
         <div className="progress-form-heading">
           <div>
             <span>03</span>
-            <h3>باقي بيانات Excel</h3>
+            <h3>المراجعات والبيانات الإضافية</h3>
           </div>
-          <p>نفس حقول الشيت الحالية، وتقدر تعدلها بعد الحفظ من الجدول.</p>
+          <p>سجل تواريخ المراجعة والموقف المالي والتعاقد والطاقم والملاحظات بشكل واضح.</p>
+        </div>
+
+        <div className="progress-subsection-title">
+          <strong>تواريخ آخر مراجعة</strong>
+          <span>سيب أي تاريخ فاضي لو الشخص لسه ما راجعش المشروع.</span>
         </div>
 
         <div className="progress-review-dates">
@@ -220,22 +258,31 @@ export default function ProjectProgressForm({
           <label className="field"><span>آخر مراجعة — م. عبدالرحمن حسين</span><input type="date" value={form.review_abdelrahman_date} onChange={(e) => setField('review_abdelrahman_date', e.target.value)} /></label>
         </div>
 
+        <div className="progress-subsection-title progress-subsection-title--spaced">
+          <strong>بيانات التعاقد والمتابعة</strong>
+          <span>الحقول دي نصية ومرنة، وتقدر تجمع فيها عربي وEnglish وأرقام.</span>
+        </div>
+
         <div className="progress-form-grid">
           <label className="field progress-field-wide">
             <span>الموقف المالي</span>
-            <textarea rows={3} value={form.financial_status} onChange={(e) => setField('financial_status', e.target.value)} placeholder="اكتب موقف المستخلصات أو المستحقات..." />
+            <textarea rows={3} value={form.financial_status} onChange={(e) => setField('financial_status', e.target.value)} placeholder="مثال: مستخلص 3 — 125,000 EGP — Approved بنسبة 70%" />
+            <small className="progress-field-hint">يقبل عربي + English + أرقام + نسب ومبالغ. مثال: تم صرف 85,000 جنيه والمتبقي 40,000 EGP.</small>
           </label>
           <label className="field">
             <span>نوع التعاقد</span>
-            <input value={form.contract_type} onChange={(e) => setField('contract_type', e.target.value)} placeholder="توريد وتركيب / مطالبة..." />
+            <input value={form.contract_type} onChange={(e) => setField('contract_type', e.target.value)} placeholder="مثال: توريد وتركيب / مقاولة / مطالبة" />
+            <small className="progress-field-hint">اكتب وصف مختصر لطبيعة التعاقد.</small>
           </label>
           <label className="field">
             <span>الطاقم المسئول عن استكمال الأعمال</span>
-            <input value={form.responsible_team} onChange={(e) => setField('responsible_team', e.target.value)} placeholder="اسم المهندس / المجموعة" />
+            <input value={form.responsible_team} onChange={(e) => setField('responsible_team', e.target.value)} placeholder="مثال: م. أحمد + فريق التركيب" />
+            <small className="progress-field-hint">اسم المهندس أو الفريق المسئول حاليًا عن استكمال المشروع.</small>
           </label>
           <label className="field progress-field-wide">
             <span>ملاحظات</span>
-            <textarea rows={4} value={form.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="أي ملاحظات تشغيلية أو متابعة..." />
+            <textarea rows={4} value={form.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="مثال: انتظار اعتماد الرسومات — مطلوب زيارة موقع — توريد الخامة خلال الأسبوع..." />
+            <small className="progress-field-hint">اكتب أي نقطة محتاج الفريق يفتكرها في المتابعة الجاية.</small>
           </label>
         </div>
       </section>
