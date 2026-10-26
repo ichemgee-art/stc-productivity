@@ -267,7 +267,7 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
 
       <section className={`submission-review-card ${ready ? 'is-ready' : ''}`}>
         <div className="review-card-head">
-          <div><span className="section-kicker">${mode === 'create' ? '04' : '03'}</span><div><h3>راجع العملية قبل الحفظ</h3><p>{ready ? 'البيانات الأساسية مكتملة — راجع الأسماء والأرقام ثم احفظ.' : 'أكمل البيانات المطلوبة ليصبح الملخص جاهزًا للحفظ.'}</p></div></div>
+          <div><span className="section-kicker">{mode === 'create' ? '04' : '03'}</span><div><h3>راجع العملية قبل الحفظ</h3><p>{ready ? 'البيانات الأساسية مكتملة — راجع الأسماء والأرقام ثم احفظ.' : 'أكمل البيانات المطلوبة ليصبح الملخص جاهزًا للحفظ.'}</p></div></div>
           <span className={`status-pill ${ready ? 'success' : 'warning'}`}>{ready ? 'جاهزة للحفظ' : 'غير مكتملة'}</span>
         </div>
         {mode === 'edit' ? <div className="form-hint">أي تعديل في بيانات العملية يعيد حالة المراجعة تلقائيًا إلى «لم تتم المراجعة» حتى يتم اعتمادها من جديد.</div> : null}
