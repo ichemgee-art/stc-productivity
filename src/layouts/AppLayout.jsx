@@ -13,7 +13,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import PageErrorBoundary from '../components/PageErrorBoundary'
 import GlobalSearch from '../components/GlobalSearch'
 import NotificationCenter from '../components/NotificationCenter'
-import AIAssistant from '../components/AIAssistant'
 import { useTheme } from '../context/ThemeContext'
 import { readSessionCache, writeSessionCache } from '../lib/sessionCache'
 
@@ -153,7 +152,6 @@ export default function AppLayout() {
               {selectedCycle?.is_active ? <span className="status-pill success">الحالية</span> : permissions.canSetActiveCycle ? <button className="btn btn-ghost btn-sm" disabled={settingActive} onClick={setAsActive}>{settingActive ? '...' : 'اعتماد'}</button> : null}
             </div>
             <div className="topbar-utility-actions">
-              <AIAssistant />
               <GlobalSearch />
               <NotificationCenter />
               <button className="icon-btn" type="button" onClick={toggleTheme} title={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'} aria-label={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}>
