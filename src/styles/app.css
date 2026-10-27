@@ -6333,3 +6333,86 @@ html[data-theme="dark"] .review-complete-stat strong{
     inset -4px 0 0 var(--brand-gold),
     inset 0 0 0 1px rgba(243,184,32,.62);
 }
+
+/* Global restrained micro-interactions — 2026-10-27 */
+@media (hover:hover) and (pointer:fine){
+  .nav-link,
+  .icon-btn,
+  .btn,
+  .stat-card,
+  .panel,
+  .management-quick-card,
+  .person-card-v2,
+  .project-chip{
+    transition:
+      transform .16s ease,
+      background-color .16s ease,
+      border-color .16s ease,
+      box-shadow .16s ease,
+      color .16s ease,
+      opacity .16s ease;
+  }
+
+  .nav-link:hover{
+    transform:translateX(-2px);
+  }
+
+  .icon-btn:hover:not(:disabled){
+    transform:translateY(-1px);
+    box-shadow:0 6px 15px rgba(37,58,85,.08);
+  }
+
+  .btn:hover:not(:disabled){
+    transform:translateY(-1px);
+  }
+
+  .stat-card:hover,
+  .management-quick-card:hover,
+  .person-card-v2:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 24px rgba(37,58,85,.07);
+    border-color:color-mix(in srgb,var(--brand-gold) 24%,var(--border));
+  }
+}
+
+.btn:active:not(:disabled),
+.icon-btn:active:not(:disabled){
+  transform:translateY(0) scale(.98);
+}
+
+.nav-link.active{
+  box-shadow:inset -3px 0 0 var(--brand-gold);
+}
+
+.app-toast{
+  animation:stcToastIn .22s ease-out;
+}
+@keyframes stcToastIn{
+  from{opacity:0;transform:translateY(-6px) scale(.985)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+input,
+select,
+textarea{
+  transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .nav-link,
+  .icon-btn,
+  .btn,
+  .stat-card,
+  .panel,
+  .management-quick-card,
+  .person-card-v2,
+  .project-chip,
+  input,
+  select,
+  textarea{
+    transition:none!important;
+  }
+  .app-toast{
+    animation:none!important;
+  }
+}
