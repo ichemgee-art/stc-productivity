@@ -155,6 +155,12 @@ export default function ProjectProgressForm({
       </div>
 
       {error ? <div className="inline-error progress-form-error" role="alert">{error}</div> : null}
+      {!initial && saved ? (
+        <div className="progress-save-success" role="status">
+          <CheckCircle2 size={18} />
+          <div><strong>تم حفظ المتابعة بنجاح</strong><span>المشروع اتسجل وبياناته جاهزة في متابعة المشاريع.</span></div>
+        </div>
+      ) : null}
 
       <section className="progress-form-card">
         <div className="progress-form-heading">
