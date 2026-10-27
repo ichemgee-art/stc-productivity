@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Eye, KeyRound, ShieldCheck, UserPlus, UsersRound } from 'lucide-react'
+import { Eye, KeyRound, ShieldCheck, Trash2, UserPlus, UsersRound } from 'lucide-react'
 import { userAdminService } from '../services/userAdminService'
 import { useFeedback } from '../context/FeedbackContext'
 import Modal from '../components/Modal'
@@ -30,6 +30,7 @@ export default function UsersAdminPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [passwordTarget, setPasswordTarget] = useState(null)
   const [passwordValue, setPasswordValue] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState(null)
   const [form, setForm] = useState({
     displayName: '',
     email: '',
@@ -78,6 +79,16 @@ export default function UsersAdminPage() {
       feedback.success('تم تغيير كلمة المرور بنجاح')
     },
     onError: (error) => feedback.error(error.message || 'تعذر تغيير كلمة المرور'),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (userId) => userAdminService.deleteUser(userId),
+    onSuccess: async () => {
+      setDeleteTarget(null)
+      await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      feedback.success('تم حذف المستخدم من النظام')
+    },
+    onError: (error) => feedback.error(error.message || 'تعذر حذف المستخدم'),
   })
 
   const submitCreate = (event) => {
@@ -174,6 +185,16 @@ export default function UsersAdminPage() {
                           <button className="icon-btn small" type="button" onClick={() => { setPasswordTarget(user); setPasswordValue('') }} title="تغيير كلمة المرور">
                             <KeyRound size={15} />
                           </button>
+                          <button
+                            className="icon-btn small danger"
+                            type="button"
+                            disabled={user.is_current || deleteMutation.isPending}
+                            onClick={() => setDeleteTarget(user)}
+                            title={user.is_current ? 'لا يمكن حذف حسابك الحالي' : 'حذف المستخدم'}
+                            aria-label={`حذف ${user.email}`}
+                          >
+                            <Trash2 size={15} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -246,6 +267,31 @@ export default function UsersAdminPage() {
             <button className="btn btn-ghost" type="button" onClick={() => setCreateOpen(false)}>إلغاء</button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} title="حذف المستخدم">
+        <div className="users-admin-delete-confirm">
+          <div className="users-admin-delete-icon"><Trash2 size={22} /></div>
+          <div>
+            <strong>تأكيد حذف الحساب</strong>
+            <p>سيتم حذف الحساب من تسجيل الدخول والصلاحيات، مع الاحتفاظ ببيانات التشغيل والسجل التاريخي.</p>
+          </div>
+          <div className="users-admin-delete-user">
+            <span>{deleteTarget?.display_name || 'مستخدم'}</span>
+            <b>{deleteTarget?.email}</b>
+          </div>
+          <div className="form-actions">
+            <button
+              className="btn btn-danger"
+              type="button"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+            >
+              {deleteMutation.isPending ? 'جاري الحذف...' : 'حذف المستخدم نهائيًا'}
+            </button>
+            <button className="btn btn-ghost" type="button" onClick={() => setDeleteTarget(null)}>إلغاء</button>
+          </div>
+        </div>
       </Modal>
 
       <Modal open={Boolean(passwordTarget)} onClose={() => { setPasswordTarget(null); setPasswordValue('') }} title="تغيير كلمة المرور">
