@@ -161,6 +161,41 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true })
     }
 
+    if (action === "delete_user") {
+      const userId = String(body.user_id || "")
+      if (!userId) return json({ error: "المستخدم مطلوب" }, 400)
+      if (userId === callerId) {
+        return json({ error: "لا يمكنك حذف حسابك الحالي" }, 400)
+      }
+
+      const { data: targetData, error: targetError } = await adminClient.auth.admin.getUserById(userId)
+      if (targetError || !targetData.user) return json({ error: "المستخدم غير موجود" }, 404)
+
+      const { data: targetProfile, error: targetProfileError } = await adminClient
+        .from("profiles")
+        .select("app_role")
+        .eq("user_id", userId)
+        .maybeSingle()
+
+      if (targetProfileError) throw targetProfileError
+
+      if (targetProfile?.app_role === "admin") {
+        const { count, error: countError } = await adminClient
+          .from("profiles")
+          .select("user_id", { count: "exact", head: true })
+          .eq("app_role", "admin")
+        if (countError) throw countError
+        if ((count || 0) <= 1) {
+          return json({ error: "لا يمكن حذف آخر Admin في النظام" }, 400)
+        }
+      }
+
+      const { error } = await adminClient.auth.admin.deleteUser(userId)
+      if (error) throw error
+
+      return json({ ok: true, id: userId })
+    }
+
     return json({ error: "Unknown action" }, 400)
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected server error"
