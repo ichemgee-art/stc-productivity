@@ -13,6 +13,7 @@ import ExportButtons from '../components/ExportButtons'
 import { useFeedback } from '../context/FeedbackContext'
 import { smartIncludes } from '../lib/smartSearch'
 import { playFeedbackSound } from '../lib/feedbackSound'
+import { useSessionState } from '../lib/sessionCache'
 
 const PRODUCTIVITY_PIN_KEY = 'stc_productivity_pinned_column'
 const PRODUCTIVITY_PIN_COLUMNS = [
@@ -45,10 +46,12 @@ export default function ProductivityPage() {
   const [searchParams] = useSearchParams()
   const routeQuery = searchParams.get('q') || ''
   const routeReview = searchParams.get('review') || ''
-  const [queryText, setQueryText] = useState(routeQuery)
-  const [project, setProject] = useState('')
-  const [section, setSection] = useState('')
-  const [review, setReview] = useState(routeReview)
+  const hasRouteQuery = searchParams.has('q')
+  const hasRouteReview = searchParams.has('review')
+  const [queryText, setQueryText] = useSessionState('page:productivity:query', routeQuery)
+  const [project, setProject] = useSessionState('page:productivity:project', '')
+  const [section, setSection] = useSessionState('page:productivity:section', '')
+  const [review, setReview] = useSessionState('page:productivity:review', routeReview)
   const [pinnedColumn, setPinnedColumn] = useState(getInitialPinnedColumn)
   const [editing, setEditing] = useState(null)
   const [editInitial, setEditInitial] = useState(null)
@@ -66,9 +69,9 @@ export default function ProductivityPage() {
   const rows = rowsQuery.data || []
 
   useEffect(() => {
-    setQueryText(routeQuery)
-    setReview(routeReview)
-  }, [routeQuery, routeReview])
+    if (hasRouteQuery) setQueryText(routeQuery)
+    if (hasRouteReview) setReview(routeReview)
+  }, [hasRouteQuery, hasRouteReview, routeQuery, routeReview, setQueryText, setReview])
 
   useEffect(() => {
     window.localStorage.setItem(PRODUCTIVITY_PIN_KEY, pinnedColumn)
