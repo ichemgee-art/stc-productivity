@@ -3,6 +3,7 @@ import { Activity, Building2, Calculator, CheckCircle2, Clock, Database, FileSpr
 
 import { useAuth } from '../context/AuthContext'
 import { PROJECT_PROGRESS_CATEGORIES, progressRequest } from '../lib/projectProgress'
+import { clearSessionCache, useSessionState } from '../lib/sessionCache'
 
 const categoryIcons = {
   completed_handed_over: CheckCircle2,
@@ -42,13 +43,18 @@ export default function ProjectProgressForm({
   const { permissions } = useAuth()
   const requestRef = useRef(null)
   const busyRef = useRef(false)
-  const [saveAlias, setSaveAlias] = useState(false)
+  const draftEnabled = !initial
+  const [saveAlias, setSaveAlias] = useSessionState('draft:project-progress:save-alias', false, { enabled: draftEnabled })
   const [saved, setSaved] = useState(false)
   const originalName = initial?.original_project_name || initial?.project_name_snapshot || initial?.project || ''
   const businessToday = references?.businessToday || ''
   const initialLinked = Boolean(initial?.project_id)
-  const [projectMode, setProjectMode] = useState(initial ? (initialLinked ? 'linked' : 'manual') : 'linked')
-  const [form, setForm] = useState(() => ({
+  const [projectMode, setProjectMode] = useSessionState(
+    'draft:project-progress:mode',
+    initial ? (initialLinked ? 'linked' : 'manual') : 'linked',
+    { enabled: draftEnabled },
+  )
+  const [form, setForm] = useSessionState('draft:project-progress:form', () => ({
     ...emptyForm,
     report_date: initial?.report_date || businessToday,
     review_yahya_date: initial?.review_yahya_date || '',
@@ -65,7 +71,7 @@ export default function ProjectProgressForm({
     contract_type: initial?.contract_type || '',
     responsible_team: initial?.responsible_team || '',
     notes: initial?.notes || '',
-  }))
+  }), { enabled: draftEnabled })
   const [error, setError] = useState('')
 
   const projects = useMemo(
@@ -127,6 +133,11 @@ export default function ProjectProgressForm({
     busyRef.current = true
     try {
       await onSubmit({ ...payload, request_id: requestRef.current.id })
+      if (draftEnabled) {
+        clearSessionCache('draft:project-progress:save-alias')
+        clearSessionCache('draft:project-progress:mode')
+        clearSessionCache('draft:project-progress:form')
+      }
       setSaved(true)
     } catch (err) {
       setError(err.message || 'تعذر حفظ المتابعة')
