@@ -5,20 +5,38 @@ declare
   admin_id uuid; entry_id uuid; viewer_id uuid;
   a uuid; b uuid; r jsonb; retried jsonb; p jsonb; stale jsonb; row_data public.v_project_progress;
   legacy public.project_progress_records; failed boolean; qty numeric; audit_count integer;
+  alias_name text; alias_project_id uuid; active_section text; submission_result jsonb;
 begin
   select user_id into admin_id from public.profiles where app_role='admin' limit 1;
   select user_id into entry_id from public.profiles where app_role='data_entry' limit 1;
   select user_id into viewer_id from public.profiles where app_role='viewer' limit 1;
   assert admin_id is not null, 'admin fixture required';
   perform set_config('request.jwt.claim.sub',admin_id::text,true);
-  select id into a from public.projects order by id limit 1;
-  select id into b from public.projects where id<>a order by id limit 1;
+  insert into public.projects(name,active)
+    values('__progress_test_a_'||gen_random_uuid(),true)
+    returning id into a;
+  insert into public.projects(name,active)
+    values('__progress_test_b_'||gen_random_uuid(),true)
+    returning id into b;
   p := jsonb_build_object('request_id',gen_random_uuid(),'execution_mode','linked','project_id',a,'project_name','test','contract_quantity','  ','historical_before_system',' ','manual_executed_quantity','');
   r := public.save_project_progress(p);
   select * into row_data from public.v_project_progress where id=(r->>'id')::uuid;
   assert row_data.contract_quantity is null and row_data.execution_percent is null, 'linked without contract / blank numeric';
   retried := public.save_project_progress(p);
   assert retried->>'id'=r->>'id' and (retried->>'duplicate_prevented')::boolean, 'duplicate retry';
+
+  failed := false;
+  begin
+    perform public.save_project_progress(jsonb_build_object(
+      'request_id',gen_random_uuid(),
+      'execution_mode','linked',
+      'project_id',a,
+      'project_name','duplicate linked project'
+    ));
+  exception when others then
+    failed := sqlerrm like '%المشروع موجود بالفعل في متابعة المشاريع%' or sqlstate='23505';
+  end;
+  assert failed, 'same linked project cannot have two progress rows';
   select count(*) into audit_count from public.audit_log where entity_id=r->>'id' and action='create';
   assert audit_count=1, 'retry must not create another audit event';
   p := p || jsonb_build_object('request_id',gen_random_uuid(),'id',r->>'id','expected_updated_at',r->>'updated_at','contract_quantity',1,'historical_before_system',200,'execution_percent',0);
@@ -64,6 +82,27 @@ begin
   begin perform public.save_project_progress(p || jsonb_build_object('request_id',gen_random_uuid(),'execution_mode','linked','project_id',b,'save_alias',true,'alias_name',p->>'project_name'));
   exception when others then failed := sqlerrm like '%مربوط بمشروع آخر%'; end;
   assert failed, 'alias collision must not remap';
+
+  assert public.resolve_project_input_name('مول انفينتى')='إنفينيتي', 'progress alias resolves for productivity';
+  assert public.resolve_project_input_name('جامعه مصر')='جامعة مصر', 'legacy business alias resolves for productivity';
+
+  select a.alias,a.project_id into alias_name,alias_project_id
+  from public.project_aliases a
+  order by a.created_at
+  limit 1;
+  select name into active_section from public.sections where active=true order by name limit 1;
+  if alias_name is not null and active_section is not null then
+    submission_result := public.create_productivity_submission(
+      public.business_today(), alias_name, active_section, 0,
+      '{}'::uuid[], '{}'::uuid[], '{}'::uuid[], '{}'::uuid[],
+      'progress_integration_test', gen_random_uuid()
+    );
+    assert exists(
+      select 1 from public.submissions
+      where id=(submission_result->>'id')::uuid
+        and project_id=alias_project_id
+    ), 'productivity alias must use canonical project_id';
+  end if;
 
   failed := false;
   begin perform public.save_project_progress(p || jsonb_build_object('request_id',gen_random_uuid(),'contract_quantity','NaN'));
