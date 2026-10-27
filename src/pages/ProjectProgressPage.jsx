@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Database, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { progressMetersById } from '../lib/projectProgress'
+import { PROJECT_PROGRESS_CATEGORIES, projectCategoryLabel, progressMetersById } from '../lib/projectProgress'
 import { appService } from '../services/appService'
 import { useAuth } from '../context/AuthContext'
 import { useFeedback } from '../context/FeedbackContext'
@@ -32,6 +32,7 @@ export default function ProjectProgressPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [source, setSource] = useState('')
+  const [category, setCategory] = useState('')
   const [editing, setEditing] = useState(null)
 
   const rowsQuery = useQuery({
@@ -47,13 +48,22 @@ export default function ProjectProgressPage() {
   const projectMetersMap = useMemo(() => progressMetersById(productivityQuery.data), [productivityQuery.data])
 
   const rows = rowsQuery.data || []
+  const categoryCounts = useMemo(() => rows.reduce((counts, row) => {
+    const key = row.project_category || '__unclassified__'
+    counts[key] = (counts[key] || 0) + 1
+    return counts
+  }, {}), [rows])
+
   const filtered = useMemo(() => rows.filter((row) => {
     if (source && row.execution_mode !== source) return false
+    if (category === '__unclassified__' && row.project_category) return false
+    if (category && category !== '__unclassified__' && row.project_category !== category) return false
     return smartIncludes(
       search,
       row.display_number,
       row.project,
       row.location,
+      projectCategoryLabel(row.project_category),
       row.financial_status,
       row.contract_type,
       row.responsible_team,
@@ -62,7 +72,7 @@ export default function ProjectProgressPage() {
       row.executed_quantity,
       row.execution_percent,
     )
-  }), [rows, search, source])
+  }), [rows, search, source, category])
 
   const excelSheets = useMemo(() => [{
     name: 'متابعة المشاريع',
@@ -71,6 +81,7 @@ export default function ProjectProgressPage() {
       'رقم': row.display_number ?? '',
       'المشروع': row.project || '',
       'الموقع': row.location || '',
+      'حالة المشروع': projectCategoryLabel(row.project_category),
       'آخر مراجعة - م. يحيي حسين': displayDate(row.review_yahya_date),
       'آخر مراجعة - م. مارينا سامي': displayDate(row.review_marina_date),
       'آخر مراجعة - م. عبدالرحمن حسين': displayDate(row.review_abdelrahman_date),
@@ -142,13 +153,36 @@ export default function ProjectProgressPage() {
             <option value="manual">يدوي</option>
           </select>
           <ExportButtons
-            filename="project-progress"
+            filename={category ? `project-progress-${category === '__unclassified__' ? 'unclassified' : category}` : 'project-progress'}
             excelSheets={excelSheets}
             compact
             showSuccess
           />
           {permissions.canManageProjectProgress ? <Link className="btn btn-primary" to="/project-progress/new"><Plus size={16} /> تسجيل متابعة</Link> : null}
         </div>
+      </section>
+
+      <section className="progress-category-filter" aria-label="فلترة المشاريع حسب الحالة">
+        <button type="button" className={!category ? 'is-active' : ''} onClick={() => setCategory('')}>
+          <span>كل المشاريع</span><b>{rows.length}</b>
+        </button>
+        {PROJECT_PROGRESS_CATEGORIES.map((item) => (
+          <button
+            key={item.value}
+            type="button"
+            className={category === item.value ? `is-active status-${item.value}` : `status-${item.value}`}
+            onClick={() => setCategory(item.value)}
+          >
+            <span>{item.label}</span><b>{categoryCounts[item.value] || 0}</b>
+          </button>
+        ))}
+        <button
+          type="button"
+          className={category === '__unclassified__' ? 'is-active status-unclassified' : 'status-unclassified'}
+          onClick={() => setCategory('__unclassified__')}
+        >
+          <span>غير مصنف</span><b>{categoryCounts.__unclassified__ || 0}</b>
+        </button>
       </section>
 
       <section className="progress-live-hint">
@@ -170,6 +204,7 @@ export default function ProjectProgressPage() {
                 <th rowSpan="2">نوع التعاقد</th>
                 <th rowSpan="2">الطاقم المسئول عن استكمال الاعمال</th>
                 <th rowSpan="2">ملاحظات</th>
+                <th rowSpan="2" className="progress-status-head">حالة المشروع</th>
                 {(permissions.canManageProjectProgress || permissions.canDeleteProjectProgress) ? <th rowSpan="2" className="progress-actions-head">إجراءات</th> : null}
               </tr>
               <tr>
@@ -207,6 +242,11 @@ export default function ProjectProgressPage() {
                   <td className="progress-long-cell">{row.contract_type || '—'}</td>
                   <td className="progress-long-cell">{row.responsible_team || '—'}</td>
                   <td className="progress-notes-cell">{row.notes || '—'}</td>
+                  <td className="progress-status-cell">
+                    <span className={`progress-status-badge status-${row.project_category || 'unclassified'}`}>
+                      {projectCategoryLabel(row.project_category, { short: true })}
+                    </span>
+                  </td>
                   {(permissions.canManageProjectProgress || permissions.canDeleteProjectProgress) ? (
                     <td className="progress-row-actions">
                       <div className="progress-row-action-buttons">

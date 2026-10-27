@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { progressMetersById, progressRequest, invalidateProductivity } from '../src/lib/projectProgress.js'
+import { PROJECT_PROGRESS_CATEGORIES, projectCategoryLabel, progressMetersById, progressRequest, invalidateProductivity } from '../src/lib/projectProgress.js'
 
 test('quantity previews use IDs across renamed projects and A -> B switches', () => {
   const map = progressMetersById([{ project_id: 'a', project: 'old', meters: 10 }, { project_id: 'a', project: 'new', meters: 7 }, { project_id: 'b', project: 'old', meters: 3 }, { project: 'old', meters: 99 }])
@@ -17,4 +17,15 @@ test('central invalidation refreshes all progress queries and productivity depen
   const calls = []
   await invalidateProductivity({ invalidateQueries: async (options) => calls.push(options.queryKey) })
   assert.deepEqual(calls, [['cycle-data'], ['available-cycles'], ['references'], ['person-full-details'], ['project-progress']])
+})
+
+
+test('project progress exposes exactly the four approved categories and a safe unclassified fallback', () => {
+  assert.deepEqual(
+    PROJECT_PROGRESS_CATEGORIES.map((item) => item.value),
+    ['completed_handed_over', 'nearing_completion', 'phased_client_request', 'active'],
+  )
+  assert.equal(projectCategoryLabel('completed_handed_over'), 'مشاريع انتهت وتم التسليم')
+  assert.equal(projectCategoryLabel('active', { short: true }), 'قائمة')
+  assert.equal(projectCategoryLabel(null), 'غير مصنف')
 })

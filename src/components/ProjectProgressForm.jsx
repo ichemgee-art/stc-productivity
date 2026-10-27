@@ -1,8 +1,15 @@
 import { useMemo, useRef, useState } from 'react'
-import { Building2, Calculator, Database, FileSpreadsheet, Link2, PenLine, Save, X } from 'lucide-react'
+import { Activity, Building2, Calculator, CheckCircle2, Clock, Database, FileSpreadsheet, Layers, Link2, PenLine, Save, X } from 'lucide-react'
 
 import { useAuth } from '../context/AuthContext'
-import { progressRequest } from '../lib/projectProgress'
+import { PROJECT_PROGRESS_CATEGORIES, progressRequest } from '../lib/projectProgress'
+
+const categoryIcons = {
+  completed_handed_over: CheckCircle2,
+  nearing_completion: Clock,
+  phased_client_request: Layers,
+  active: Activity,
+}
 
 const emptyForm = {
   report_date: '',
@@ -12,6 +19,7 @@ const emptyForm = {
   project_id: '',
   project_name: '',
   location: '',
+  project_category: '',
   contract_quantity: '',
   historical_before_system: '',
   manual_executed_quantity: '',
@@ -49,6 +57,7 @@ export default function ProjectProgressForm({
     project_id: initial?.project_id || '',
     project_name: initial?.project || initial?.project_name_snapshot || '',
     location: initial?.location || '',
+    project_category: initial?.project_category || '',
     contract_quantity: toInput(initial?.contract_quantity),
     historical_before_system: toInput(initial?.historical_before_system),
     manual_executed_quantity: toInput(initial?.manual_executed_quantity ?? initial?.executed_quantity),
@@ -87,6 +96,7 @@ export default function ProjectProgressForm({
     }
     if (projectMode === 'linked' && !form.project_id) return setError('اختار المشروع من قائمة المشاريع')
     if (projectMode === 'manual' && !form.project_name.trim() && !(initial?.source === 'excel_import' && initial?.legacy_excel_row)) return setError('اكتب اسم المشروع الجديد')
+    if (!form.project_category) return setError('اختار حالة المشروع من التصنيفات الأربعة')
     if (form.contract_quantity !== '' && Number(form.contract_quantity) < 0) return setError('كميات العقد لا يمكن أن تكون سالبة')
     if (projectMode === 'linked' && Number(form.historical_before_system || 0) < 0) return setError('كميات ما قبل النظام لا يمكن أن تكون سالبة')
     if (projectMode === 'manual' && Number(form.manual_executed_quantity || 0) < 0) return setError('الكميات المنفذة لا يمكن أن تكون سالبة')
@@ -103,6 +113,7 @@ export default function ProjectProgressForm({
       project_id: projectMode === 'linked' ? form.project_id : '',
       project_name: projectMode === 'manual' ? form.project_name.trim() : initial?.original_project_name || (initial?.source === 'excel_import' ? originalName : '') || selectedProject?.name || '',
       location: form.location.trim(),
+      project_category: form.project_category,
       contract_quantity: form.contract_quantity === '' ? null : Number(form.contract_quantity),
       historical_before_system: projectMode === 'linked' ? Number(form.historical_before_system || 0) : 0,
       manual_executed_quantity: projectMode === 'manual' ? Number(form.manual_executed_quantity || 0) : null,
@@ -216,6 +227,33 @@ export default function ProjectProgressForm({
             <input value={form.location} onChange={(e) => setField('location', e.target.value)} placeholder="مثال: العاصمة الإدارية، التجمع، العلمين..." maxLength={300} />
             <small className="progress-field-hint">اكتب موقع المشروع بشكل مختصر وواضح عشان البحث في الجدول يبقى أسهل.</small>
           </label>
+
+          <div className="progress-project-category progress-field-wide">
+            <div className="progress-field-label">
+              <span>حالة المشروع <b className="progress-required">*</b></span>
+              <small>اختار التصنيف الحالي للمشروع. تقدر تغيّره بعد كده من زر تعديل.</small>
+            </div>
+            <div className="progress-category-selector" role="radiogroup" aria-label="حالة المشروع">
+              {PROJECT_PROGRESS_CATEGORIES.map((item) => {
+                const Icon = categoryIcons[item.value]
+                const active = form.project_category === item.value
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className={active ? `is-active status-${item.value}` : `status-${item.value}`}
+                    onClick={() => setField('project_category', item.value)}
+                  >
+                    <span className="progress-category-selector__icon"><Icon size={19} /></span>
+                    <span><strong>{item.label}</strong><small>{item.description}</small></span>
+                  </button>
+                )
+              })}
+            </div>
+            {initial && !initial.project_category ? <div className="progress-category-legacy-note">المشروع ده قديم ولسه غير مصنف — اختار حالة قبل حفظ التعديل.</div> : null}
+          </div>
         </div>
       </section>
 
