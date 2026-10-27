@@ -16,6 +16,7 @@ import ExecutiveReportPage from './pages/ExecutiveReportPage'
 import QuarterReportPage from './pages/QuarterReportPage'
 import ProjectProgressPage from './pages/ProjectProgressPage'
 import NewProjectProgressPage from './pages/NewProjectProgressPage'
+import UsersAdminPage from './pages/UsersAdminPage'
 
 function RequireAuth({ children }) {
   const { session, profile, loading, error, signOut } = useAuth()
@@ -70,6 +71,7 @@ export default function App() {
         <Route path="report" element={<ExecutiveReportPage />} />
         <Route path="quarter" element={<QuarterReportPage />} />
         <Route path="audit" element={<RequireAdmin><AuditPage /></RequireAdmin>} />
+        <Route path="admin/users" element={<RequireAdmin><UsersAdminPage /></RequireAdmin>} />
       </Route>
       <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />
     </Routes>
