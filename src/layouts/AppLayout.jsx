@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   BarChart3, ClipboardPlus, Database, FolderKanban, Gauge, LogOut, Menu,
@@ -15,6 +15,7 @@ import GlobalSearch from '../components/GlobalSearch'
 import NotificationCenter from '../components/NotificationCenter'
 import AIAssistant from '../components/AIAssistant'
 import { useTheme } from '../context/ThemeContext'
+import { readSessionCache, writeSessionCache } from '../lib/sessionCache'
 
 const pageTitles = {
   '/': ['لوحة الإنتاجية', 'ملخص الدورة والفرق والمشاريع.'],
@@ -42,6 +43,22 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [settingActive, setSettingActive] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+
+  useEffect(() => {
+    const cacheKey = `scroll:${location.pathname}`
+    const savedScroll = Number(readSessionCache(cacheKey, 0)) || 0
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: savedScroll, left: 0, behavior: 'auto' })
+    })
+    const saveScroll = () => writeSessionCache(cacheKey, window.scrollY || 0)
+
+    window.addEventListener('beforeunload', saveScroll)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      saveScroll()
+      window.removeEventListener('beforeunload', saveScroll)
+    }
+  }, [location.pathname])
 
   const meta = useMemo(() => {
     if (location.pathname.startsWith('/people/')) {
