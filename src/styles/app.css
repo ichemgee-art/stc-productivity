@@ -6335,84 +6335,300 @@ html[data-theme="dark"] .review-complete-stat strong{
 }
 
 /* Global restrained micro-interactions — 2026-10-27 */
-@media (hover:hover) and (pointer:fine){
-  .nav-link,
-  .icon-btn,
-  .btn,
-  .stat-card,
-  .panel,
-  .management-quick-card,
-  .person-card-v2,
-  .project-chip{
-    transition:
-      transform .16s ease,
-      background-color .16s ease,
-      border-color .16s ease,
-      box-shadow .16s ease,
-      color .16s ease,
-      opacity .16s ease;
-  }
+:root{
+  --motion-fast:140ms;
+  --motion-base:180ms;
+  --motion-slow:260ms;
+  --motion-ease:cubic-bezier(.2,.72,.2,1);
+}
 
+/* Page / surface entrance */
+.page-content > *{
+  animation:stcPageIn var(--motion-slow) var(--motion-ease) both;
+}
+@keyframes stcPageIn{
+  from{opacity:0;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.modal-backdrop,
+.confirm-backdrop,
+.global-search-overlay,
+.mobile-sidebar-backdrop,
+.floating-backdrop{
+  animation:stcBackdropIn var(--motion-base) ease-out both;
+}
+@keyframes stcBackdropIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+.modal-card,
+.confirm-dialog,
+.global-search-panel,
+.notification-popover{
+  transform-origin:top center;
+  animation:stcSurfaceIn var(--motion-slow) var(--motion-ease) both;
+}
+@keyframes stcSurfaceIn{
+  from{opacity:0;transform:translateY(-8px) scale(.985)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+.mobile-sidebar{
+  animation:stcSidebarIn var(--motion-slow) var(--motion-ease) both;
+}
+@keyframes stcSidebarIn{
+  from{opacity:0;transform:translateX(18px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+.app-toast{
+  animation:stcToastIn .22s var(--motion-ease) both;
+}
+@keyframes stcToastIn{
+  from{opacity:0;transform:translateY(-7px) scale(.985)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+.success-banner,
+.saved-receipt,
+.inline-error,
+.form-error,
+.smart-empty-state{
+  animation:stcFeedbackIn var(--motion-base) var(--motion-ease) both;
+}
+@keyframes stcFeedbackIn{
+  from{opacity:0;transform:translateY(3px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.notification-count,
+.count-chip{
+  animation:stcBadgePop .22s var(--motion-ease) both;
+}
+@keyframes stcBadgePop{
+  0%{opacity:0;transform:scale(.75)}
+  70%{transform:scale(1.08)}
+  100%{opacity:1;transform:scale(1)}
+}
+
+/* Consistent transitions */
+:where(
+  .nav-link,.mobile-bottom-nav__item,.btn,.icon-btn,
+  .global-search-result,.notification-item,.pick-person,
+  .stat-card,.person-card-v2,.management-quick-card,.project-chip,
+  .rank-row,.audit-event,.management-person-row,.person-operation-note,
+  .entry-callout,.saved-receipt,.review-grid>div,.review-team-grid>div,
+  .details-summary-grid>div,.summary-line>div,.insight-grid>div,
+  .report-kpi-grid>div,.quarter-highlight-grid article,
+  .status-pill,.count-chip,.role-badge,.availability-dot,
+  [role="tab"],[aria-pressed="true"],[role="radio"]
+){
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    background-color var(--motion-base) ease,
+    border-color var(--motion-base) ease,
+    box-shadow var(--motion-base) ease,
+    color var(--motion-base) ease,
+    opacity var(--motion-base) ease;
+}
+
+:where(
+  input,select,textarea,.input-with-icon,.global-search-input,
+  .table-input,.data-table select,.quarter-select-grid select
+){
+  transition:
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    color var(--motion-fast) ease;
+}
+
+:where(
+  .btn svg,.icon-btn svg,.nav-link svg,.mobile-bottom-nav__item svg,
+  .stat-card__icon,.section-kicker,.person-avatar,.person-avatar-pro,
+  .empty-state__icon,.global-search-result__icon,.notification-item__icon
+){
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    color var(--motion-base) ease,
+    background-color var(--motion-base) ease;
+}
+
+/* Focus feedback */
+:where(input,select,textarea):focus-visible{
+  outline:none;
+  border-color:color-mix(in srgb,var(--brand-gold) 58%,var(--brand-navy))!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--brand-gold) 14%,transparent)!important;
+}
+:where(button,a,[role="button"],[tabindex]):focus-visible{
+  outline:2px solid color-mix(in srgb,var(--brand-gold) 70%,var(--brand-white));
+  outline-offset:2px;
+}
+
+/* Desktop hover feedback */
+@media (hover:hover) and (pointer:fine){
   .nav-link:hover{
     transform:translateX(-2px);
+  }
+  .nav-link:hover svg,
+  .mobile-bottom-nav__item:hover svg{
+    transform:scale(1.08);
   }
 
   .icon-btn:hover:not(:disabled){
     transform:translateY(-1px);
     box-shadow:0 6px 15px rgba(37,58,85,.08);
   }
+  .icon-btn:hover:not(:disabled) svg{
+    transform:scale(1.08);
+  }
 
   .btn:hover:not(:disabled){
     transform:translateY(-1px);
+    box-shadow:0 8px 18px rgba(37,58,85,.09);
+  }
+  .btn:hover:not(:disabled) svg{
+    transform:translateX(-1px) scale(1.04);
   }
 
-  .stat-card:hover,
-  .management-quick-card:hover,
-  .person-card-v2:hover{
+  :where(
+    .stat-card,.person-card-v2,.management-quick-card,
+    .entry-callout,.saved-receipt,.review-grid>div,.review-team-grid>div,
+    .details-summary-grid>div,.summary-line>div,.insight-grid>div,
+    .report-kpi-grid>div,.quarter-highlight-grid article
+  ):hover{
     transform:translateY(-2px);
     box-shadow:0 10px 24px rgba(37,58,85,.07);
     border-color:color-mix(in srgb,var(--brand-gold) 24%,var(--border));
   }
+
+  .stat-card:hover .stat-card__icon,
+  .person-card-v2:hover :is(.person-avatar,.person-avatar-pro),
+  .smart-empty-state:hover .empty-state__icon{
+    transform:scale(1.06);
+  }
+
+  :where(
+    .global-search-result,.notification-item,.pick-person,
+    .rank-row,.audit-event,.management-person-row,.person-operation-note,
+    .project-chip
+  ):hover{
+    transform:translateY(-1px);
+    background:color-mix(in srgb,var(--brand-gold) 4%,var(--brand-white));
+  }
+
+  .data-table tbody tr,
+  .compact-table tbody tr{
+    transition:background-color var(--motion-fast) ease;
+  }
+  .data-table tbody tr td,
+  .compact-table tbody tr td{
+    transition:background-color var(--motion-fast) ease,color var(--motion-fast) ease;
+  }
+  .data-table tbody tr:hover td,
+  .compact-table tbody tr:hover td{
+    background:color-mix(in srgb,var(--brand-gold) 3.5%,var(--brand-white));
+  }
+
+  .topbar .user-chip:hover{
+    background:color-mix(in srgb,var(--brand-navy) 3%,var(--brand-white));
+    border-radius:11px;
+  }
 }
 
-.btn:active:not(:disabled),
-.icon-btn:active:not(:disabled){
-  transform:translateY(0) scale(.98);
+/* Press feedback — mouse and touch */
+:where(
+  .btn,.icon-btn,.nav-link,.mobile-bottom-nav__item,
+  .global-search-result,.notification-item,.pick-person,
+  [role="tab"],[role="radio"],button[aria-pressed]
+):active:not(:disabled){
+  transform:scale(.98);
 }
 
+input[type="checkbox"],
+input[type="radio"]{
+  accent-color:var(--brand-gold);
+  transition:transform var(--motion-fast) var(--motion-ease);
+}
+input[type="checkbox"]:active,
+input[type="radio"]:active{
+  transform:scale(.9);
+}
+
+/* Active / selected feedback */
 .nav-link.active{
   box-shadow:inset -3px 0 0 var(--brand-gold);
 }
-
-.app-toast{
-  animation:stcToastIn .22s ease-out;
+.nav-link.active svg{
+  transform:scale(1.06);
 }
-@keyframes stcToastIn{
-  from{opacity:0;transform:translateY(-6px) scale(.985)}
-  to{opacity:1;transform:translateY(0) scale(1)}
+.mobile-bottom-nav__item.active{
+  transform:translateY(-1px);
 }
-
-input,
-select,
-textarea{
-  transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease;
+:where(.status-pill,.count-chip,.role-badge){
+  transform-origin:center;
 }
 
+/* Search / notification item entrance */
+.global-search-result,
+.notification-item{
+  animation:stcListItemIn .18s var(--motion-ease) both;
+}
+.global-search-result:nth-child(2),
+.notification-item:nth-child(2){animation-delay:18ms}
+.global-search-result:nth-child(3),
+.notification-item:nth-child(3){animation-delay:36ms}
+.global-search-result:nth-child(4),
+.notification-item:nth-child(4){animation-delay:54ms}
+.global-search-result:nth-child(5),
+.notification-item:nth-child(5){animation-delay:72ms}
+@keyframes stcListItemIn{
+  from{opacity:0;transform:translateY(4px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Table action reveal */
+.row-actions,
+.progress-row-action-buttons{
+  transition:opacity var(--motion-fast) ease,transform var(--motion-fast) var(--motion-ease);
+}
+@media (hover:hover) and (pointer:fine){
+  tbody tr .row-actions,
+  tbody tr .progress-row-action-buttons{
+    opacity:.82;
+  }
+  tbody tr:hover .row-actions,
+  tbody tr:hover .progress-row-action-buttons{
+    opacity:1;
+    transform:translateY(-1px);
+  }
+}
+
+/* Dark mode hover keeps contrast */
+html[data-theme="dark"] :where(
+  .global-search-result,.notification-item,.pick-person,
+  .rank-row,.audit-event,.management-person-row,.person-operation-note,
+  .project-chip
+):hover{
+  background:var(--surface-2)!important;
+}
+html[data-theme="dark"] .data-table tbody tr:hover td,
+html[data-theme="dark"] .compact-table tbody tr:hover td{
+  background:#182638!important;
+}
+
+/* Accessibility: remove movement when requested */
 @media(prefers-reduced-motion:reduce){
-  .nav-link,
-  .icon-btn,
-  .btn,
-  .stat-card,
-  .panel,
-  .management-quick-card,
-  .person-card-v2,
-  .project-chip,
-  input,
-  select,
-  textarea{
-    transition:none!important;
-  }
-  .app-toast{
-    animation:none!important;
+  html{scroll-behavior:auto!important}
+  *,
+  *::before,
+  *::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
   }
 }
+
