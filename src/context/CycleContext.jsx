@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { appService } from '../services/appService'
+import { useSessionState } from '../lib/sessionCache'
 import { useAuth } from './AuthContext'
 
 const CycleContext = createContext(null)
@@ -8,7 +9,7 @@ const CycleContext = createContext(null)
 export function CycleProvider({ children }) {
   const { session } = useAuth()
   const queryClient = useQueryClient()
-  const [monthKey, setMonthKey] = useState(null)
+  const [monthKey, setMonthKey] = useSessionState('cycle:selected', null)
 
   const cyclesQuery = useQuery({
     queryKey: ['available-cycles'],
