@@ -5,6 +5,7 @@ import { number } from '../lib/format'
 import { calculateSubmissionPreview } from '../lib/calculations'
 import { useFeedback } from '../context/FeedbackContext'
 import { playFeedbackSound } from '../lib/feedbackSound'
+import { clearSessionCache, useSessionState } from '../lib/sessionCache'
 
 const emptyTeam = { engineer: [], technician: [], assistant: [], worker: [] }
 export default function SubmissionForm({ references, initial, onSubmit, submitting, mode = 'create' }) {
@@ -13,14 +14,15 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
   const sectionRef = useRef(null)
   const [saveVisual, setSaveVisual] = useState('idle')
   const [successOverlay, setSuccessOverlay] = useState(null)
-  const [form, setForm] = useState({
+  const draftEnabled = mode === 'create' && !initial
+  const [form, setForm] = useSessionState('draft:submission:form', () => ({
     work_date: initial?.work_date || references.businessToday || '',
     project: initial?.project || '',
     section: initial?.section || '',
     meters: initial?.meters ?? '',
     note: initial?.note || '',
-  })
-  const [team, setTeam] = useState(initial?.team || emptyTeam)
+  }), { enabled: draftEnabled })
+  const [team, setTeam] = useSessionState('draft:submission:team', initial?.team || emptyTeam, { enabled: draftEnabled })
   const [submitMode, setSubmitMode] = useState('save')
   const [formError, setFormError] = useState('')
 
@@ -123,6 +125,10 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
         submitMode: 'save',
       })
       setSaveVisual('success')
+      if (draftEnabled) {
+        clearSessionCache('draft:submission:form')
+        clearSessionCache('draft:submission:team')
+      }
       if (mode === 'create') {
         setSuccessOverlay({
           project: form.project.trim(),
