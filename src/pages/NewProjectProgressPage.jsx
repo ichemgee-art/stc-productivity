@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2 } from 'lucide-react'
 import { progressMetersById } from '../lib/projectProgress'
 import { appService } from '../services/appService'
 import ProjectProgressForm from '../components/ProjectProgressForm'
@@ -36,13 +35,6 @@ export default function NewProjectProgressPage() {
 
   return (
     <div className="page-stack progress-entry-page">
-      <section className="progress-preview-banner">
-        <CheckCircle2 size={19} />
-        <div>
-          <strong>Project Follow-up — Preview</strong>
-          <span>الصفحة دي على نسخة التجربة فقط. مش مضافة إلى Main حتى اعتمادك النهائي.</span>
-        </div>
-      </section>
       <ProjectProgressForm
         references={refsQuery.data}
         projectMetersMap={projectMetersMap}
