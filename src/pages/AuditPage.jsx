@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Clock3, History, RotateCcw, Search, ShieldCheck, UserRound } from 'lucide-react'
 import { appService } from '../services/appService'
+import { useSessionState } from '../lib/sessionCache'
 import { useFeedback } from '../context/FeedbackContext'
 import { smartIncludes } from '../lib/smartSearch'
 import { date, money, number, roleLabels } from '../lib/format'
@@ -167,10 +168,10 @@ function canRestore(row, restoredIds, rows) {
 export default function AuditPage() {
   const feedback = useFeedback()
   const queryClient = useQueryClient()
-  const [queryText, setQueryText] = useState('')
-  const [action, setAction] = useState('')
-  const [entity, setEntity] = useState('')
-  const [actor, setActor] = useState('')
+  const [queryText, setQueryText] = useSessionState('page:audit:query', '')
+  const [action, setAction] = useSessionState('page:audit:action', '')
+  const [entity, setEntity] = useSessionState('page:audit:entity', '')
+  const [actor, setActor] = useSessionState('page:audit:actor', '')
 
   const query = useQuery({
     queryKey: ['audit-log'],
