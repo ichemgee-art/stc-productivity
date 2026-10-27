@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { appService } from '../services/appService'
 import { permissionsFor } from '../lib/permissions'
 import { queryClient } from '../lib/queryClient'
+import { clearAllSessionCache } from '../lib/sessionCache'
 
 const AuthContext = createContext(null)
 
@@ -67,6 +68,7 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     queryClient.clear()
+    clearAllSessionCache()
     setProfile(null)
     setSession(null)
     activeUserId.current = null
