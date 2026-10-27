@@ -6718,7 +6718,7 @@ html[data-theme="dark"] .compact-table tbody tr:hover td{
 }
 .users-admin-hero h2{margin:7px 0 5px;font-size:22px;color:var(--navy-900)}
 .users-admin-hero p{margin:0;color:var(--muted);font-size:10px;line-height:1.8}
-.users-admin-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.users-admin-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .users-admin-stats article{
   display:flex;align-items:center;gap:11px;padding:15px 16px;
   border:1px solid var(--border);border-radius:14px;background:var(--brand-white);
@@ -6744,7 +6744,7 @@ html[data-theme="dark"] .compact-table tbody tr:hover td{
 .user-role-badge strong{font-size:9px;color:var(--navy-900)}
 .user-role-badge small{font-size:7px;color:var(--muted)}
 .user-role-badge.role-admin{border-color:color-mix(in srgb,var(--brand-gold) 45%,var(--border));background:color-mix(in srgb,var(--brand-gold) 7%,var(--brand-white))}
-.user-role-badge.role-data_entry{border-color:color-mix(in srgb,var(--blue-600) 30%,var(--border));background:color-mix(in srgb,var(--blue-600) 4%,var(--brand-white))}
+
 .user-role-badge.role-viewer{border-color:color-mix(in srgb,var(--brand-navy) 14%,var(--border));background:color-mix(in srgb,var(--brand-navy) 2%,var(--brand-white))}
 .users-admin-actions{display:flex;align-items:center;gap:6px}
 .users-admin-actions select{min-width:112px;border:1px solid var(--border);border-radius:9px;background:var(--brand-white);color:var(--brand-navy);padding:8px 9px;font-size:9px;font-weight:800}
