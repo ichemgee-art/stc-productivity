@@ -14,6 +14,8 @@ import ComparisonPage from './pages/ComparisonPage'
 import AuditPage from './pages/AuditPage'
 import ExecutiveReportPage from './pages/ExecutiveReportPage'
 import QuarterReportPage from './pages/QuarterReportPage'
+import ProjectProgressPage from './pages/ProjectProgressPage'
+import NewProjectProgressPage from './pages/NewProjectProgressPage'
 
 function RequireAuth({ children }) {
   const { session, profile, loading, error, signOut } = useAuth()
@@ -60,6 +62,8 @@ export default function App() {
         <Route path="people/assistant" element={<PeoplePage key="assistant" role="assistant" />} />
         <Route path="people/worker" element={<PeoplePage key="worker" role="worker" />} />
         <Route path="attendance" element={<AttendancePage />} />
+        <Route path="project-progress" element={<ProjectProgressPage />} />
+        <Route path="project-progress/new" element={<RequireCreate><NewProjectProgressPage /></RequireCreate>} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="sections" element={<SectionsPage />} />
         <Route path="comparison" element={<ComparisonPage />} />

@@ -1609,28 +1609,30 @@ textarea:focus-visible{
 }
 
 /* AI assistant */
-.ai-assistant{position:fixed;left:20px;bottom:18px;z-index:245}
+.ai-assistant{position:relative;left:auto;bottom:auto;z-index:245;flex:0 0 auto}
 .ai-floating-button{
-  min-width:62px;
-  height:48px;
+  min-width:52px;
+  height:38px;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:7px;
-  padding:0 14px;
-  border:0;
-  border-radius:15px;
+  padding:0 10px;
+  border:1px solid color-mix(in srgb,var(--brand-navy) 12%,var(--brand-white));
+  border-radius:10px;
   background:linear-gradient(135deg,var(--brand-navy),color-mix(in srgb,var(--brand-navy) 82%,var(--brand-gold)));
   color:var(--brand-white);
-  box-shadow:0 14px 32px rgba(37,58,85,.28);
+  box-shadow:none;
   cursor:pointer;
 }
 .ai-floating-button svg{color:var(--brand-gold)}
 .ai-floating-button span{font-size:10px;font-weight:900;letter-spacing:.5px}
 .ai-panel{
-  position:absolute;
-  left:0;
-  bottom:60px;
+  position:fixed;
+  left:18px;
+  top:70px;
+  bottom:auto;
+  z-index:260;
   width:min(420px,calc(100vw - 24px));
   height:min(610px,calc(100vh - 120px));
   display:grid;
@@ -1867,9 +1869,10 @@ textarea:focus-visible{
 @media(max-width:760px){
   .global-search-overlay{padding:58px 8px 8px}
   .global-search-input kbd{display:none}
-  .ai-assistant{left:10px;bottom:10px}
-  .ai-panel{width:calc(100vw - 20px);height:min(600px,calc(100vh - 92px));bottom:56px}
-  .ai-floating-button{height:44px;min-width:56px}
+  .ai-assistant{left:auto;bottom:auto}
+  .ai-panel{top:112px;left:10px;right:10px;bottom:auto;width:auto;height:min(600px,calc(100dvh - 186px))}
+  .ai-floating-button{height:36px;min-width:36px;width:36px;padding:0}
+  .ai-floating-button span{display:none}
   .report-actions{align-items:stretch;flex-direction:column}
   .report-actions>div:last-child{width:100%}
   .report-actions .btn{flex:1}
@@ -3010,12 +3013,16 @@ body,
   .global-search-panel{border-radius:18px}
 
   .ai-assistant{
-    left:10px!important;
-    bottom:calc(var(--mobile-nav-height) + 10px)!important;
+    position:relative!important;
+    left:auto!important;
+    bottom:auto!important;
   }
   .ai-panel{
-    bottom:58px!important;
-    width:calc(100vw - 20px)!important;
+    top:112px!important;
+    left:10px!important;
+    right:10px!important;
+    bottom:auto!important;
+    width:auto!important;
     height:min(610px,calc(100dvh - 175px))!important;
     border-radius:20px!important;
   }

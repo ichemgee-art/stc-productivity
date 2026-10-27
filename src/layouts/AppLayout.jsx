@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   BarChart3, ClipboardPlus, Database, FolderKanban, Gauge, LogOut, Menu,
   Settings2, ShieldCheck, UserRoundCog, Users, X, CalendarDays, Wrench, ArrowLeftRight, History, RefreshCw, FileText, CalendarRange,
-  Moon, Sun, Home, MoreHorizontal,
+  Moon, Sun, Home, MoreHorizontal, ClipboardList,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCycle } from '../context/CycleContext'
@@ -21,6 +21,8 @@ const pageTitles = {
   '/productivity': ['البيانات المحسوبة', 'كل عمليات الدورة مع البحث والمراجعة والإدارة.'],
   '/productivity/new': ['تسجيل إنتاجية', 'إضافة عملية جديدة وحساب الأنصبة تلقائيًا.'],
   '/attendance': ['الحضور والغياب', 'متابعة الحضور والغياب والملاحظات داخل الدورة.'],
+  '/project-progress': ['متابعة المشاريع', 'نفس جدول Excel مع تحديث الكميات المنفذة تلقائيًا من الإنتاجية.'],
+  '/project-progress/new': ['تسجيل متابعة مشروع', 'تسجيل موقف المشروع والكميات والموقف المالي والملاحظات.'],
   '/projects': ['المشاريع', 'قائمة المشاريع واستخدامها داخل التشغيل.'],
   '/sections': ['القطاعات والأسعار', 'القطاعات وأسعار المتر الحالية والتاريخ التشغيلي.'],
   '/comparison': ['مقارنة الشهور', 'مقارنة شاملة بين دورتين من حيث التشغيل والحضور والأداء.'],
@@ -77,6 +79,8 @@ export default function AppLayout() {
     { to: '/', label: 'لوحة الإنتاجية', icon: Gauge, end: true },
     { to: '/productivity', label: 'البيانات المحسوبة', icon: Database },
     ...(permissions.canCreateSubmission ? [{ to: '/productivity/new', label: 'تسجيل إنتاجية', icon: ClipboardPlus, accent: true }] : []),
+    { to: '/project-progress', label: 'متابعة المشاريع · Preview', icon: ClipboardList },
+    ...(permissions.canManageProjectProgress ? [{ to: '/project-progress/new', label: 'تسجيل متابعة', icon: ClipboardPlus }] : []),
     { to: '/people/engineer', label: 'المهندسين', icon: UserRoundCog },
     { to: '/people/technician', label: 'الفنيين', icon: Wrench },
     { to: '/people/assistant', label: 'المساعدين', icon: Users },
@@ -132,6 +136,7 @@ export default function AppLayout() {
               {selectedCycle?.is_active ? <span className="status-pill success">الحالية</span> : permissions.canSetActiveCycle ? <button className="btn btn-ghost btn-sm" disabled={settingActive} onClick={setAsActive}>{settingActive ? '...' : 'اعتماد'}</button> : null}
             </div>
             <div className="topbar-utility-actions">
+              <AIAssistant />
               <GlobalSearch />
               <NotificationCenter />
               <button className="icon-btn" type="button" onClick={toggleTheme} title={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'} aria-label={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}>
@@ -184,7 +189,6 @@ export default function AppLayout() {
           <MoreHorizontal size={20} /><span>المزيد</span>
         </button>
       </nav>
-      <AIAssistant />
     </div>
   )
 }

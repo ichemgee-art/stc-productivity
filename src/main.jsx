@@ -9,6 +9,7 @@ import { FeedbackProvider } from './context/FeedbackContext'
 import { ThemeProvider } from './context/ThemeContext'
 import App from './App'
 import './styles/app.css'
+import './styles/project-progress.css'
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
