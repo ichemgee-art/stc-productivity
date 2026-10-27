@@ -7,7 +7,7 @@ import { useAuth } from './AuthContext'
 const CycleContext = createContext(null)
 
 export function CycleProvider({ children }) {
-  const { session } = useAuth()
+  const { session, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
   const [monthKey, setMonthKey] = useSessionState('cycle:selected', null)
 
@@ -18,8 +18,8 @@ export function CycleProvider({ children }) {
   })
 
   useEffect(() => {
-    if (!session) setMonthKey(null)
-  }, [session])
+    if (!authLoading && !session) setMonthKey(null)
+  }, [authLoading, session, setMonthKey])
 
   useEffect(() => {
     const cycles = cyclesQuery.data || []
