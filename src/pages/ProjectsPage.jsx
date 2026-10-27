@@ -4,6 +4,7 @@ import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useFeedback } from '../context/FeedbackContext'
 import { appService } from '../services/appService'
+import { useSessionState } from '../lib/sessionCache'
 import { date, number } from '../lib/format'
 import Modal from '../components/Modal'
 import EmptyState from '../components/EmptyState'
@@ -14,8 +15,8 @@ export default function ProjectsPage() {
   const { permissions } = useAuth()
   const queryClient = useQueryClient()
   const feedback = useFeedback()
-  const [queryText, setQueryText] = useState('')
-  const [activeFilter, setActiveFilter] = useState('')
+  const [queryText, setQueryText] = useSessionState('page:projects:query', '')
+  const [activeFilter, setActiveFilter] = useSessionState('page:projects:active-filter', '')
   const [editing, setEditing] = useState(null)
   const exportRef = useRef(null)
 
