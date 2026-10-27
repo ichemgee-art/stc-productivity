@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Eye, KeyRound, ShieldCheck, UserPlus, UserRoundCog, UsersRound } from 'lucide-react'
+import { Eye, KeyRound, ShieldCheck, UserPlus, UsersRound } from 'lucide-react'
 import { userAdminService } from '../services/userAdminService'
 import { useFeedback } from '../context/FeedbackContext'
 import Modal from '../components/Modal'
 
 const roleOptions = [
   { value: 'admin', label: 'Admin', description: 'إدارة كاملة للنظام', icon: ShieldCheck },
-  { value: 'data_entry', label: 'User', description: 'إدخال + تعديل + حذف الإنتاجية', icon: UserRoundCog },
   { value: 'viewer', label: 'Viewer', description: 'قراءة فقط', icon: Eye },
 ]
 
@@ -35,7 +34,7 @@ export default function UsersAdminPage() {
     displayName: '',
     email: '',
     password: '',
-    appRole: 'data_entry',
+    appRole: 'viewer',
   })
 
   const usersQuery = useQuery({
@@ -48,7 +47,6 @@ export default function UsersAdminPage() {
   const counts = useMemo(() => ({
     total: users.length,
     admin: users.filter((user) => user.app_role === 'admin').length,
-    data_entry: users.filter((user) => user.app_role === 'data_entry').length,
     viewer: users.filter((user) => user.app_role === 'viewer').length,
   }), [users])
 
@@ -57,7 +55,7 @@ export default function UsersAdminPage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
       setCreateOpen(false)
-      setForm({ displayName: '', email: '', password: '', appRole: 'data_entry' })
+      setForm({ displayName: '', email: '', password: '', appRole: 'viewer' })
       feedback.success('تم إنشاء المستخدم بنجاح')
     },
     onError: (error) => feedback.error(error.message || 'تعذر إنشاء المستخدم'),
@@ -109,7 +107,6 @@ export default function UsersAdminPage() {
       <section className="users-admin-stats">
         <article><UsersRound size={18} /><div><span>إجمالي الحسابات</span><strong>{counts.total}</strong></div></article>
         <article><ShieldCheck size={18} /><div><span>Admin</span><strong>{counts.admin}</strong></div></article>
-        <article><UserRoundCog size={18} /><div><span>User</span><strong>{counts.data_entry}</strong></div></article>
         <article><Eye size={18} /><div><span>Viewer</span><strong>{counts.viewer}</strong></div></article>
       </section>
 
@@ -117,7 +114,7 @@ export default function UsersAdminPage() {
         <div className="panel-header">
           <div>
             <h3>الحسابات</h3>
-            <p>الـ Viewer قراءة فقط، والـ User يقدر يسجل ويعدل ويحذف الإنتاجية، والـ Admin إدارة كاملة.</p>
+            <p>الـ Viewer قراءة فقط، والـ Admin هو الوحيد اللي يقدر يسجل ويعدل ويحذف ويدير النظام.</p>
           </div>
           <button className="btn btn-ghost btn-sm" type="button" onClick={() => usersQuery.refetch()} disabled={usersQuery.isFetching}>
             {usersQuery.isFetching ? 'جاري التحديث...' : 'تحديث'}
