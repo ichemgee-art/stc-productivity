@@ -1,10 +1,46 @@
 -- Ensure productivity and project follow-up always share one canonical project identity.
 -- Linked follow-up quantities are all-time SUM(submissions.meters) by project_id.
 
+do $$
+declare
+  rec record;
+  pid uuid;
+  existing_pid uuid;
+begin
+  for rec in
+    select * from (values
+      ('انفينتي'::text,'إنفينيتي'::text),
+      ('جامعه مصر'::text,'جامعة مصر'::text),
+      ('اسمنت العامرية'::text,'أسمنت العامرية'::text)
+    ) as v(alias_name,canonical_name)
+  loop
+    select id into pid
+    from public.projects
+    where normalized_name=lower(btrim(regexp_replace(rec.canonical_name,'\s+',' ','g')))
+    limit 1;
+
+    if pid is null then
+      raise exception 'Canonical project missing for alias %',rec.alias_name;
+    end if;
+
+    insert into public.project_aliases(alias,project_id)
+    values(rec.alias_name,pid)
+    on conflict(normalized_name) do nothing;
+
+    select project_id into existing_pid
+    from public.project_aliases
+    where normalized_name=lower(btrim(regexp_replace(rec.alias_name,'\s+',' ','g')));
+
+    if existing_pid is distinct from pid then
+      raise exception 'Alias % points to the wrong project',rec.alias_name;
+    end if;
+  end loop;
+end $$;
+
 create or replace function public.resolve_project_input_name(p_name text)
 returns text
 language plpgsql
-security definer
+security invoker
 set search_path=''
 as $$
 declare
@@ -16,21 +52,13 @@ begin
   select p.name into v_name
   from public.project_aliases a
   join public.projects p on p.id=a.project_id
-  where a.normalized_name=private.project_alias_key(v_clean)
-  limit 1;
-  if found then return v_name; end if;
-
-  select p.name into v_name
-  from private.project_name_aliases a
-  join public.projects p
-    on private.project_name_key(p.name)=private.project_name_key(a.canonical_name)
-  where a.alias_key=private.project_alias_key(v_clean)
+  where a.normalized_name=lower(v_clean)
   limit 1;
   if found then return v_name; end if;
 
   select p.name into v_name
   from public.projects p
-  where private.project_name_key(p.name)=private.project_name_key(v_clean)
+  where p.normalized_name=lower(v_clean)
   limit 1;
   if found then return v_name; end if;
 
