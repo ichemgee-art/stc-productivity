@@ -126,7 +126,7 @@ export default function AppLayout() {
         ))}
       </nav>
       <div className="sidebar-footer">
-        <div className="sidebar-role"><ShieldCheck size={17} /><div><strong>{roleLabels[profile?.app_role] || profile?.app_role}</strong><small>{profile?.app_role === 'admin' ? 'إدارة كاملة' : profile?.app_role === 'data_entry' ? 'تشغيل وإدخال' : 'قراءة فقط'}</small></div></div>
+        <div className="sidebar-role"><ShieldCheck size={17} /><div><strong>{roleLabels[profile?.app_role] || profile?.app_role}</strong><small>{profile?.app_role === 'admin' ? 'إدارة كاملة' : 'قراءة فقط'}</small></div></div>
       </div>
     </>
   )
