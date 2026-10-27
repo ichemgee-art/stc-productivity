@@ -79,7 +79,7 @@ export default function AppLayout() {
     { to: '/', label: 'لوحة الإنتاجية', icon: Gauge, end: true },
     { to: '/productivity', label: 'البيانات المحسوبة', icon: Database },
     ...(permissions.canCreateSubmission ? [{ to: '/productivity/new', label: 'تسجيل إنتاجية', icon: ClipboardPlus, accent: true }] : []),
-    { to: '/project-progress', label: 'متابعة المشاريع', icon: ClipboardList },
+    { to: '/project-progress', label: 'متابعة المشاريع', icon: ClipboardList, end: true },
     ...(permissions.canManageProjectProgress ? [{ to: '/project-progress/new', label: 'تسجيل متابعة', icon: ClipboardPlus }] : []),
     { to: '/people/engineer', label: 'المهندسين', icon: UserRoundCog },
     { to: '/people/technician', label: 'الفنيين', icon: Wrench },
