@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Database, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -35,6 +35,12 @@ export default function ProjectProgressPage() {
   const [source, setSource] = useSessionState('page:project-progress:source', '')
   const [category, setCategory] = useSessionState('page:project-progress:category', '')
   const [editing, setEditing] = useState(null)
+  const [recentlyUpdatedId, setRecentlyUpdatedId] = useState(null)
+  const highlightTimerRef = useRef(null)
+
+  useEffect(() => () => {
+    if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current)
+  }, [])
 
   const rowsQuery = useQuery({
     queryKey: ['project-progress', 'rows'],
@@ -98,9 +104,15 @@ export default function ProjectProgressPage() {
 
   const mutation = useMutation({
     mutationFn: appService.saveProjectProgress,
-    onSuccess: async (_data, variables) => {
+    onSuccess: async (data, variables) => {
+      const updatedId = data?.id || variables?.id || null
       setEditing(null)
       await queryClient.invalidateQueries({ queryKey: ['project-progress'] })
+      if (updatedId) {
+        if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current)
+        setRecentlyUpdatedId(updatedId)
+        highlightTimerRef.current = window.setTimeout(() => setRecentlyUpdatedId(null), 1800)
+      }
       feedback.success(
         'تم حفظ التعديل',
         `تم تحديث متابعة ${variables.project_name || 'المشروع'} والحسابات اتحدثت تلقائيًا.`,
@@ -223,7 +235,13 @@ export default function ProjectProgressPage() {
             </thead>
             <tbody>
               {filtered.map((row) => (
-                <tr key={row.id} className={row.execution_mode === 'linked' ? 'is-linked' : ''}>
+                <tr
+                  key={row.id}
+                  className={[
+                    row.execution_mode === 'linked' ? 'is-linked' : '',
+                    row.id === recentlyUpdatedId ? 'is-just-updated' : '',
+                  ].filter(Boolean).join(' ')}
+                >
                   <td>{displayDate(row.review_yahya_date)}</td>
                   <td>{displayDate(row.review_marina_date)}</td>
                   <td>{displayDate(row.review_abdelrahman_date)}</td>
