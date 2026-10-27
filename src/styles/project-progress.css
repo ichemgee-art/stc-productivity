@@ -1273,3 +1273,37 @@ html[data-theme="dark"] .progress-live-hint span{
     font-size:10.5px;
   }
 }
+
+/* Project progress entry full-width workspace — 2026-10-27 */
+.progress-entry-page{
+  width:100%;
+  max-width:none;
+}
+.progress-entry-form{
+  width:100%;
+  max-width:none;
+  margin-inline:0;
+}
+.progress-entry-form > *{
+  width:100%;
+  max-width:none;
+}
+
+@media(min-width:761px){
+  .progress-entry-page{
+    width:calc(100% + 40px);
+    max-width:none;
+    margin:-20px;
+    padding:20px;
+    background:color-mix(in srgb,var(--brand-navy) 1.4%,var(--brand-white));
+  }
+  .progress-entry-form{
+    width:100%;
+    max-width:none;
+    margin:0;
+  }
+}
+
+html[data-theme="dark"] .progress-entry-page{
+  background:color-mix(in srgb,var(--brand-navy) 14%,var(--surface));
+}
