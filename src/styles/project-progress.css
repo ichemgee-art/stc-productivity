@@ -1585,3 +1585,50 @@ html[data-theme="dark"] .project-progress-table tbody tr.is-linked:hover td{
     animation:none!important;
   }
 }
+
+/* Project progress toolbar full-width search — 2026-10-27 */
+.progress-table-toolbar{
+  align-items:stretch;
+}
+.progress-table-toolbar__actions{
+  flex:1 1 auto;
+  width:100%;
+  min-width:0;
+}
+.progress-search{
+  flex:1 1 0;
+  width:auto;
+  min-width:0;
+}
+.progress-search input{
+  width:100%;
+  min-width:0;
+}
+.progress-table-toolbar__actions select{
+  flex:0 0 190px;
+  width:190px;
+}
+.progress-table-toolbar__actions .export-actions,
+.progress-table-toolbar__actions > .btn{
+  flex:0 0 auto;
+}
+
+@media(max-width:1100px){
+  .progress-table-toolbar{
+    flex-direction:column;
+  }
+  .progress-table-toolbar__actions{
+    width:100%;
+  }
+  .progress-search{
+    flex:1 1 100%;
+    width:100%;
+  }
+}
+
+@media(max-width:760px){
+  .progress-table-toolbar__actions select{
+    flex:1 1 100%;
+    width:100%;
+  }
+}
