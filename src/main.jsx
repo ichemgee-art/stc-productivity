@@ -8,8 +8,11 @@ import { CycleProvider } from './context/CycleContext'
 import { FeedbackProvider } from './context/FeedbackContext'
 import { ThemeProvider } from './context/ThemeContext'
 import App from './App'
+import { installGlobalMonitoring } from './services/monitoringService'
 import './styles/app.css'
 import './styles/project-progress.css'
+
+installGlobalMonitoring()
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
