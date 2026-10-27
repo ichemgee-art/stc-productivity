@@ -143,8 +143,10 @@ export default function ProjectProgressPage() {
     <div className="project-progress-page">
       <section className="progress-table-toolbar">
         <div className="progress-table-toolbar__title">
-          <span>PREVIEW</span>
-          <div><strong>متابعة المشاريع</strong><small>{filtered.length} صف · مستورد من Excel + تحديث حي من الإنتاجية</small></div>
+          <div>
+            <strong>متابعة المشاريع</strong>
+            <small>{filtered.length} مشروع ظاهر من إجمالي {rows.length} · الكميات المرتبطة تتحدث تلقائيًا من الإنتاجية</small>
+          </div>
         </div>
         <div className="progress-table-toolbar__actions">
           <div className="input-with-icon progress-search"><Search size={16} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث في المشروع، الموقع، الملاحظات..." /></div>
@@ -164,7 +166,7 @@ export default function ProjectProgressPage() {
       </section>
 
       <section className="progress-category-filter" aria-label="فلترة المشاريع حسب الحالة">
-        <button type="button" className={!category ? 'is-active' : ''} onClick={() => setCategory('')}>
+        <button type="button" className={!category ? 'is-active' : ''} onClick={() => setCategory('')} aria-pressed={!category}>
           <span>كل المشاريع</span><b>{rows.length}</b>
         </button>
         {PROJECT_PROGRESS_CATEGORIES.map((item) => (
@@ -172,7 +174,8 @@ export default function ProjectProgressPage() {
             key={item.value}
             type="button"
             className={category === item.value ? `is-active status-${item.value}` : `status-${item.value}`}
-            onClick={() => setCategory(item.value)}
+            onClick={() => setCategory((current) => current === item.value ? '' : item.value)}
+            aria-pressed={category === item.value}
           >
             <span>{item.label}</span><b>{categoryCounts[item.value] || 0}</b>
           </button>
@@ -180,7 +183,8 @@ export default function ProjectProgressPage() {
         <button
           type="button"
           className={category === '__unclassified__' ? 'is-active status-unclassified' : 'status-unclassified'}
-          onClick={() => setCategory('__unclassified__')}
+          onClick={() => setCategory((current) => current === '__unclassified__' ? '' : '__unclassified__')}
+          aria-pressed={category === '__unclassified__'}
         >
           <span>غير مصنف</span><b>{categoryCounts.__unclassified__ || 0}</b>
         </button>
@@ -188,7 +192,7 @@ export default function ProjectProgressPage() {
 
       <section className="progress-live-hint">
         <Database size={17} />
-        <span>أي صف مرتبط بمشروع في الإنتاجية يتحدث تلقائيًا. الرقم اليدوي التاريخي يضاف فوق إنتاجية السيستم من غير Double Counting.</span>
+        <span>الكميات المنفذة للمشروع المرتبط = إجمالي أمتار إنتاجية نفس المشروع عبر كل الدورات + الكمية التاريخية قبل النظام، بدون تكرار في الحساب.</span>
       </section>
 
       <section className="progress-table-panel">
