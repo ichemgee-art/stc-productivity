@@ -1,4 +1,3 @@
-import { aiService } from './aiService'
 import { attendanceService } from './attendanceService'
 import { catalogService } from './catalogService'
 import { peopleService } from './peopleService'
@@ -15,11 +14,9 @@ export const appService = {
   ...attendanceService,
   ...catalogService,
   ...projectProgressService,
-  ...aiService,
 }
 
 export {
-  aiService,
   attendanceService,
   catalogService,
   peopleService,
