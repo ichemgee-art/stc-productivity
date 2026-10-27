@@ -13,7 +13,7 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
   })
 
-const allowedRoles = new Set(["admin", "data_entry", "viewer"])
+const allowedRoles = new Set(["admin", "viewer"])
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
