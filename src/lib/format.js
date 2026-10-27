@@ -1,6 +1,5 @@
 export const roleLabels = {
   admin: 'Admin',
-  data_entry: 'User',
   viewer: 'Viewer',
   engineer: 'مهندس',
   technician: 'فني',
