@@ -4,6 +4,7 @@ import { Search } from 'lucide-react'
 import { useCycle } from '../context/CycleContext'
 import { useAuth } from '../context/AuthContext'
 import { appService } from '../services/appService'
+import { useSessionState } from '../lib/sessionCache'
 import { date, roleLabels } from '../lib/format'
 import EmptyState from '../components/EmptyState'
 import ExportButtons from '../components/ExportButtons'
@@ -21,10 +22,10 @@ export default function AttendancePage() {
   const { permissions } = useAuth()
   const queryClient = useQueryClient()
   const feedback = useFeedback()
-  const [role, setRole] = useState('')
-  const [person, setPerson] = useState('')
-  const [status, setStatus] = useState('')
-  const [queryText, setQueryText] = useState('')
+  const [role, setRole] = useSessionState('page:attendance:role', '')
+  const [person, setPerson] = useSessionState('page:attendance:person', '')
+  const [status, setStatus] = useSessionState('page:attendance:status', '')
+  const [queryText, setQueryText] = useSessionState('page:attendance:query', '')
   const [error, setError] = useState('')
   const exportRef = useRef(null)
 
