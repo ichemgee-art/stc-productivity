@@ -75,6 +75,7 @@ begin
 
   p := jsonb_build_object('request_id',gen_random_uuid(),'execution_mode','manual','project_name','test alias '||gen_random_uuid(),'manual_executed_quantity',0);
   r := public.save_project_progress(p || jsonb_build_object('execution_mode','linked','project_id',a,'save_alias',true,'alias_name',p->>'project_name'));
+  perform public.delete_project_progress((r->>'id')::uuid);
   retried := public.save_project_progress(p || jsonb_build_object('request_id',gen_random_uuid()));
   select * into row_data from public.v_project_progress where id=(retried->>'id')::uuid;
   assert row_data.project_id=a and row_data.project=p->>'project_name', 'known alias resolves and preserves original';
