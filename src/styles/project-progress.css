@@ -1339,3 +1339,249 @@ html[data-theme="dark"] .progress-entry-page{
 html[data-theme="dark"] .progress-empty-state{
   background:var(--surface);
 }
+
+/* Unified project statuses + micro interactions — 2026-10-27 */
+.status-completed_handed_over{
+  --project-status-color:#18794E;
+  --project-status-bg:#ECF9F1;
+  --project-status-border:#A9DEC2;
+}
+.status-nearing_completion{
+  --project-status-color:#946A00;
+  --project-status-bg:#FFF8DE;
+  --project-status-border:#E8CC72;
+}
+.status-phased_client_request{
+  --project-status-color:#355E93;
+  --project-status-bg:#EEF4FB;
+  --project-status-border:#B8CBE3;
+}
+.status-active{
+  --project-status-color:#253A55;
+  --project-status-bg:#EEF2F6;
+  --project-status-border:#AEBCCA;
+}
+.status-unclassified{
+  --project-status-color:#707B87;
+  --project-status-bg:#F4F6F8;
+  --project-status-border:#D6DDE4;
+}
+
+.progress-status-badge[class*="status-"]{
+  background:var(--project-status-bg);
+  border-color:var(--project-status-border);
+  color:var(--project-status-color);
+}
+
+.progress-category-filter>button[class*="status-"]{
+  border-color:color-mix(in srgb,var(--project-status-border) 70%,var(--border));
+  background:color-mix(in srgb,var(--project-status-bg) 55%,var(--brand-white));
+  color:var(--project-status-color);
+}
+.progress-category-filter>button[class*="status-"] b{
+  color:var(--project-status-color);
+  border-color:var(--project-status-border);
+  background:var(--brand-white);
+}
+.progress-category-filter>button[class*="status-"].is-active{
+  border-color:var(--project-status-border);
+  background:var(--project-status-bg);
+  color:var(--project-status-color);
+  box-shadow:
+    inset 0 -3px 0 var(--project-status-color),
+    0 0 0 2px color-mix(in srgb,var(--project-status-color) 10%,transparent);
+}
+
+.progress-category-selector>button[class*="status-"]{
+  border-color:color-mix(in srgb,var(--project-status-border) 72%,var(--border));
+  background:color-mix(in srgb,var(--project-status-bg) 45%,var(--brand-white));
+}
+.progress-category-selector>button[class*="status-"] .progress-category-selector__icon{
+  background:var(--project-status-bg);
+  color:var(--project-status-color);
+  border:1px solid var(--project-status-border);
+}
+.progress-category-selector>button[class*="status-"].is-active{
+  border-color:var(--project-status-border);
+  background:var(--project-status-bg);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--project-status-color) 10%,transparent);
+}
+.progress-category-selector>button[class*="status-"].is-active .progress-category-selector__icon{
+  background:var(--project-status-color);
+  color:#fff;
+  border-color:var(--project-status-color);
+}
+
+.progress-category-filter>button,
+.progress-category-selector>button,
+.progress-edit-btn,
+.progress-delete-btn,
+.progress-mode-selector>button{
+  transition:
+    transform .16s ease,
+    border-color .16s ease,
+    background-color .16s ease,
+    box-shadow .16s ease,
+    color .16s ease;
+}
+.progress-category-filter>button:hover,
+.progress-category-selector>button:hover,
+.progress-edit-btn:hover:not(:disabled),
+.progress-delete-btn:hover:not(:disabled),
+.progress-mode-selector>button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 7px 18px rgba(37,58,85,.08);
+}
+.progress-category-filter>button:active,
+.progress-category-selector>button:active,
+.progress-edit-btn:active:not(:disabled),
+.progress-delete-btn:active:not(:disabled),
+.progress-mode-selector>button:active{
+  transform:translateY(0) scale(.985);
+  box-shadow:none;
+}
+
+.progress-form-card,
+.progress-selected-project,
+.progress-readonly-metric,
+.progress-calculated-card{
+  transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease;
+}
+.progress-form-card:focus-within{
+  border-color:color-mix(in srgb,var(--brand-gold) 36%,var(--border));
+  box-shadow:0 12px 30px rgba(37,58,85,.065);
+}
+.progress-entry-form .field input,
+.progress-entry-form .field select,
+.progress-entry-form .field textarea{
+  transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease;
+}
+
+.project-progress-table tbody tr td{
+  transition:background-color .16s ease,box-shadow .16s ease;
+}
+.project-progress-table tbody tr:hover td{
+  background:color-mix(in srgb,var(--brand-gold) 3.5%,#fff);
+}
+.project-progress-table tbody tr.is-linked:hover td{
+  background:color-mix(in srgb,var(--success) 4.5%,#fff);
+}
+.project-progress-table tbody tr:hover td:first-child{
+  box-shadow:inset 3px 0 0 color-mix(in srgb,var(--brand-gold) 65%,transparent);
+}
+
+@keyframes progressRowSaved{
+  0%{background:color-mix(in srgb,var(--success) 22%,#fff)}
+  40%{background:color-mix(in srgb,var(--success) 12%,#fff)}
+  100%{background:inherit}
+}
+.project-progress-table tbody tr.is-just-updated td{
+  animation:progressRowSaved 1.6s ease-out;
+}
+
+.progress-save-success{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border:1px solid var(--success-border);
+  border-radius:12px;
+  background:var(--success-soft);
+  color:var(--success);
+  animation:progressSaveSuccessIn .28s ease-out;
+}
+.progress-save-success>div{
+  display:grid;
+  gap:2px;
+}
+.progress-save-success strong{
+  font-size:12px;
+}
+.progress-save-success span{
+  font-size:10px;
+  line-height:1.6;
+  color:color-mix(in srgb,var(--success) 78%,var(--brand-navy));
+}
+@keyframes progressSaveSuccessIn{
+  from{opacity:0;transform:translateY(-4px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+html[data-theme="dark"] .status-completed_handed_over{
+  --project-status-color:#67DEA6;
+  --project-status-bg:#102C25;
+  --project-status-border:#205342;
+}
+html[data-theme="dark"] .status-nearing_completion{
+  --project-status-color:#F5C84C;
+  --project-status-bg:#302813;
+  --project-status-border:#5F4D1D;
+}
+html[data-theme="dark"] .status-phased_client_request{
+  --project-status-color:#8DB9ED;
+  --project-status-bg:#14263B;
+  --project-status-border:#29486C;
+}
+html[data-theme="dark"] .status-active{
+  --project-status-color:#D7E3EF;
+  --project-status-bg:#1A2A3C;
+  --project-status-border:#39506A;
+}
+html[data-theme="dark"] .status-unclassified{
+  --project-status-color:#A7B4C2;
+  --project-status-bg:#19232F;
+  --project-status-border:#354353;
+}
+html[data-theme="dark"] .progress-category-filter>button[class*="status-"],
+html[data-theme="dark"] .progress-category-selector>button[class*="status-"],
+html[data-theme="dark"] .progress-status-badge[class*="status-"]{
+  background:var(--project-status-bg)!important;
+  border-color:var(--project-status-border)!important;
+  color:var(--project-status-color)!important;
+}
+html[data-theme="dark"] .progress-category-filter>button[class*="status-"] b{
+  background:var(--surface-2);
+  border-color:var(--project-status-border);
+  color:var(--project-status-color);
+}
+html[data-theme="dark"] .progress-category-selector>button[class*="status-"] .progress-category-selector__icon{
+  background:var(--project-status-bg)!important;
+  border-color:var(--project-status-border)!important;
+  color:var(--project-status-color)!important;
+}
+html[data-theme="dark"] .progress-category-selector>button[class*="status-"].is-active .progress-category-selector__icon{
+  background:var(--project-status-color)!important;
+  color:#0B111A!important;
+}
+html[data-theme="dark"] .progress-save-success{
+  background:#102C25;
+  border-color:#205342;
+  color:#67DEA6;
+}
+html[data-theme="dark"] .progress-save-success span{
+  color:#A9DCC6;
+}
+html[data-theme="dark"] .project-progress-table tbody tr:hover td{
+  background:#182638!important;
+}
+html[data-theme="dark"] .project-progress-table tbody tr.is-linked:hover td{
+  background:#132B25!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .progress-category-filter>button,
+  .progress-category-selector>button,
+  .progress-edit-btn,
+  .progress-delete-btn,
+  .progress-mode-selector>button,
+  .progress-form-card,
+  .progress-entry-form .field input,
+  .progress-entry-form .field select,
+  .progress-entry-form .field textarea,
+  .project-progress-table tbody tr td{
+    transition:none!important;
+  }
+  .project-progress-table tbody tr.is-just-updated td,
+  .progress-save-success{
+    animation:none!important;
+  }
+}
