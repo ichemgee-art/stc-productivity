@@ -1,0 +1,14 @@
+{
+  "name": "stc-productivity-e2e",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "install:chromium": "playwright install chromium --with-deps"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}
