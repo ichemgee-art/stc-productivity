@@ -1,4 +1,5 @@
 import { useEffect, useId } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 export default function Modal({ open, title, children, onClose, width = 'md' }) {
@@ -19,8 +20,9 @@ export default function Modal({ open, title, children, onClose, width = 'md' }) 
     }
   }, [open, onClose])
 
-  if (!open) return null
-  return (
+  if (!open || typeof document === 'undefined') return null
+
+  return createPortal(
     <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose?.()}>
       <section className={`modal-card modal-${width}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <header className="modal-header">
@@ -29,6 +31,7 @@ export default function Modal({ open, title, children, onClose, width = 'md' }) 
         </header>
         <div className="modal-body">{children}</div>
       </section>
-    </div>
+    </div>,
+    document.body,
   )
 }
