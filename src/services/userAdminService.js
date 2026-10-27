@@ -47,4 +47,11 @@ export const userAdminService = {
       password,
     })
   },
+
+  async deleteUser(userId) {
+    return invokeUserAdmin({
+      action: 'delete_user',
+      user_id: userId,
+    })
+  },
 }
