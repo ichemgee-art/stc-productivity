@@ -77,7 +77,7 @@ export default function AppLayout() {
 
   const nav = [
     { to: '/', label: 'لوحة الإنتاجية', icon: Gauge, end: true },
-    { to: '/productivity', label: 'البيانات المحسوبة', icon: Database },
+    { to: '/productivity', label: 'البيانات المحسوبة', icon: Database, end: true },
     ...(permissions.canCreateSubmission ? [{ to: '/productivity/new', label: 'تسجيل إنتاجية', icon: ClipboardPlus, accent: true }] : []),
     { to: '/project-progress', label: 'متابعة المشاريع', icon: ClipboardList, end: true },
     ...(permissions.canManageProjectProgress ? [{ to: '/project-progress/new', label: 'تسجيل متابعة', icon: ClipboardPlus }] : []),
