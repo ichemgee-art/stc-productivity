@@ -195,8 +195,8 @@ export default function ProjectProgressPage() {
         <span>الكميات المنفذة للمشروع المرتبط = إجمالي أمتار إنتاجية نفس المشروع عبر كل الدورات + الكمية التاريخية قبل النظام، بدون تكرار في الحساب.</span>
       </section>
 
-      <section className="progress-table-panel">
-        <div className="progress-table-scroll">
+      <section className={`progress-table-panel ${!filtered.length ? 'is-empty' : ''}`}>
+        {filtered.length ? <div className="progress-table-scroll">
           <table className="project-progress-table">
             <thead>
               <tr>
@@ -285,8 +285,16 @@ export default function ProjectProgressPage() {
               ))}
             </tbody>
           </table>
-        </div>
-        {!filtered.length ? <EmptyState title="مفيش نتائج مطابقة" description="غيّر البحث أو الفلتر لعرض بيانات المتابعة." /> : null}
+        </div> : (
+          <div className="progress-empty-state">
+            <EmptyState
+              title={rows.length ? 'مفيش مشاريع مطابقة' : 'مفيش مشاريع مسجلة'}
+              description={rows.length
+                ? 'مفيش مشاريع مطابقة للبحث أو الفلتر الحالي. غيّر الفلتر أو اضغط نفس الكاتيجوري مرة تانية لإلغائها.'
+                : 'لما تسجل أول متابعة مشروع هتظهر هنا تلقائيًا.'}
+            />
+          </div>
+        )}
       </section>
 
       <Modal open={Boolean(editing)} title={editing ? `تعديل متابعة — ${editing.project || 'مشروع'}` : 'تعديل المتابعة'} onClose={() => setEditing(null)} width="xl">
