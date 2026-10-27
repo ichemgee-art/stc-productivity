@@ -11,6 +11,7 @@ import ProjectProgressForm from '../components/ProjectProgressForm'
 import EmptyState from '../components/EmptyState'
 import ExportButtons from '../components/ExportButtons'
 import { smartIncludes } from '../lib/smartSearch'
+import { useSessionState } from '../lib/sessionCache'
 
 const displayDate = (value) => {
   if (!value) return '—'
@@ -30,9 +31,9 @@ export default function ProjectProgressPage() {
   const { permissions } = useAuth()
   const feedback = useFeedback()
   const queryClient = useQueryClient()
-  const [search, setSearch] = useState('')
-  const [source, setSource] = useState('')
-  const [category, setCategory] = useState('')
+  const [search, setSearch] = useSessionState('page:project-progress:search', '')
+  const [source, setSource] = useSessionState('page:project-progress:source', '')
+  const [category, setCategory] = useSessionState('page:project-progress:category', '')
   const [editing, setEditing] = useState(null)
 
   const rowsQuery = useQuery({
