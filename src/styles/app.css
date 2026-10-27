@@ -6787,3 +6787,55 @@ html[data-theme="dark"] .users-admin-password-target{background:var(--surface-2)
   .users-admin-hero .btn{width:100%}
   .users-admin-stats{grid-template-columns:1fr 1fr}
 }
+
+/* Admin user deletion confirm — 2026-10-27 */
+.users-admin-delete-confirm{
+  display:grid;
+  gap:14px;
+}
+.users-admin-delete-icon{
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  border-radius:14px;
+  background:color-mix(in srgb,var(--red-600) 10%,var(--brand-white));
+  color:var(--red-600);
+  border:1px solid color-mix(in srgb,var(--red-600) 24%,var(--border));
+}
+.users-admin-delete-confirm>div:nth-child(2){
+  display:grid;
+  gap:5px;
+}
+.users-admin-delete-confirm>div:nth-child(2) strong{
+  color:var(--navy-900);
+  font-size:13px;
+}
+.users-admin-delete-confirm>div:nth-child(2) p{
+  margin:0;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.8;
+}
+.users-admin-delete-user{
+  display:grid;
+  gap:3px;
+  padding:11px 12px;
+  border:1px solid color-mix(in srgb,var(--red-600) 18%,var(--border));
+  border-radius:11px;
+  background:color-mix(in srgb,var(--red-600) 4%,var(--brand-white));
+}
+.users-admin-delete-user span{
+  color:var(--navy-900);
+  font-size:10px;
+  font-weight:800;
+}
+.users-admin-delete-user b{
+  color:var(--muted);
+  font-size:8px;
+  direction:ltr;
+  text-align:right;
+}
+html[data-theme="dark"] .users-admin-delete-user{
+  background:color-mix(in srgb,var(--red-600) 8%,var(--surface));
+}
