@@ -4,6 +4,7 @@ import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCycle } from '../context/CycleContext'
 import { appService } from '../services/appService'
+import { useSessionState } from '../lib/sessionCache'
 import { money, number } from '../lib/format'
 import Modal from '../components/Modal'
 import EmptyState from '../components/EmptyState'
@@ -16,8 +17,8 @@ export default function SectionsPage() {
   const { monthKey } = useCycle()
   const queryClient = useQueryClient()
   const feedback = useFeedback()
-  const [queryText, setQueryText] = useState('')
-  const [activeFilter, setActiveFilter] = useState('')
+  const [queryText, setQueryText] = useSessionState('page:sections:query', '')
+  const [activeFilter, setActiveFilter] = useSessionState('page:sections:active-filter', '')
   const [editing, setEditing] = useState(null)
   const exportRef = useRef(null)
 
