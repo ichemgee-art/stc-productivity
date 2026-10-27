@@ -6486,3 +6486,24 @@ html[data-theme="dark"] .review-complete-stat strong{
   }
   .tour-card:hover{transform:none}
 }
+
+/* SIDEBAR ACTIVE STATE — single clear current page */
+.nav-link.accent:not(.active){
+  background:transparent;
+  border-color:transparent;
+  color:rgba(255,255,255,.66);
+}
+.nav-link:hover:not(.active){
+  background:rgba(255,255,255,.07);
+  color:var(--brand-white);
+}
+.nav-link.active,
+.nav-link.accent.active{
+  position:relative;
+  background:rgba(243,184,32,.18);
+  color:var(--brand-white);
+  border-color:transparent;
+  box-shadow:
+    inset -4px 0 0 var(--brand-gold),
+    inset 0 0 0 1px rgba(243,184,32,.62);
+}
