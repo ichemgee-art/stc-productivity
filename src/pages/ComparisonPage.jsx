@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeftRight, BarChart3, CalendarCheck2, CalendarX2, CircleDollarSign, Ruler, TrendingDown, TrendingUp } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useCycle } from '../context/CycleContext'
+import { useSessionState } from '../lib/sessionCache'
 import { appService } from '../services/appService'
 import { date, money, monthName, number } from '../lib/format'
 import ExportButtons from '../components/ExportButtons'
@@ -113,8 +114,8 @@ function NamedComparisonTable({ title, rows, moneyMode = false, peopleMode = fal
 export default function ComparisonPage() {
   const { cycles, monthKey } = useCycle()
   const printRef = useRef(null)
-  const [currentKey, setCurrentKey] = useState('')
-  const [previousKey, setPreviousKey] = useState('')
+  const [currentKey, setCurrentKey] = useSessionState('page:comparison:current', '')
+  const [previousKey, setPreviousKey] = useSessionState('page:comparison:previous', '')
 
   useEffect(() => {
     if (!cycles.length || currentKey) return
