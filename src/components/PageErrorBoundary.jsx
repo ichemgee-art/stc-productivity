@@ -1,5 +1,6 @@
 import React from 'react'
 import { RefreshCcw, TriangleAlert } from 'lucide-react'
+import { captureClientError } from '../services/monitoringService'
 
 export default class PageErrorBoundary extends React.Component {
   constructor(props) {
@@ -19,6 +20,11 @@ export default class PageErrorBoundary extends React.Component {
 
   componentDidCatch(error, info) {
     console.error('Page render error', error, info)
+    captureClientError(error, {
+      source: 'react.error-boundary',
+      componentStack: info?.componentStack || '',
+      metadata: { resetKey: this.props.resetKey || '' },
+    })
   }
 
   render() {
