@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Database, FileSpreadsheet, Pencil, Pin, Plus, Search, Trash2 } from 'lucide-react'
+import { Database, ExternalLink, FileSpreadsheet, Paperclip, Pencil, Pin, Plus, Search, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PROJECT_PROGRESS_CATEGORIES, projectCategoryLabel, progressMetersById } from '../lib/projectProgress'
 import { appService } from '../services/appService'
@@ -31,6 +31,8 @@ const PROJECT_PROGRESS_PIN_COLUMNS = [
   { key: 'number', label: 'رقم' },
   { key: 'project', label: 'المشروع' },
   { key: 'location', label: 'الموقع' },
+  { key: 'originalContract', label: 'كمية التعاقد الأصلية' },
+  { key: 'contractValue', label: 'قيمة العقد' },
   { key: 'financial', label: 'الموقف المالي' },
   { key: 'contract', label: 'نوع التعاقد' },
   { key: 'team', label: 'الطاقم المسئول' },
@@ -93,6 +95,8 @@ export default function ProjectProgressPage() {
       row.responsible_team,
       row.notes,
       row.contract_quantity,
+      row.original_contract_quantity,
+      row.contract_value,
       row.executed_quantity,
       row.execution_percent,
     )
@@ -109,18 +113,25 @@ export default function ProjectProgressPage() {
       'آخر مراجعة - م. يحيي حسين': displayDate(row.review_yahya_date),
       'آخر مراجعة - م. مارينا سامي': displayDate(row.review_marina_date),
       'آخر مراجعة - م. عبدالرحمن حسين': displayDate(row.review_abdelrahman_date),
-      'كميات العقد': row.contract_quantity == null ? '' : Number(row.contract_quantity),
+      'كميات التعاقد + البنود المحملة على القطاعات': row.contract_quantity == null ? '' : Number(row.contract_quantity),
       'الكميات المنفذة': row.executed_quantity == null ? '' : Number(row.executed_quantity),
       'نسبة التنفيذ %': row.execution_percent == null ? '' : Number(row.execution_percent),
+      'كمية التعاقد الأصلية': row.original_contract_quantity == null ? '' : Number(row.original_contract_quantity),
+      'قيمة العقد (ج.م)': row.contract_value == null ? '' : Number(row.contract_value),
       'الموقف المالي': row.financial_status || '',
       'نوع التعاقد': row.contract_type || '',
       'الطاقم المسئول': row.responsible_team || '',
       'ملاحظات': row.notes || '',
+      'المرفقات': Number(row.attachment_count || 0),
     })),
   }], [filtered])
 
   const mutation = useMutation({
-    mutationFn: appService.saveProjectProgress,
+    mutationFn: async ({ payload, newFiles, removeAttachmentIds }) => {
+      const saved = await appService.saveProjectProgress(payload)
+      await appService.syncProjectProgressAttachments(saved.id, { newFiles, removeAttachmentIds })
+      return saved
+    },
     onSuccess: async (data, variables) => {
       const updatedId = data?.id || variables?.id || null
       setEditing(null)
@@ -132,7 +143,7 @@ export default function ProjectProgressPage() {
       }
       feedback.success(
         'تم حفظ التعديل',
-        `تم تحديث متابعة ${variables.project_name || 'المشروع'} والحسابات اتحدثت تلقائيًا.`,
+        `تم تحديث متابعة ${variables.payload?.project_name || 'المشروع'} والحسابات والمرفقات اتحدثت بنجاح.`,
       )
     },
     onError: (error) => feedback.error('تعذر حفظ التعديل', error.message || 'حدث خطأ غير متوقع'),
@@ -243,18 +254,21 @@ export default function ProjectProgressPage() {
                 <th rowSpan="2" className={progressPinClass(pinnedColumn, 'project')}>المشروع</th>
                 <th rowSpan="2" className={progressPinClass(pinnedColumn, 'location')}>الموقع</th>
                 <th colSpan="3" className="progress-group-head">موقف تنفيذي</th>
+                <th rowSpan="2" className={progressPinClass(pinnedColumn, 'originalContract')}>كمية التعاقد الأصلية</th>
+                <th rowSpan="2" className={progressPinClass(pinnedColumn, 'contractValue')}>قيمة العقد</th>
                 <th rowSpan="2" className={progressPinClass(pinnedColumn, 'financial')}>موقف المالي</th>
                 <th rowSpan="2" className={progressPinClass(pinnedColumn, 'contract')}>نوع التعاقد</th>
                 <th rowSpan="2" className={progressPinClass(pinnedColumn, 'team')}>الطاقم المسئول عن استكمال الاعمال</th>
                 <th rowSpan="2" className={progressPinClass(pinnedColumn, 'notes')}>ملاحظات</th>
                 <th rowSpan="2" className={progressPinClass(pinnedColumn, 'status', 'progress-status-head')}>حالة المشروع</th>
+                <th rowSpan="2" className="progress-attachments-head">المرفقات</th>
                 {(permissions.canManageProjectProgress || permissions.canDeleteProjectProgress) ? <th rowSpan="2" className="progress-actions-head">إجراءات</th> : null}
               </tr>
               <tr>
                 <th>م. يحيي حسين</th>
                 <th>م. مارينا سامي</th>
                 <th>م. عبدالرحمن حسين</th>
-                <th>كميات العقد</th>
+                <th>كميات التعاقد + البنود المحملة على القطاعات</th>
                 <th>الكميات المنفذة</th>
                 <th>نسب التنفيذ %</th>
               </tr>
@@ -273,7 +287,10 @@ export default function ProjectProgressPage() {
                   <td>{displayDate(row.review_abdelrahman_date)}</td>
                   <td className={progressPinClass(pinnedColumn, 'number', 'progress-number-cell')}>{row.display_number ?? '—'}</td>
                   <td className={progressPinClass(pinnedColumn, 'project', 'progress-project-cell')}>
-                    <strong title={row.project || ''}>{row.project || '—'}</strong>
+                    <Link className="progress-project-link" to={`/project-progress/${row.id}`} title={row.project || ''}>
+                      <strong>{row.project || '—'}</strong>
+                      <ExternalLink size={13} />
+                    </Link>
                     {row.source === 'excel_import' ? <small><FileSpreadsheet size={12} /> Excel</small> : null}
                   </td>
                   <td className={progressPinClass(pinnedColumn, 'location')}>{row.location || '—'}</td>
@@ -287,6 +304,8 @@ export default function ProjectProgressPage() {
                   <td className={Number(row.execution_percent || 0) > 100 ? 'progress-percent over' : 'progress-percent'}>
                     {row.execution_percent == null ? '—' : `${displayNumber(row.execution_percent)}%`}
                   </td>
+                  <td className={progressPinClass(pinnedColumn, 'originalContract', 'progress-metric-cell')}>{displayNumber(row.original_contract_quantity)}</td>
+                  <td className={progressPinClass(pinnedColumn, 'contractValue', 'progress-money-cell')}>{row.contract_value == null ? '—' : `${displayNumber(row.contract_value)} ج.م`}</td>
                   <td className={progressPinClass(pinnedColumn, 'financial', 'progress-long-cell')}>{row.financial_status || '—'}</td>
                   <td className={progressPinClass(pinnedColumn, 'contract', 'progress-long-cell')}>{row.contract_type || '—'}</td>
                   <td className={progressPinClass(pinnedColumn, 'team', 'progress-long-cell')}>{row.responsible_team || '—'}</td>
@@ -295,6 +314,13 @@ export default function ProjectProgressPage() {
                     <span className={`progress-status-badge status-${row.project_category || 'unclassified'}`}>
                       {projectCategoryLabel(row.project_category, { short: true })}
                     </span>
+                  </td>
+                  <td className="progress-attachments-cell">
+                    {Number(row.attachment_count || 0) > 0 ? (
+                      <Link to={`/project-progress/${row.id}#attachments`} className="progress-attachment-count">
+                        <Paperclip size={14} /><span>{Number(row.attachment_count)} مرفق</span>
+                      </Link>
+                    ) : <span className="progress-no-attachments">—</span>}
                   </td>
                   {(permissions.canManageProjectProgress || permissions.canDeleteProjectProgress) ? (
                     <td className="progress-row-actions">
@@ -349,7 +375,7 @@ export default function ProjectProgressPage() {
             initial={editing}
             submitting={mutation.isPending}
             onCancel={() => setEditing(null)}
-            onSubmit={(payload) => mutation.mutateAsync(payload)}
+            onSubmit={(submission) => mutation.mutateAsync(submission)}
           />
         ) : null}
       </Modal>
