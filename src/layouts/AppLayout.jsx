@@ -65,8 +65,8 @@ export default function AppLayout() {
       const role = location.pathname.split('/').pop()
       return [peopleLabels[role] || 'الأفراد', 'الإنتاجية والحضور ومستحقات كل شخص في الدورة.']
     }
-    if (location.pathname.startsWith('/projects/')) {
-      return ['Project 360', 'كل بيانات المشروع التشغيلية والتاريخية في مكان واحد.']
+    if (/^\/project-progress\/[^/]+$/.test(location.pathname)) {
+      return ['ملف المشروع', 'عرض احترافي لبيانات متابعة المشروع والمرفقات المسجلة.']
     }
     return pageTitles[location.pathname] || ['STC Productivity', 'Engineering Operations System']
   }, [location.pathname])
