@@ -18,7 +18,7 @@ import QuarterReportPage from './pages/QuarterReportPage'
 import ProjectProgressPage from './pages/ProjectProgressPage'
 import NewProjectProgressPage from './pages/NewProjectProgressPage'
 import UsersAdminPage from './pages/UsersAdminPage'
-import Project360Page from './pages/Project360Page'
+import ProjectProgressDetailsPage from './pages/ProjectProgressDetailsPage'
 
 function RequireAuth({ children }) {
   const { session, profile, loading, error, signOut } = useAuth()
@@ -67,8 +67,8 @@ export default function App() {
         <Route path="attendance" element={<AttendancePage />} />
         <Route path="project-progress" element={<ProjectProgressPage />} />
         <Route path="project-progress/new" element={<RequireCreate><NewProjectProgressPage /></RequireCreate>} />
+        <Route path="project-progress/:recordId" element={<ProjectProgressDetailsPage />} />
         <Route path="projects" element={<ProjectsPage />} />
-        <Route path="projects/:projectId" element={<Project360Page />} />
         <Route path="sections" element={<SectionsPage />} />
         <Route path="comparison" element={<ComparisonPage />} />
         <Route path="report" element={<ExecutiveReportPage />} />
