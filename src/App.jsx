@@ -1,3 +1,4 @@
+// STC Operations application routes
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import LoadingScreen from './components/LoadingScreen'
