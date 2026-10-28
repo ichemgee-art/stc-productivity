@@ -14,6 +14,37 @@ const loadPdfJs = async () => {
   return pdfJsPromise
 }
 
+const renderPageToJpeg = async (page, { targetWidth = 1200, maxScale = 3, quality = 0.9 } = {}) => {
+  const baseViewport = page.getViewport({ scale: 1 })
+  const scale = Math.min(maxScale, Math.max(1, targetWidth / baseViewport.width))
+  const viewport = page.getViewport({ scale })
+
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.ceil(viewport.width)
+  canvas.height = Math.ceil(viewport.height)
+
+  const context = canvas.getContext('2d', { alpha: false })
+  context.fillStyle = '#ffffff'
+  context.fillRect(0, 0, canvas.width, canvas.height)
+
+  await page.render({ canvasContext: context, viewport }).promise
+
+  const dataUrl = canvas.toDataURL('image/jpeg', quality)
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality))
+  if (!blob) throw new Error('تعذر إنشاء صورة من صفحة PDF')
+
+  const result = {
+    blob,
+    dataUrl,
+    width: canvas.width,
+    height: canvas.height,
+  }
+
+  canvas.width = 1
+  canvas.height = 1
+  return result
+}
+
 export async function renderPdfFirstPage(file) {
   const pdfjs = await loadPdfJs()
   const bytes = await file.arrayBuffer()
@@ -21,24 +52,48 @@ export async function renderPdfFirstPage(file) {
 
   try {
     const page = await pdfDocument.getPage(1)
-    const baseViewport = page.getViewport({ scale: 1 })
-    const targetWidth = 1200
-    const scale = Math.min(2, Math.max(1, targetWidth / baseViewport.width))
-    const viewport = page.getViewport({ scale })
+    const rendered = await renderPageToJpeg(page, {
+      targetWidth: 1200,
+      maxScale: 2,
+      quality: 0.88,
+    })
+    return rendered.blob
+  } finally {
+    await pdfDocument.destroy()
+  }
+}
 
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.ceil(viewport.width)
-    canvas.height = Math.ceil(viewport.height)
+export async function renderPdfPagesFromUrl(url, {
+  targetWidth = 2400,
+  maxScale = 4,
+  quality = 0.95,
+  onPage,
+} = {}) {
+  if (!url) throw new Error('رابط ملف PDF غير متاح')
 
-    const context = canvas.getContext('2d', { alpha: false })
-    context.fillStyle = '#ffffff'
-    context.fillRect(0, 0, canvas.width, canvas.height)
+  const response = await fetch(url)
+  if (!response.ok) throw new Error('تعذر تحميل ملف PDF المرفق')
 
-    await page.render({ canvasContext: context, viewport }).promise
+  const pdfjs = await loadPdfJs()
+  const bytes = await response.arrayBuffer()
+  const pdfDocument = await pdfjs.getDocument({ data: bytes }).promise
+  const pages = []
 
-    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.88))
-    if (!blob) throw new Error('تعذر إنشاء صورة معاينة للـ PDF')
-    return blob
+  try {
+    for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
+      const page = await pdfDocument.getPage(pageNumber)
+      const rendered = await renderPageToJpeg(page, { targetWidth, maxScale, quality })
+      const pageData = {
+        pageNumber,
+        totalPages: pdfDocument.numPages,
+        dataUrl: rendered.dataUrl,
+        width: rendered.width,
+        height: rendered.height,
+      }
+      if (onPage) await onPage(pageData)
+      else pages.push(pageData)
+    }
+    return pages
   } finally {
     await pdfDocument.destroy()
   }
