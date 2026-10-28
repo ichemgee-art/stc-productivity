@@ -1150,7 +1150,8 @@ const appendAttachmentPages = async (pdf, attachments = []) => {
       }
     }
 
-    if (attachment.mime_type?.startsWith('image/')) {
+    const isImage = attachment.mime_type?.startsWith('image/') || /\.(?:jpe?g|png|webp|gif|bmp)$/i.test(String(attachment.file_name || ''))
+    if (isImage) {
       try {
         const image = await loadImageAsJpeg(attachment.url)
         addFullPageImageToPdf(pdf, image)
