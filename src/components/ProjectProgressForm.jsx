@@ -35,7 +35,7 @@ const emptyForm = {
 
 const toInput = (value) => value == null ? '' : String(value)
 
-const MAX_ATTACHMENTS = 3
+const MAX_ATTACHMENTS = 5
 const MAX_ATTACHMENT_SIZE = 15 * 1024 * 1024
 const ALLOWED_ATTACHMENT_TYPES = new Set([
   'application/pdf',
@@ -484,7 +484,7 @@ export default function ProjectProgressForm({
 
         <div className="progress-subsection-title progress-subsection-title--spaced">
           <strong>مرفقات المشروع</strong>
-          <span>بحد أقصى 3 ملفات — PDF أو صور أو Word أو Excel — والـPDF بيتجهز له Preview للصفحة الأولى تلقائيًا.</span>
+          <span>بحد أقصى 5 ملفات — PDF أو صور أو Word أو Excel — والـPDF بيتجهز له Preview للصفحة الأولى تلقائيًا.</span>
         </div>
 
         <div className="progress-attachments-box">
