@@ -7205,3 +7205,30 @@ html[data-theme="dark"] .management-project-table .data-table tbody tr:nth-child
 /* Two-role admin picker alignment */
 .users-admin-role-picker{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:620px){.users-admin-role-picker{grid-template-columns:1fr}}
+
+/* Admin creator credit — 2026-10-28 */
+.sidebar-role>div{
+  min-width:0;
+}
+.sidebar-creator-credit{
+  display:grid;
+  gap:1px;
+  margin-top:7px;
+  padding-top:7px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.sidebar-creator-credit em{
+  color:rgba(255,255,255,.34);
+  font-size:7px;
+  font-style:normal;
+  letter-spacing:.35px;
+  text-transform:uppercase;
+}
+.sidebar-creator-credit b{
+  color:color-mix(in srgb,var(--brand-gold) 88%,#fff);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.15px;
+  white-space:nowrap;
+}
+
