@@ -1617,3 +1617,246 @@
   pointer-events:none;
 }
 
+/* Final project progress review summary — 2026-10-28 */
+.progress-final-review{
+  display:grid;
+  gap:15px;
+  padding:17px;
+  border:1px solid var(--border);
+  border-radius:15px;
+  background:var(--surface-2);
+  box-shadow:var(--shadow-soft);
+}
+.progress-final-review__head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding-bottom:13px;
+  border-bottom:1px solid var(--border);
+}
+.progress-final-review__title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.progress-final-review__title>span{
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  border-radius:11px;
+  background:color-mix(in srgb,var(--brand-gold) 12%,var(--surface));
+  color:var(--brand-gold);
+  border:1px solid color-mix(in srgb,var(--brand-gold) 24%,var(--border));
+}
+.progress-final-review__title>div{
+  display:grid;
+  gap:2px;
+  min-width:0;
+}
+.progress-final-review__title strong{
+  color:var(--text-strong);
+  font-size:14px;
+}
+.progress-final-review__title small{
+  color:var(--muted);
+  font-size:9px;
+}
+.progress-final-review__ready{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-height:30px;
+  padding:6px 9px;
+  border:1px solid var(--warning-border);
+  border-radius:999px;
+  background:var(--warning-soft);
+  color:var(--warning);
+  font-size:8px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.progress-final-review__ready.is-ready{
+  background:var(--success-soft);
+  border-color:var(--success-border);
+  color:var(--success);
+}
+
+.progress-final-review__identity{
+  display:grid;
+  grid-template-columns:minmax(0,1.4fr) minmax(0,1.2fr) minmax(0,.8fr);
+  gap:9px;
+}
+.progress-final-review__identity>div,
+.progress-final-review__metrics article{
+  min-width:0;
+  display:grid;
+  gap:4px;
+  padding:11px 12px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:var(--surface);
+}
+.progress-final-review__identity span,
+.progress-final-review__metrics span{
+  color:var(--muted);
+  font-size:8px;
+  font-weight:800;
+}
+.progress-final-review__identity strong{
+  color:var(--text-strong);
+  font-size:11px;
+  line-height:1.55;
+  overflow-wrap:anywhere;
+}
+.progress-final-review__identity small{
+  color:var(--muted);
+  font-size:8px;
+  line-height:1.55;
+}
+
+.progress-final-review__metrics{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+}
+.progress-final-review__metrics article{
+  position:relative;
+  overflow:hidden;
+}
+.progress-final-review__metrics article::before{
+  content:'';
+  position:absolute;
+  inset-inline-start:0;
+  top:0;
+  bottom:0;
+  width:3px;
+  background:var(--brand-gold);
+}
+.progress-final-review__metrics strong{
+  color:var(--text-strong);
+  font-size:16px;
+  line-height:1.35;
+}
+
+.progress-final-review__details{
+  display:grid;
+  gap:12px;
+  padding-top:2px;
+}
+.progress-final-review__section-title{
+  color:var(--text);
+  font-size:9px;
+  font-weight:900;
+}
+.progress-final-review__reviews{
+  display:grid;
+  gap:8px;
+}
+.progress-final-review__reviews>div{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.progress-final-review__reviews>div>span{
+  display:grid;
+  gap:4px;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface-soft);
+}
+.progress-final-review__reviews small{
+  color:var(--muted);
+  font-size:8px;
+}
+.progress-final-review__reviews strong{
+  color:var(--text);
+  font-size:9px;
+}
+
+.progress-final-review__text-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.progress-final-review__text-grid>div{
+  min-width:0;
+  display:grid;
+  gap:4px;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface-soft);
+}
+.progress-final-review__text-grid>div.is-wide{
+  grid-column:1/-1;
+}
+.progress-final-review__text-grid span{
+  color:var(--muted);
+  font-size:8px;
+  font-weight:800;
+}
+.progress-final-review__text-grid p{
+  margin:0;
+  color:var(--text);
+  font-size:9px;
+  line-height:1.7;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+
+.progress-final-review__footer{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  padding:10px 11px;
+  border-radius:10px;
+  background:var(--success-soft);
+  color:var(--success);
+  border:1px solid var(--success-border);
+  font-size:9px;
+  font-weight:800;
+}
+.progress-final-review__footer svg{
+  flex:0 0 auto;
+}
+
+@media(max-width:900px){
+  .progress-final-review__identity{
+    grid-template-columns:1fr 1fr;
+  }
+  .progress-final-review__identity>div:first-child{
+    grid-column:1/-1;
+  }
+  .progress-final-review__metrics{
+    grid-template-columns:1fr 1fr;
+  }
+}
+@media(max-width:640px){
+  .progress-final-review{
+    padding:13px;
+  }
+  .progress-final-review__head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .progress-final-review__identity,
+  .progress-final-review__metrics,
+  .progress-final-review__reviews>div,
+  .progress-final-review__text-grid{
+    grid-template-columns:1fr;
+  }
+  .progress-final-review__identity>div:first-child,
+  .progress-final-review__text-grid>div.is-wide{
+    grid-column:auto;
+  }
+  .progress-final-review__ready{
+    width:100%;
+    justify-content:center;
+  }
+}
+
