@@ -6529,3 +6529,137 @@ body{font-size:15px}
   .data-table{font-size:11px}
   .data-table th{font-size:10px}
 }
+
+
+/* Executive report: contract and project follow-up summary — 2026-10-29 */
+.project-contract-summary{
+  background:var(--surface);
+}
+.project-contract-kpis{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:8px;
+  padding:12px 13px;
+  border-bottom:1px solid var(--border);
+}
+.project-contract-kpis>div{
+  min-width:0;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:center;
+  gap:3px 8px;
+  padding:11px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:var(--surface-2);
+}
+.project-contract-kpis svg{
+  grid-row:1/3;
+  color:var(--brand-gold);
+}
+.project-contract-kpis span{
+  color:var(--muted);
+  font-size:7.5px;
+}
+.project-contract-kpis strong{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--text);
+  font-size:12px;
+}
+.project-contract-details{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  padding:12px 13px;
+  border-bottom:1px solid var(--border);
+}
+.project-contract-details>div{
+  display:grid;
+  gap:3px;
+  padding:9px 10px;
+  border-radius:9px;
+  background:var(--surface-2);
+}
+.project-contract-details span,
+.project-contract-text-grid span{
+  color:var(--muted);
+  font-size:7.5px;
+  font-weight:800;
+}
+.project-contract-details strong{
+  color:var(--text);
+  font-size:9px;
+  line-height:1.55;
+}
+.project-contract-text-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  padding:12px 13px;
+}
+.project-contract-text-grid article{
+  min-width:0;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface-2);
+}
+.project-contract-text-grid p{
+  margin:4px 0 0;
+  color:var(--text);
+  font-size:8.5px;
+  line-height:1.75;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.project-contract-empty{
+  padding:22px 14px;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.8;
+  text-align:center;
+}
+
+@media(max-width:1100px){
+  .project-contract-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .project-contract-kpis{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    padding:10px;
+  }
+  .project-contract-details{
+    grid-template-columns:1fr;
+    padding:10px;
+  }
+  .project-contract-text-grid{
+    grid-template-columns:1fr;
+    padding:10px;
+  }
+}
+@media print{
+  .project-contract-kpis{
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    gap:5px!important;
+    padding:8px 0!important;
+  }
+  .project-contract-kpis>div,
+  .project-contract-details>div,
+  .project-contract-text-grid article{
+    break-inside:avoid!important;
+    page-break-inside:avoid!important;
+  }
+  .project-contract-details{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+    padding:7px 0!important;
+  }
+  .project-contract-text-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:5px!important;
+    padding:7px 0!important;
+  }
+}
