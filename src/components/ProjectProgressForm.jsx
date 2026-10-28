@@ -44,13 +44,17 @@ const ALLOWED_ATTACHMENT_TYPES = new Set([
   'image/webp',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ])
 
 const attachmentKind = (mimeType) => mimeType === 'application/pdf'
   ? 'PDF'
   : mimeType?.startsWith('image/')
     ? 'صورة'
-    : 'Word'
+    : mimeType === 'application/vnd.ms-excel' || mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ? 'Excel'
+      : 'Word'
 
 const fileSize = (bytes) => {
   const value = Number(bytes || 0)
@@ -480,7 +484,7 @@ export default function ProjectProgressForm({
 
         <div className="progress-subsection-title progress-subsection-title--spaced">
           <strong>مرفقات المشروع</strong>
-          <span>بحد أقصى 3 ملفات — PDF أو صور أو Word — والـPDF بيتجهز له Preview للصفحة الأولى تلقائيًا.</span>
+          <span>بحد أقصى 3 ملفات — PDF أو صور أو Word أو Excel — والـPDF بيتجهز له Preview للصفحة الأولى تلقائيًا.</span>
         </div>
 
         <div className="progress-attachments-box">
@@ -492,7 +496,7 @@ export default function ProjectProgressForm({
               type="file"
               multiple
               disabled={attachmentCount >= MAX_ATTACHMENTS}
-              accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,application/pdf,image/jpeg,image/png,image/webp,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,image/webp,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={onFilesSelected}
             />
           </label>
@@ -504,7 +508,7 @@ export default function ProjectProgressForm({
               {visibleExistingAttachments.map((item) => (
                 <div className="progress-attachment-item" key={item.id}>
                   <span className="progress-attachment-item__icon">
-                    {item.mime_type === 'application/pdf' ? <FileText size={18} /> : item.mime_type?.startsWith('image/') ? <FileImage size={18} /> : <Paperclip size={18} />}
+                    {item.mime_type === 'application/pdf' ? <FileText size={18} /> : item.mime_type?.startsWith('image/') ? <FileImage size={18} /> : item.mime_type === 'application/vnd.ms-excel' || item.mime_type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ? <FileSpreadsheet size={18} /> : <Paperclip size={18} />}
                   </span>
                   <div>
                     <strong>{item.file_name}</strong>
@@ -518,7 +522,7 @@ export default function ProjectProgressForm({
               {newFiles.map((file, index) => (
                 <div className="progress-attachment-item is-new" key={`${file.name}-${file.size}-${index}`}>
                   <span className="progress-attachment-item__icon">
-                    {file.type === 'application/pdf' ? <FileText size={18} /> : file.type?.startsWith('image/') ? <FileImage size={18} /> : <Paperclip size={18} />}
+                    {file.type === 'application/pdf' ? <FileText size={18} /> : file.type?.startsWith('image/') ? <FileImage size={18} /> : file.type === 'application/vnd.ms-excel' || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ? <FileSpreadsheet size={18} /> : <Paperclip size={18} />}
                   </span>
                   <div>
                     <strong>{file.name}</strong>
