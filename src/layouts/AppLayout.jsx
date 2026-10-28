@@ -92,37 +92,72 @@ export default function AppLayout() {
     }
   }
 
-  const nav = [
-    { to: '/', label: 'لوحة الإنتاجية', icon: Gauge, end: true },
-    { to: '/productivity', label: 'البيانات المحسوبة', icon: Database, end: true },
-    ...(permissions.canCreateSubmission ? [{ to: '/productivity/new', label: 'تسجيل إنتاجية', icon: ClipboardPlus, accent: true }] : []),
-    { to: '/project-progress', label: 'متابعة المشاريع', icon: ClipboardList, end: true },
-    ...(permissions.canManageProjectProgress ? [{ to: '/project-progress/new', label: 'تسجيل متابعة', icon: ClipboardPlus }] : []),
-    { to: '/people/engineer', label: 'المهندسين', icon: UserRoundCog },
-    { to: '/people/technician', label: 'الفنيين', icon: Wrench },
-    { to: '/people/assistant', label: 'المساعدين', icon: Users },
-    { to: '/people/worker', label: 'العمال', icon: Users },
-    { to: '/attendance', label: 'الحضور والغياب', icon: CalendarDays },
-    { to: '/comparison', label: 'مقارنة الشهور', icon: ArrowLeftRight },
-    { to: '/quarter', label: 'حساب الكوارتر', icon: CalendarRange },
-    { to: '/report', label: 'التقرير التنفيذي', icon: FileText },
-    ...(permissions.canViewAudit ? [{ to: '/audit', label: 'سجل التعديلات', icon: History }] : []),
-    ...(permissions.canManageUsers ? [{ to: '/admin/users', label: 'إدارة المستخدمين', icon: UsersRound }] : []),
-    { to: '/projects', label: 'المشاريع', icon: FolderKanban },
-    { to: '/sections', label: 'القطاعات والأسعار', icon: Settings2 },
+  const navGroups = [
+    {
+      label: 'نظرة عامة',
+      items: [
+        { to: '/', label: 'لوحة الإدارة', icon: Gauge, end: true },
+      ],
+    },
+    {
+      label: 'التشغيل',
+      items: [
+        { to: '/productivity', label: 'الإنتاجية', icon: Database, end: true },
+        ...(permissions.canCreateSubmission ? [{ to: '/productivity/new', label: 'تسجيل إنتاجية', icon: ClipboardPlus, accent: true }] : []),
+        { to: '/project-progress', label: 'متابعة المشاريع', icon: ClipboardList, end: true },
+        ...(permissions.canManageProjectProgress ? [{ to: '/project-progress/new', label: 'تسجيل متابعة', icon: ClipboardPlus }] : []),
+        { to: '/attendance', label: 'الحضور والغياب', icon: CalendarDays },
+      ],
+    },
+    {
+      label: 'فريق العمل',
+      items: [
+        { to: '/people/engineer', label: 'المهندسين', icon: UserRoundCog },
+        { to: '/people/technician', label: 'الفنيين', icon: Wrench },
+        { to: '/people/assistant', label: 'المساعدين', icon: Users },
+        { to: '/people/worker', label: 'العمال', icon: Users },
+      ],
+    },
+    {
+      label: 'التقارير والتحليل',
+      items: [
+        { to: '/comparison', label: 'مقارنة الشهور', icon: ArrowLeftRight },
+        { to: '/quarter', label: 'حساب الكوارتر', icon: CalendarRange },
+        { to: '/report', label: 'التقرير التنفيذي', icon: FileText },
+      ],
+    },
+    {
+      label: 'الإدارة والإعدادات',
+      items: [
+        { to: '/projects', label: 'المشاريع', icon: FolderKanban },
+        { to: '/sections', label: 'القطاعات والأسعار', icon: Settings2 },
+        ...(permissions.canViewAudit ? [{ to: '/audit', label: 'سجل التعديلات', icon: History }] : []),
+        ...(permissions.canManageUsers ? [{ to: '/admin/users', label: 'إدارة المستخدمين', icon: UsersRound }] : []),
+      ],
+    },
   ]
 
   const sidebar = (
     <>
       <div className="sidebar-brand">
         <img className="sidebar-brand-logo" src="/stc-logo-hq.jpg" alt="STC Specialized Trading & Construction" />
+        <div className="sidebar-brand-copy">
+          <strong>STC Operations</strong>
+          <small>Company Management Platform</small>
+        </div>
       </div>
-      <div className="sidebar-section-label">OPERATIONS</div>
-      <nav className="sidebar-nav">
-        {nav.map(({ to, label, icon: Icon, end, accent }) => (
-          <NavLink key={to} to={to} end={end} onClick={() => setMobileOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${accent ? 'accent' : ''}`}>
-            {Icon ? <Icon size={18} /> : null}<span>{label}</span>
-          </NavLink>
+      <nav className="sidebar-nav sidebar-nav-groups">
+        {navGroups.map((group) => (
+          <section className="sidebar-nav-group" key={group.label}>
+            <div className="sidebar-section-label">{group.label}</div>
+            <div className="sidebar-nav-group__items">
+              {group.items.map(({ to, label, icon: Icon, end, accent }) => (
+                <NavLink key={to} to={to} end={end} onClick={() => setMobileOpen(false)} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${accent ? 'accent' : ''}`}>
+                  {Icon ? <Icon size={18} /> : null}<span>{label}</span>
+                </NavLink>
+              ))}
+            </div>
+          </section>
         ))}
       </nav>
       <div className="sidebar-footer">
