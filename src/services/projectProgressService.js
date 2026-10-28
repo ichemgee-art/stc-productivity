@@ -116,16 +116,22 @@ const uploadAttachment = async (projectProgressId, file) => {
     if (originalUpload.error) throw originalUpload.error
 
     if (file.type === 'application/pdf') {
-      const previewBlob = await renderPdfFirstPage(file)
-      previewPath = `${projectProgressId}/previews/${token}.jpg`
-      const previewUpload = await supabase.storage
-        .from(ATTACHMENT_BUCKET)
-        .upload(previewPath, previewBlob, {
-          cacheControl: '3600',
-          contentType: 'image/jpeg',
-          upsert: false,
-        })
-      if (previewUpload.error) throw previewUpload.error
+      try {
+        const previewBlob = await renderPdfFirstPage(file)
+        const candidatePreviewPath = `${projectProgressId}/previews/${token}.jpg`
+        const previewUpload = await supabase.storage
+          .from(ATTACHMENT_BUCKET)
+          .upload(candidatePreviewPath, previewBlob, {
+            cacheControl: '3600',
+            contentType: 'image/jpeg',
+            upsert: false,
+          })
+        if (!previewUpload.error) previewPath = candidatePreviewPath
+      } catch (_) {
+        // Preview generation is optional. Never fail the original PDF upload because
+        // PDF.js/CDN preview rendering is unavailable or blocked in the browser.
+        previewPath = null
+      }
     }
 
     const insert = await supabase
