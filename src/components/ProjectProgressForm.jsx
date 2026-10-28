@@ -164,7 +164,7 @@ export default function ProjectProgressForm({
     if (oversized) return setError(`الملف ${oversized.name} أكبر من 15MB`)
 
     if (attachmentCount + incoming.length > MAX_ATTACHMENTS) {
-      return setError('الحد الأقصى 3 مرفقات لكل متابعة مشروع')
+      return setError('الحد الأقصى 5 مرفقات لكل متابعة مشروع')
     }
 
     setError('')
