@@ -3,7 +3,7 @@ import { fetchAll, supabase, unwrap } from './serviceUtils'
 
 const ATTACHMENT_BUCKET = 'project-progress-attachments'
 const MAX_ATTACHMENT_SIZE = 15 * 1024 * 1024
-const MAX_ATTACHMENTS = 3
+const MAX_ATTACHMENTS = 5
 const ALLOWED_ATTACHMENT_TYPES = new Set([
   'application/pdf',
   'image/jpeg',
