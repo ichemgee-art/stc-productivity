@@ -62,12 +62,18 @@ const removeStoragePaths = async (paths) => {
 }
 
 const deleteAttachmentRow = async (row) => {
-  await removeStoragePaths([row.storage_path, row.preview_storage_path])
   const { error } = await supabase
     .from('project_progress_attachments')
     .delete()
     .eq('id', row.id)
   if (error) throw error
+
+  try {
+    await removeStoragePaths([row.storage_path, row.preview_storage_path])
+  } catch (_) {
+    // Metadata is already removed, so the UI cannot point to a missing file.
+    // A failed storage cleanup only leaves an orphaned object that can be cleaned later.
+  }
 }
 
 const validateAttachment = (file) => {
