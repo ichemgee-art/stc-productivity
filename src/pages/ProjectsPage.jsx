@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { ExternalLink, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useFeedback } from '../context/FeedbackContext'
 import { appService } from '../services/appService'
@@ -99,7 +100,7 @@ export default function ProjectsPage() {
     <div className="page-stack">
       <section className="panel" ref={exportRef}>
         <div className="filters-bar"><div className="input-with-icon grow"><Search size={16} /><input placeholder="بحث باسم المشروع..." value={queryText} onChange={(e) => setQueryText(e.target.value)} /></div><select value={activeFilter} onChange={(e) => setActiveFilter(e.target.value)}><option value="">كل الحالات</option><option value="active">نشط</option><option value="inactive">معطل</option></select><ExportButtons filename="projects-filtered" excelSheets={excelSheets} pdfTarget={exportRef} compact />{permissions.canManageProjects ? <button className="btn btn-primary" onClick={() => setEditing({ id: null, name: '', active: true })}><Plus size={16} /> إضافة مشروع</button> : null}</div>
-        <div className="data-table-wrap"><table className="data-table"><thead><tr><th>المشروع</th><th>الحالة</th><th>مرات الاستخدام</th><th>آخر استخدام</th>{permissions.canManageProjects ? <th>إدارة</th> : null}</tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td className="strong-cell">{row.name}</td><td><span className={`status-pill ${row.active ? 'success' : 'neutral'}`}>{row.active ? 'نشط' : 'معطل'}</span></td><td>{number(row.use_count)}</td><td>{date(row.last_used)}</td>{permissions.canManageProjects ? <td><div className="row-actions project-actions"><button className="btn btn-ghost btn-sm" type="button" onClick={() => setEditing(row)}><Pencil size={15} /> تعديل</button><button className="btn btn-danger-soft btn-sm" type="button" disabled={deleteMutation.isPending} onClick={() => removeProject(row)}><Trash2 size={15} /> حذف</button></div></td> : null}</tr>)}</tbody></table>{!rows.length ? (
+        <div className="data-table-wrap"><table className="data-table"><thead><tr><th>المشروع</th><th>الحالة</th><th>مرات الاستخدام</th><th>آخر استخدام</th>{permissions.canManageProjects ? <th>إدارة</th> : null}</tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td className="strong-cell"><Link className="project-360-row-link" to={`/projects/${row.id}`}><span>{row.name}</span><ExternalLink size={14} /></Link></td><td><span className={`status-pill ${row.active ? 'success' : 'neutral'}`}>{row.active ? 'نشط' : 'معطل'}</span></td><td>{number(row.use_count)}</td><td>{date(row.last_used)}</td>{permissions.canManageProjects ? <td><div className="row-actions project-actions"><button className="btn btn-ghost btn-sm" type="button" onClick={() => setEditing(row)}><Pencil size={15} /> تعديل</button><button className="btn btn-danger-soft btn-sm" type="button" disabled={deleteMutation.isPending} onClick={() => removeProject(row)}><Trash2 size={15} /> حذف</button></div></td> : null}</tr>)}</tbody></table>{!rows.length ? (
     <EmptyState
       title={(query.data || []).length ? 'مفيش مشاريع مطابقة للفلاتر' : 'لسه مفيش مشاريع'}
       description={(query.data || []).length ? 'امسح البحث أو غيّر حالة المشروع.' : 'أضف أول مشروع عشان يظهر في الإدخال والتقارير.'}
