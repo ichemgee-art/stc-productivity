@@ -65,6 +65,9 @@ export default function AppLayout() {
       const role = location.pathname.split('/').pop()
       return [peopleLabels[role] || 'الأفراد', 'الإنتاجية والحضور ومستحقات كل شخص في الدورة.']
     }
+    if (location.pathname.startsWith('/projects/')) {
+      return ['Project 360', 'كل بيانات المشروع التشغيلية والتاريخية في مكان واحد.']
+    }
     return pageTitles[location.pathname] || ['STC Productivity', 'Engineering Operations System']
   }, [location.pathname])
 
