@@ -3,6 +3,7 @@ import { catalogService } from './catalogService'
 import { peopleService } from './peopleService'
 import { productivityService } from './productivityService'
 import { projectProgressService } from './projectProgressService'
+import { project360Service } from './project360Service'
 import { systemService } from './systemService'
 import { userAdminService } from './userAdminService'
 
@@ -24,6 +25,7 @@ export {
   peopleService,
   productivityService,
   projectProgressService,
+  project360Service,
   systemService,
   userAdminService,
 }
