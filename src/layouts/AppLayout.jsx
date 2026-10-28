@@ -161,7 +161,7 @@ export default function AppLayout() {
         ))}
       </nav>
       <div className="sidebar-footer">
-        <div className="sidebar-role"><ShieldCheck size={17} /><div><strong>{roleLabels[profile?.app_role] || profile?.app_role}</strong><small>{profile?.app_role === 'admin' ? 'إدارة كاملة' : 'قراءة فقط'}</small></div></div>
+        <div className="sidebar-role"><ShieldCheck size={17} /><div><strong>{roleLabels[profile?.app_role] || profile?.app_role}</strong><small>{profile?.app_role === 'admin' ? 'إدارة كاملة' : 'قراءة فقط'}</small>{profile?.app_role === 'admin' ? <span className="sidebar-creator-credit"><em>Designed & Developed by</em><b>Eng. Girgis Remon</b></span> : null}</div></div>
       </div>
     </>
   )
