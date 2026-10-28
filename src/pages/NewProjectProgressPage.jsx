@@ -20,7 +20,12 @@ export default function NewProjectProgressPage() {
   const mutation = useMutation({
     mutationFn: async ({ payload, newFiles, removeAttachmentIds }) => {
       const saved = await appService.saveProjectProgress(payload)
-      await appService.syncProjectProgressAttachments(saved.id, { newFiles, removeAttachmentIds })
+      try {
+        await appService.syncProjectProgressAttachments(saved.id, { newFiles, removeAttachmentIds })
+      } catch (error) {
+        error.projectProgressSaved = saved
+        throw error
+      }
       return saved
     },
     onSuccess: async (_data, variables) => {
@@ -31,7 +36,16 @@ export default function NewProjectProgressPage() {
         3600,
       )
     },
-    onError: (error) => feedback.error('تعذر حفظ المتابعة', error.message || 'حدث خطأ غير متوقع'),
+    onError: (error) => {
+      if (error.projectProgressSaved) {
+        feedback.error(
+          'تم حفظ المتابعة وتعذر رفع المرفق',
+          error.message || 'المتابعة محفوظة، لكن الملف لم يكتمل. أعد محاولة رفع المرفق.',
+        )
+        return
+      }
+      feedback.error('تعذر حفظ المتابعة', error.message || 'حدث خطأ غير متوقع')
+    },
   })
 
   if (refsQuery.isLoading || productivityQuery.isLoading) return <div className="page-loader">جاري تجهيز شاشة المتابعة...</div>
