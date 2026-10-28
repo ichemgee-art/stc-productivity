@@ -1,4 +1,3 @@
-import { renderPdfFirstPage } from '../lib/pdfPreview'
 import { fetchAll, supabase, unwrap } from './serviceUtils'
 
 const ATTACHMENT_BUCKET = 'project-progress-attachments'
@@ -82,7 +81,7 @@ const uploadAttachment = async (projectProgressId, file) => {
 
   const token = crypto.randomUUID()
   const originalPath = `${projectProgressId}/files/${token}${storageExtensionFor(file)}`
-  let previewPath = null
+  const previewPath = null
   let metadataId = null
 
   try {
@@ -95,24 +94,7 @@ const uploadAttachment = async (projectProgressId, file) => {
       })
     if (originalUpload.error) throw originalUpload.error
 
-    if (isPdfFile(file)) {
-      try {
-        const previewBlob = await renderPdfFirstPage(file)
-        const candidatePreviewPath = `${projectProgressId}/previews/${token}.jpg`
-        const previewUpload = await supabase.storage
-          .from(ATTACHMENT_BUCKET)
-          .upload(candidatePreviewPath, previewBlob, {
-            cacheControl: '3600',
-            contentType: 'image/jpeg',
-            upsert: false,
-          })
-        if (!previewUpload.error) previewPath = candidatePreviewPath
-      } catch (_) {
-        // Preview generation is optional. Never fail the original PDF upload because
-        // PDF.js/CDN preview rendering is unavailable or blocked in the browser.
-        previewPath = null
-      }
-    }
+    // Keep uploads fast: the original PDF is enough; full pages are rendered only when exporting.
 
     const insert = await supabase
       .from('project_progress_attachments')
