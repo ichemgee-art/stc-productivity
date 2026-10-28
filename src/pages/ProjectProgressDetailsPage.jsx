@@ -6,7 +6,7 @@ import {
   FileText, LoaderCircle, MapPin, Paperclip, Percent, Ruler, Trash2, UploadCloud, Users,
 } from 'lucide-react'
 import { appService } from '../services/appService'
-import { ALLOWED_ATTACHMENT_TYPES, MAX_ATTACHMENTS, MAX_ATTACHMENT_SIZE } from '../services/projectProgressService'
+import { MAX_ATTACHMENTS, MAX_ATTACHMENT_SIZE } from '../services/projectProgressService'
 import { projectCategoryLabel } from '../lib/projectProgress'
 import ExportButtons from '../components/ExportButtons'
 import EmptyState from '../components/EmptyState'
@@ -37,13 +37,14 @@ const fileSize = (bytes) => {
   return `${(value / (1024 * 1024)).toLocaleString('en-US', { maximumFractionDigits: 1 })} MB`
 }
 
-const attachmentType = (mime) => mime === 'application/pdf'
-  ? 'PDF'
-  : mime?.startsWith('image/')
-    ? 'صورة'
-    : mime === 'application/vnd.ms-excel' || mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      ? 'Excel'
-      : 'Word'
+const attachmentType = (mime, fileName = '') => {
+  const name = String(fileName || '').toLowerCase()
+  if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'PDF'
+  if (mime?.startsWith('image/')) return 'صورة'
+  if (mime === 'application/vnd.ms-excel' || mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || /\.xlsx?$/.test(name)) return 'Excel'
+  if (mime === 'application/msword' || mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || /\.docx?$/.test(name)) return 'Word'
+  return 'ملف'
+}
 
 export default function ProjectProgressDetailsPage() {
   const { recordId } = useParams()
@@ -107,12 +108,6 @@ export default function ProjectProgressDetailsPage() {
 
     if (incoming.length > available) {
       feedback.error('عدد ملفات أكبر من المتاح', `متاح ${available} مرفق فقط لإكمال الحد الأقصى ${MAX_ATTACHMENTS}.`)
-      return
-    }
-
-    const invalidType = incoming.find((file) => !ALLOWED_ATTACHMENT_TYPES.has(file.type))
-    if (invalidType) {
-      feedback.error('نوع ملف غير مدعوم', `${invalidType.name} غير مسموح. استخدم PDF أو صور أو Word أو Excel.`)
       return
     }
 
@@ -219,7 +214,7 @@ export default function ProjectProgressDetailsPage() {
       rows: attachments.map((item, index) => ({
         'م': index + 1,
         'اسم الملف': item.file_name,
-        'النوع': attachmentType(item.mime_type),
+        'النوع': attachmentType(item.mime_type, item.file_name),
         'الحجم': fileSize(item.file_size),
         'تاريخ الرفع': displayDate(item.created_at?.slice(0, 10)),
       })),
@@ -316,7 +311,7 @@ export default function ProjectProgressDetailsPage() {
           </article>
         </section>
 
-        <section className="project-record-card project-record-attachments" id="attachments">
+        <section className="project-record-card project-record-attachments" id="attachments" data-html2canvas-ignore="true">
           <header>
             <Paperclip size={18} />
             <div>
@@ -384,7 +379,7 @@ export default function ProjectProgressDetailsPage() {
                 <small>
                   {uploadAttachmentMutation.isPending
                     ? `${uploadAttachmentMutation.variables?.map((file) => file.name).join('، ') || 'جاري تجهيز الملف'} · متسيبش الصفحة لحد ما الرفع يكتمل`
-                    : `المتاح ${Math.max(0, MAX_ATTACHMENTS - attachments.length)} من ${MAX_ATTACHMENTS} · PDF / صور / Word / Excel · حتى 15MB`}
+                    : `المتاح ${Math.max(0, MAX_ATTACHMENTS - attachments.length)} من ${MAX_ATTACHMENTS} · أي نوع ملف · حتى 15MB`}
                 </small>
               </div>
 
@@ -394,7 +389,6 @@ export default function ProjectProgressDetailsPage() {
                 type="file"
                 multiple
                 disabled={attachments.length >= MAX_ATTACHMENTS || uploadAttachmentMutation.isPending}
-                accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,image/webp,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 onChange={onAttachmentInput}
               />
             </div>
@@ -403,7 +397,7 @@ export default function ProjectProgressDetailsPage() {
           {attachments.length ? (
             <div className="project-record-attachment-grid">
               {attachments.map((item) => {
-                const isPdf = item.mime_type === 'application/pdf'
+                const isPdf = item.mime_type === 'application/pdf' || /\.pdf$/i.test(String(item.file_name || ''))
                 const isImage = item.mime_type?.startsWith('image/')
                 const preview = item.preview_url || (isImage ? item.url : null)
                 return (
@@ -412,13 +406,13 @@ export default function ProjectProgressDetailsPage() {
                       {preview ? (
                         <img src={preview} crossOrigin="anonymous" alt={isPdf ? `معاينة الصفحة الأولى من ${item.file_name}` : item.file_name} />
                       ) : (
-                        <span>{isPdf ? <FileText size={34} /> : isImage ? <FileImage size={34} /> : attachmentType(item.mime_type) === 'Excel' ? <FileSpreadsheet size={34} /> : <File size={34} />}</span>
+                        <span>{isPdf ? <FileText size={34} /> : isImage ? <FileImage size={34} /> : attachmentType(item.mime_type, item.file_name) === 'Excel' ? <FileSpreadsheet size={34} /> : <File size={34} />}</span>
                       )}
                       {isPdf ? <b>PDF · الصفحة الأولى</b> : null}
                     </div>
                     <div className="project-record-attachment__info">
                       <strong>{item.file_name}</strong>
-                      <small>{attachmentType(item.mime_type)} · {fileSize(item.file_size)}</small>
+                      <small>{attachmentType(item.mime_type, item.file_name)} · {fileSize(item.file_size)}</small>
                       <div className="project-record-attachment__actions" data-html2canvas-ignore="true">
                         {item.url ? (
                           <a href={item.url} target="_blank" rel="noreferrer">
