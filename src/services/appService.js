@@ -17,6 +17,7 @@ export const appService = {
   ...attendanceService,
   ...catalogService,
   ...projectProgressService,
+  ...project360Service,
 }
 
 export {
