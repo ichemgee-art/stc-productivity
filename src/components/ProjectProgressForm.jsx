@@ -37,24 +37,14 @@ const toInput = (value) => value == null ? '' : String(value)
 
 const MAX_ATTACHMENTS = 5
 const MAX_ATTACHMENT_SIZE = 15 * 1024 * 1024
-const ALLOWED_ATTACHMENT_TYPES = new Set([
-  'application/pdf',
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-])
-
-const attachmentKind = (mimeType) => mimeType === 'application/pdf'
-  ? 'PDF'
-  : mimeType?.startsWith('image/')
-    ? 'صورة'
-    : mimeType === 'application/vnd.ms-excel' || mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      ? 'Excel'
-      : 'Word'
+const attachmentKind = (mimeType, fileName = '') => {
+  const name = String(fileName || '').toLowerCase()
+  if (mimeType === 'application/pdf' || name.endsWith('.pdf')) return 'PDF'
+  if (mimeType?.startsWith('image/')) return 'صورة'
+  if (mimeType === 'application/vnd.ms-excel' || mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || /\.xlsx?$/.test(name)) return 'Excel'
+  if (mimeType === 'application/msword' || mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || /\.docx?$/.test(name)) return 'Word'
+  return 'ملف'
+}
 
 const fileSize = (bytes) => {
   const value = Number(bytes || 0)
@@ -156,9 +146,6 @@ export default function ProjectProgressForm({
   const addAttachmentFiles = (files) => {
     const incoming = Array.from(files || [])
     if (!incoming.length) return
-
-    const invalidType = incoming.find((file) => !ALLOWED_ATTACHMENT_TYPES.has(file.type))
-    if (invalidType) return setError(`نوع الملف غير مسموح: ${invalidType.name}. المسموح PDF أو صور أو Word أو Excel.`)
 
     const oversized = incoming.find((file) => file.size > MAX_ATTACHMENT_SIZE)
     if (oversized) return setError(`الملف ${oversized.name} أكبر من 15MB`)
@@ -536,12 +523,11 @@ export default function ProjectProgressForm({
           >
             <UploadCloud size={22} />
             <strong>{attachmentCount >= MAX_ATTACHMENTS ? 'وصلت للحد الأقصى 5 مرفقات' : attachmentDragActive ? 'سيب الملفات هنا' : 'إضافة مرفقات أو اسحبها هنا'}</strong>
-            <small>{attachmentCount} / {MAX_ATTACHMENTS} · المتاح {Math.max(0, MAX_ATTACHMENTS - attachmentCount)} · بحد أقصى 15MB للملف</small>
+            <small>{attachmentCount} / {MAX_ATTACHMENTS} · المتاح {Math.max(0, MAX_ATTACHMENTS - attachmentCount)} · أي نوع ملف · بحد أقصى 15MB</small>
             <input
               type="file"
               multiple
               disabled={attachmentCount >= MAX_ATTACHMENTS}
-              accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,image/webp,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={onFilesSelected}
             />
           </label>
@@ -557,7 +543,7 @@ export default function ProjectProgressForm({
                   </span>
                   <div>
                     <strong>{item.file_name}</strong>
-                    <small>{attachmentKind(item.mime_type)} · {fileSize(item.file_size)} · محفوظ</small>
+                    <small>{attachmentKind(item.mime_type, item.file_name)} · {fileSize(item.file_size)} · محفوظ</small>
                   </div>
                   {item.url ? <a href={item.url} target="_blank" rel="noreferrer">فتح</a> : null}
                   <button type="button" onClick={() => markAttachmentForRemoval(item.id)} aria-label={`حذف ${item.file_name}`}><Trash2 size={15} /></button>
@@ -571,7 +557,7 @@ export default function ProjectProgressForm({
                   </span>
                   <div>
                     <strong>{file.name}</strong>
-                    <small>{attachmentKind(file.type)} · {fileSize(file.size)} · جاهز للرفع</small>
+                    <small>{attachmentKind(file.type, file.name)} · {fileSize(file.size)} · جاهز للرفع</small>
                   </div>
                   <button type="button" onClick={() => setNewFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`إزالة ${file.name}`}><Trash2 size={15} /></button>
                 </div>
