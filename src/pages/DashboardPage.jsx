@@ -18,8 +18,10 @@ import ExportButtons from '../components/ExportButtons'
 
 const chartTooltipStyle = {
   borderRadius: 12,
-  border: '1px solid rgba(37,58,85,.16)',
-  boxShadow: '0 10px 30px rgba(37,58,85,.12)',
+  border: '1px solid var(--border)',
+  boxShadow: 'var(--shadow-soft)',
+  background: 'var(--surface-raised)',
+  color: 'var(--text)',
   fontFamily: 'Cairo',
   fontSize: 12,
 }
@@ -480,9 +482,9 @@ export default function DashboardPage() {
           <div className="chart-wrap chart-wrap-large">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={view.dayComparison} margin={{ top: 18, right: 15, left: 8, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(37,58,85,.12)" />
-                <XAxis dataKey="label" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--chart-grid)" />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => `${number(value)} م`} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Line type="monotone" dataKey="current" name={monthName(monthKey)} stroke="var(--blue-600)" strokeWidth={2.8} dot={{ r: 3 }} />
@@ -519,9 +521,9 @@ export default function DashboardPage() {
             {projectChartData.length ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={projectChartData} margin={{ top: 12, right: 8, left: 4, bottom: 50 }}>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(37,58,85,.12)" />
-                  <XAxis dataKey="name" angle={-18} textAnchor="end" height={72} tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--chart-grid)" />
+                  <XAxis dataKey="name" angle={-18} textAnchor="end" height={72} tick={{ fontSize: 9, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => `${number(value)} م`} />
                   <Bar dataKey="meters" name="الأمتار" radius={[8, 8, 0, 0]} fill="var(--blue-600)" />
                 </BarChart>
