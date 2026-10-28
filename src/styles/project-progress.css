@@ -2117,3 +2117,12 @@
     grid-column:span 2;
   }
 }
+
+
+.project-record-upload-spinner{
+  color:var(--brand-gold);
+  animation:stc-upload-spin .85s linear infinite;
+}
+@keyframes stc-upload-spin{
+  to{transform:rotate(360deg)}
+}
