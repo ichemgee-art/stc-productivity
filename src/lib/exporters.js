@@ -1064,7 +1064,7 @@ const sanitizePdfCloneColors = (clonedDocument) => {
   })
 }
 
-const loadImageAsJpeg = async (url, maxWidth = 2400, quality = 0.95) => {
+const loadImageAsJpeg = async (url, maxWidth = 1800, quality = 0.9) => {
   if (!url) throw new Error('رابط الصورة غير متاح')
   const response = await fetch(url)
   if (!response.ok) throw new Error('تعذر تحميل صورة المرفق')
@@ -1131,12 +1131,13 @@ const appendAttachmentPages = async (pdf, attachments = []) => {
   for (const attachment of attachments || []) {
     if (!attachment?.url) continue
 
-    if (attachment.mime_type === 'application/pdf') {
+    const isPdf = attachment.mime_type === 'application/pdf' || /\.pdf$/i.test(String(attachment.file_name || ''))
+    if (isPdf) {
       try {
         await renderPdfPagesFromUrl(attachment.url, {
-          targetWidth: 2400,
-          maxScale: 4,
-          quality: 0.95,
+          targetWidth: 1800,
+          maxScale: 3,
+          quality: 0.9,
           onPage: async (pageData) => addFullPageImageToPdf(pdf, pageData),
         })
         continue
@@ -1168,7 +1169,7 @@ export async function exportElementPdf(element, filename, { attachments = [] } =
   try {
     const captureElement = await getPdfCaptureEngine()
     canvas = await captureElement(element, {
-      scale: 1.7,
+      scale: 1.45,
       useCORS: true,
       backgroundColor: '#ffffff',
       windowWidth: Math.max(element.scrollWidth, element.clientWidth),
