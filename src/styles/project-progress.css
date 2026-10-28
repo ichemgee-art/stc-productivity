@@ -12,7 +12,7 @@
   background:color-mix(in srgb,var(--brand-gold) 7%,var(--surface));
 }
 .progress-preview-banner svg,
-.progress-live-hint svg{flex:0 0 auto;color:#9a6d00;margin-top:2px}
+.progress-live-hint svg{flex:0 0 auto;color:var(--warning);margin-top:2px}
 .progress-preview-banner div{display:grid;gap:2px}
 .progress-preview-banner strong{font-size:12px;color:var(--text)}
 .progress-preview-banner span,
@@ -221,7 +221,7 @@
   display:inline-flex;margin-top:4px;padding:2px 5px;border-radius:999px;font-size:6px;font-weight:900
 }
 .progress-metric-cell>small.linked{background:var(--success-soft);color:var(--success)}
-.progress-metric-cell>small.manual{background:#f3f5f8;color:var(--muted)}
+.progress-metric-cell>small.manual{background:var(--surface-soft);color:var(--muted)}
 .progress-percent{font-weight:900}
 .progress-percent.over{color:var(--danger)}
 .progress-long-cell,
@@ -380,7 +380,7 @@
   background:color-mix(in srgb,var(--success) 1.8%,var(--surface))!important;
 }
 .project-progress-table tbody tr:hover .progress-row-actions{
-  background:#f8fafc!important;
+  background:var(--surface-hover)!important;
 }
 .progress-edit-btn{
   width:100%;
@@ -398,7 +398,7 @@
   cursor:pointer;
   transition:.15s ease;
 }
-.progress-edit-btn svg{color:#a77700}
+.progress-edit-btn svg{color:var(--warning)}
 .progress-edit-btn:hover{
   transform:translateY(-1px);
   border-color:var(--brand-gold);
@@ -841,7 +841,7 @@
   cursor:not-allowed;
 }
 .progress-delete-btn:hover:not(:disabled){
-  background:#FFE2E2;
+  background:var(--danger-soft);
 }
 
 @media(max-width:1100px){
@@ -1008,7 +1008,7 @@
   border:1px solid color-mix(in srgb,var(--warning) 30%,var(--surface));
   border-radius:10px;
   background:color-mix(in srgb,var(--warning) 7%,var(--surface));
-  color:#8a6200;
+  color:var(--warning);
   font-size:9.5px;
   font-weight:800;
 }
@@ -1031,7 +1031,7 @@
   padding:5px 9px;
   border:1px solid var(--border);
   border-radius:999px;
-  background:#f5f7f9;
+  background:var(--surface-soft);
   color:var(--text);
   font-size:8.5px;
   font-weight:900;
@@ -1047,13 +1047,13 @@
 .progress-category-filter>button.status-nearing_completion.is-active{
   background:color-mix(in srgb,var(--brand-gold) 12%,var(--surface));
   border-color:color-mix(in srgb,var(--brand-gold) 42%,var(--surface));
-  color:#936800;
+  color:var(--warning);
 }
 .status-phased_client_request.progress-status-badge,
 .progress-category-filter>button.status-phased_client_request.is-active{
-  background:color-mix(in srgb,#5477a3 10%,var(--surface));
-  border-color:color-mix(in srgb,#5477a3 30%,var(--brand-white));
-  color:#355474;
+  background:var(--info-soft);
+  border-color:var(--info-border);
+  color:var(--info);
 }
 .status-active.progress-status-badge,
 .progress-category-filter>button.status-active.is-active{
@@ -1063,8 +1063,8 @@
 }
 .status-unclassified.progress-status-badge,
 .progress-category-filter>button.status-unclassified.is-active{
-  background:#f3f5f7;
-  border-color:#d7dde5;
+  background:var(--surface-soft);
+  border-color:var(--border);
   color:var(--muted);
 }
 .project-progress-table{
@@ -1289,29 +1289,29 @@
 
 /* Unified project statuses + micro interactions — 2026-10-27 */
 .status-completed_handed_over{
-  --project-status-color:#18794E;
-  --project-status-bg:#ECF9F1;
-  --project-status-border:#A9DEC2;
+  --project-status-color:var(--success);
+  --project-status-bg:var(--success-soft);
+  --project-status-border:var(--success-border);
 }
 .status-nearing_completion{
-  --project-status-color:#946A00;
-  --project-status-bg:#FFF8DE;
-  --project-status-border:#E8CC72;
+  --project-status-color:var(--warning);
+  --project-status-bg:var(--warning-soft);
+  --project-status-border:var(--warning-border);
 }
 .status-phased_client_request{
-  --project-status-color:#355E93;
-  --project-status-bg:#EEF4FB;
-  --project-status-border:#B8CBE3;
+  --project-status-color:var(--info);
+  --project-status-bg:var(--info-soft);
+  --project-status-border:var(--info-border);
 }
 .status-active{
-  --project-status-color:#253A55;
-  --project-status-bg:#EEF2F6;
-  --project-status-border:#AEBCCA;
+  --project-status-color:var(--text);
+  --project-status-bg:var(--surface-3);
+  --project-status-border:var(--border-strong);
 }
 .status-unclassified{
-  --project-status-color:#707B87;
-  --project-status-bg:#F4F6F8;
-  --project-status-border:#D6DDE4;
+  --project-status-color:var(--muted);
+  --project-status-bg:var(--surface-soft);
+  --project-status-border:var(--border);
 }
 
 .progress-status-badge[class*="status-"]{
