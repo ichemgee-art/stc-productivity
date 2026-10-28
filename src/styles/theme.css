@@ -39,6 +39,9 @@
   --warning:#B67A00;
   --warning-soft:#FFF7E6;
   --warning-border:#EED79E;
+  --info:#4F79AA;
+  --info-soft:#EEF4FB;
+  --info-border:#B8CBE3;
   --navy-950:var(--text-strong);
   --navy-900:var(--text-strong);
   --navy-800:var(--text);
@@ -87,6 +90,9 @@ html[data-theme="dark"]{
   --warning:#F6C94B;
   --warning-soft:rgba(246,201,75,.12);
   --warning-border:rgba(246,201,75,.30);
+  --info:#75A9E6;
+  --info-soft:rgba(117,169,230,.12);
+  --info-border:rgba(117,169,230,.30);
   --navy-950:var(--text-strong);
   --navy-900:var(--text-strong);
   --navy-800:#DCE7F1;
