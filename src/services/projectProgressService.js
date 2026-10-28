@@ -202,7 +202,8 @@ export const projectProgressService = {
       throw error
     }
 
-    return this.projectProgressAttachments(projectProgressId)
+    const refreshed = await attachmentRows(projectProgressId)
+    return Promise.all(refreshed.map(hydrateAttachment))
   },
 
   async deleteProjectProgress(id) {
