@@ -936,10 +936,11 @@
   background:var(--brand-navy);
   color:var(--brand-gold);
 }
-.progress-category-selector>button>span:last-child{
+.progress-category-selector>button>span:nth-child(2){
   min-width:0;
   display:grid;
   gap:4px;
+  align-content:center;
 }
 .progress-category-selector strong{
   font-size:11px;
@@ -1584,5 +1585,35 @@
 }
 .progress-category-selector>button.is-active .progress-category-selector__icon{
   border-color:var(--success-border)!important;
+}
+
+/* Project category text layout fix — 2026-10-28 */
+.progress-category-selector>button{
+  grid-template-columns:42px minmax(0,1fr);
+}
+.progress-category-selector>button>span:nth-child(2){
+  min-width:0;
+  max-width:100%;
+  overflow:hidden;
+}
+.progress-category-selector strong,
+.progress-category-selector small{
+  display:block;
+  min-width:0;
+  max-width:100%;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+}
+.progress-category-selector strong{
+  line-height:1.55;
+}
+.progress-category-selector small{
+  margin-top:2px;
+  line-height:1.65;
+}
+.progress-category-selector__selected{
+  z-index:3;
+  pointer-events:none;
 }
 
