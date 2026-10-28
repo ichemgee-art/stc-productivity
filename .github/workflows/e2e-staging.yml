@@ -37,7 +37,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install pinned E2E runner
         run: npm install --prefix e2e --no-audit --no-fund
