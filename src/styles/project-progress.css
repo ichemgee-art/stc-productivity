@@ -1906,3 +1906,35 @@
   .project-record-export{background:#fff}
 }
 
+
+.project-record-attachment__actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-top:4px;
+}
+.project-record-attachment__actions a{
+  margin-top:0;
+}
+.project-record-attachment__delete{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  min-height:30px;
+  padding:5px 9px;
+  border:1px solid var(--danger-border);
+  border-radius:8px;
+  background:var(--danger-soft);
+  color:var(--danger);
+  font-size:8px;
+  font-weight:900;
+  cursor:pointer;
+}
+.project-record-attachment__delete:hover{
+  border-color:var(--danger);
+}
+.project-record-attachment__delete:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
