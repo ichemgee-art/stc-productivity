@@ -145,10 +145,10 @@
 }
 .project-progress-table{
   width:max-content;
-  min-width:2240px;
+  min-width:100%;
   border-collapse:separate;
   border-spacing:0;
-  table-layout:fixed;
+  table-layout:auto;
   font-size:10px;
 }
 .project-progress-table th,.project-progress-table td{
@@ -174,36 +174,67 @@
 .project-progress-table tbody tr:hover td{background:var(--surface)}
 .project-progress-table tbody tr.is-linked td{background:var(--surface)}
 .project-progress-table tbody tr.is-linked:hover td{background:var(--surface)}
-.project-progress-table th:nth-child(1),
-.project-progress-table th:nth-child(2),
-.project-progress-table th:nth-child(3),
-.project-progress-table td:nth-child(1),
-.project-progress-table td:nth-child(2),
-.project-progress-table td:nth-child(3){width:112px}
-.project-progress-table th:nth-child(4),
-.project-progress-table td:nth-child(4){width:64px}
-.project-progress-table th:nth-child(5),
-.project-progress-table td:nth-child(5){width:230px}
-.project-progress-table th:nth-child(6),
-.project-progress-table td:nth-child(6){width:165px}
-.project-progress-table th:nth-child(7),
-.project-progress-table th:nth-child(8),
-.project-progress-table th:nth-child(9),
-.project-progress-table td:nth-child(7),
-.project-progress-table td:nth-child(8),
-.project-progress-table td:nth-child(9){width:120px}
-.project-progress-table th:nth-child(10),
-.project-progress-table td:nth-child(10){width:330px}
-.project-progress-table th:nth-child(11),
-.project-progress-table td:nth-child(11){width:210px}
-.project-progress-table th:nth-child(12),
-.project-progress-table td:nth-child(12){width:260px}
-.project-progress-table th:nth-child(13),
-.project-progress-table td:nth-child(13){width:360px}
 .project-progress-table td{
   color:var(--text);
   white-space:normal;
   overflow-wrap:anywhere;
+}
+
+/* Content-fit column sizing */
+.project-progress-table th:nth-child(1),
+.project-progress-table th:nth-child(2),
+.project-progress-table th:nth-child(3),
+.project-progress-table th:nth-child(4),
+.project-progress-table th:nth-child(7),
+.project-progress-table th:nth-child(8),
+.project-progress-table th:nth-child(9),
+.project-progress-table th:nth-child(14),
+.project-progress-table td:nth-child(1),
+.project-progress-table td:nth-child(2),
+.project-progress-table td:nth-child(3),
+.project-progress-table td:nth-child(4),
+.project-progress-table td:nth-child(7),
+.project-progress-table td:nth-child(8),
+.project-progress-table td:nth-child(9),
+.project-progress-table td:nth-child(14){
+  width:1%;
+  white-space:nowrap;
+}
+
+.project-progress-table th:nth-child(5),
+.project-progress-table td:nth-child(5){
+  max-width:280px;
+}
+
+.project-progress-table th:nth-child(6),
+.project-progress-table td:nth-child(6){
+  max-width:190px;
+}
+
+.project-progress-table th:nth-child(10),
+.project-progress-table td:nth-child(10),
+.project-progress-table th:nth-child(11),
+.project-progress-table td:nth-child(11),
+.project-progress-table th:nth-child(12),
+.project-progress-table td:nth-child(12){
+  max-width:260px;
+}
+
+.project-progress-table th:nth-child(13),
+.project-progress-table td:nth-child(13){
+  max-width:340px;
+}
+
+.project-progress-table th,
+.project-progress-table td{
+  min-width:0;
+}
+
+.project-progress-table .progress-number-cell,
+.project-progress-table .progress-metric-cell,
+.project-progress-table .progress-percent,
+.project-progress-table .progress-status-cell{
+  white-space:nowrap;
 }
 .progress-number-cell{font-weight:900}
 .progress-project-cell{text-align:right!important}
@@ -290,7 +321,7 @@
 }
 
 .project-progress-table{
-  min-width:2390px;
+  min-width:100%;
   font-size:11.5px;
 }
 .project-progress-table th,
@@ -307,32 +338,6 @@
   min-height:54px;
   line-height:1.75;
 }
-.project-progress-table th:nth-child(1),
-.project-progress-table th:nth-child(2),
-.project-progress-table th:nth-child(3),
-.project-progress-table td:nth-child(1),
-.project-progress-table td:nth-child(2),
-.project-progress-table td:nth-child(3){width:126px}
-.project-progress-table th:nth-child(4),
-.project-progress-table td:nth-child(4){width:72px}
-.project-progress-table th:nth-child(5),
-.project-progress-table td:nth-child(5){width:260px}
-.project-progress-table th:nth-child(6),
-.project-progress-table td:nth-child(6){width:190px}
-.project-progress-table th:nth-child(7),
-.project-progress-table th:nth-child(8),
-.project-progress-table th:nth-child(9),
-.project-progress-table td:nth-child(7),
-.project-progress-table td:nth-child(8),
-.project-progress-table td:nth-child(9){width:132px}
-.project-progress-table th:nth-child(10),
-.project-progress-table td:nth-child(10){width:350px}
-.project-progress-table th:nth-child(11),
-.project-progress-table td:nth-child(11){width:225px}
-.project-progress-table th:nth-child(12),
-.project-progress-table td:nth-child(12){width:285px}
-.project-progress-table th:nth-child(13),
-.project-progress-table td:nth-child(13){width:380px}
 .progress-project-cell strong{
   display:block;
   color:var(--text);
@@ -362,9 +367,9 @@
 .progress-row-actions{
   position:sticky!important;
   left:0;
-  width:108px!important;
-  min-width:108px!important;
-  max-width:108px!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
   z-index:12!important;
 }
 .progress-actions-head{
@@ -789,9 +794,9 @@
 .progress-row-actions{
   position:static!important;
   left:auto!important;
-  width:154px!important;
-  min-width:154px!important;
-  max-width:154px!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
   z-index:auto!important;
   box-shadow:none!important;
 }
@@ -864,9 +869,9 @@
   top:0!important;
   left:auto!important;
   z-index:14!important;
-  width:154px!important;
-  min-width:154px!important;
-  max-width:154px!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
   background:var(--brand-navy)!important;
   color:var(--brand-gold)!important;
   box-shadow:none!important;
@@ -875,9 +880,9 @@
   position:static!important;
   left:auto!important;
   z-index:auto!important;
-  width:154px!important;
-  min-width:154px!important;
-  max-width:154px!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
   box-shadow:none!important;
 }
 
@@ -1066,7 +1071,7 @@
   color:var(--muted);
 }
 .project-progress-table{
-  min-width:2570px;
+  min-width:100%;
 }
 @media(max-width:760px){
   .progress-category-selector{grid-template-columns:1fr}
