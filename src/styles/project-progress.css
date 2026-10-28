@@ -1552,3 +1552,37 @@
   }
 }
 
+/* Project category selected state — 2026-10-28 */
+.progress-category-selector>button{
+  position:relative;
+}
+.progress-category-selector__selected{
+  position:absolute;
+  top:10px;
+  inset-inline-end:10px;
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  background:var(--success);
+  color:#fff;
+  border:2px solid var(--surface);
+  box-shadow:0 5px 14px color-mix(in srgb,var(--success) 28%,transparent);
+}
+.progress-category-selector>button.is-active{
+  border-color:var(--success-border)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--success) 11%,transparent)!important;
+}
+.progress-category-selector>button.is-active::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--success) 7%,transparent),transparent 42%);
+}
+.progress-category-selector>button.is-active .progress-category-selector__icon{
+  border-color:var(--success-border)!important;
+}
+
