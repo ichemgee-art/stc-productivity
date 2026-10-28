@@ -945,11 +945,7 @@ textarea:focus-visible{
   color:var(--danger)!important;
   border-color:var(--danger-border)!important
 }
-.icon-btn.danger:hover,.btn-danger-soft:hover{
-  background:#FFE2E2!important;
-  color:#B82F2F!important;
-  border-color:#E59B9B!important
-}
+.icon-btn.danger:hover,.btn-danger-soft:hover{background:var(--danger-soft)!important;color:var(--danger)!important;border-color:var(--danger-border)!important}
 .btn-danger-solid{
   background:var(--danger)!important;
   color:var(--brand-white)!important;
@@ -1179,7 +1175,7 @@ textarea:focus-visible{
   .modal-card.modal-xl{width:100vw!important;max-width:100vw!important}
   .executive-kpi-grid,.management-quick-grid{grid-template-columns:1fr}
   .form-actions{
-    background:rgba(255,255,255,.96)!important;
+    background:var(--surface-raised)!important;
     border:1px solid var(--border);
     box-shadow:0 -8px 24px rgba(37,58,85,.08)
   }
@@ -2250,7 +2246,7 @@ body,
     height:calc(var(--mobile-nav-height) + env(safe-area-inset-bottom));
     padding:7px 8px calc(6px + env(safe-area-inset-bottom));
     border-top:1px solid var(--border);
-    background:rgba(255,255,255,.96);
+    background:var(--topbar-bg);
     backdrop-filter:blur(18px);
     box-shadow:0 -10px 28px rgba(37,58,85,.10);
   }
@@ -2406,9 +2402,6 @@ body,
     box-shadow:2px 0 0 var(--border);
   }
   .data-table th:first-child{z-index:3;background:var(--table-head)}
-  html:not([data-theme="dark"]) .data-table th:first-child{background:#F8FAFC}
-  html:not([data-theme="dark"]) .data-table td:first-child{background:var(--surface)}
-
   .form-grid,.picker-grid{grid-template-columns:1fr!important}
   .calc-preview{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .form-section{
@@ -2683,13 +2676,7 @@ body,
     z-index:auto!important;
     box-shadow:none!important;
   }
-  html:not([data-theme="dark"]) .productivity-scroll .data-table th:first-child:not(.productivity-pinned-column){
-    background:#F8FAFC!important;
   }
-  html:not([data-theme="dark"]) .productivity-scroll .data-table td:first-child:not(.productivity-pinned-column){
-    background:var(--surface)!important;
-  }
-}
 
 
 /* Quarter comprehensive filters */
@@ -5252,7 +5239,7 @@ body{
   padding:10px;
   border:1px solid var(--border);
   border-radius:11px;
-  background:#fbfcfd;
+  background:var(--surface-soft);
 }
 .prelogin-role-grid svg{flex:0 0 auto;color:var(--brand-gold)}
 .prelogin-role-grid span{display:grid;gap:2px}
@@ -5337,7 +5324,7 @@ body{
   overflow:hidden;
   border:0;
   border-bottom:1px solid var(--border);
-  background:#f7f9fc;
+  background:var(--surface-soft);
   aspect-ratio:1200/760;
 }
 .tour-card__preview img{
@@ -5428,7 +5415,7 @@ body{
   margin:0;
   padding:14px;
   overflow:auto;
-  background:#f7f9fc;
+  background:var(--surface-soft);
 }
 .tour-lightbox__figure img{
   width:100%;
