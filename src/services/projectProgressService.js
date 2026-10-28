@@ -11,6 +11,8 @@ const ALLOWED_ATTACHMENT_TYPES = new Set([
   'image/webp',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ])
 
 const normalizeOptionalNumber = (value, label) => {
@@ -27,6 +29,8 @@ const STORAGE_EXTENSION_BY_MIME = {
   'image/webp': '.webp',
   'application/msword': '.doc',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+  'application/vnd.ms-excel': '.xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
 }
 
 const storageExtensionFor = (file) => STORAGE_EXTENSION_BY_MIME[file?.type] || ''
