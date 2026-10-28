@@ -139,7 +139,14 @@ Deno.serve(async (req: Request) => {
       const { data: authUser, error: authUserError } = await adminClient.auth.admin.getUserById(userId)
       if (authUserError || !authUser.user) return json({ error: "المستخدم غير موجود" }, 404)
 
-      const displayName = authUser.user.user_metadata?.display_name || authUser.user.email || "مستخدم"
+      const { data: existingProfile, error: existingProfileError } = await adminClient
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", userId)
+        .maybeSingle()
+      if (existingProfileError) throw existingProfileError
+
+      const displayName = existingProfile?.display_name || authUser.user.user_metadata?.display_name || authUser.user.email || "مستخدم"
       const { error } = await adminClient.from("profiles").upsert({
         user_id: userId,
         display_name: displayName,
@@ -148,6 +155,55 @@ Deno.serve(async (req: Request) => {
       if (error) throw error
 
       return json({ ok: true })
+    }
+
+    if (action === "update_display_name") {
+      const userId = String(body.user_id || "")
+      const displayName = String(body.display_name || "").trim()
+
+      if (!userId) return json({ error: "المستخدم مطلوب" }, 400)
+      if (displayName.length < 2) return json({ error: "الاسم الظاهر يجب ألا يقل عن حرفين" }, 400)
+      if (displayName.length > 80) return json({ error: "الاسم الظاهر طويل جدًا" }, 400)
+
+      const { data: authUser, error: authUserError } = await adminClient.auth.admin.getUserById(userId)
+      if (authUserError || !authUser.user) return json({ error: "المستخدم غير موجود" }, 404)
+
+      const { data: targetProfile, error: targetProfileError } = await adminClient
+        .from("profiles")
+        .select("display_name,app_role")
+        .eq("user_id", userId)
+        .maybeSingle()
+
+      if (targetProfileError) throw targetProfileError
+      if (!targetProfile) return json({ error: "ملف المستخدم غير موجود" }, 404)
+
+      const previousMetadata = authUser.user.user_metadata || {}
+      const previousDisplayName = targetProfile.display_name || authUser.user.email || "مستخدم"
+
+      const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(userId, {
+        user_metadata: {
+          ...previousMetadata,
+          display_name: displayName,
+        },
+      })
+      if (authUpdateError) throw authUpdateError
+
+      const { error: profileUpdateError } = await adminClient
+        .from("profiles")
+        .update({ display_name: displayName })
+        .eq("user_id", userId)
+
+      if (profileUpdateError) {
+        await adminClient.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            ...previousMetadata,
+            display_name: previousDisplayName,
+          },
+        })
+        throw profileUpdateError
+      }
+
+      return json({ ok: true, id: userId, display_name: displayName })
     }
 
     if (action === "update_password") {
