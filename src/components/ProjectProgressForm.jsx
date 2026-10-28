@@ -1,9 +1,10 @@
-import { useMemo, useRef, useState } from 'react'
-import { Activity, Building2, Calculator, Check, CheckCircle2, Clock, Database, FileSpreadsheet, Layers, Link2, PenLine, Save, ShieldCheck, X } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Activity, Building2, Calculator, Check, CheckCircle2, Clock, Database, FileImage, FileSpreadsheet, FileText, Layers, Link2, Paperclip, PenLine, Save, Trash2, UploadCloud, X } from 'lucide-react'
 
 import { useAuth } from '../context/AuthContext'
 import { PROJECT_PROGRESS_CATEGORIES, progressRequest } from '../lib/projectProgress'
 import { clearSessionCache, useSessionState } from '../lib/sessionCache'
+import { appService } from '../services/appService'
 
 const categoryIcons = {
   completed_handed_over: CheckCircle2,
@@ -22,6 +23,8 @@ const emptyForm = {
   location: '',
   project_category: '',
   contract_quantity: '',
+  original_contract_quantity: '',
+  contract_value: '',
   historical_before_system: '',
   manual_executed_quantity: '',
   financial_status: '',
@@ -31,6 +34,29 @@ const emptyForm = {
 }
 
 const toInput = (value) => value == null ? '' : String(value)
+
+const MAX_ATTACHMENTS = 3
+const MAX_ATTACHMENT_SIZE = 15 * 1024 * 1024
+const ALLOWED_ATTACHMENT_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+])
+
+const attachmentKind = (mimeType) => mimeType === 'application/pdf'
+  ? 'PDF'
+  : mimeType?.startsWith('image/')
+    ? 'صورة'
+    : 'Word'
+
+const fileSize = (bytes) => {
+  const value = Number(bytes || 0)
+  if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024)).toLocaleString('en-US')} KB`
+  return `${(value / (1024 * 1024)).toLocaleString('en-US', { maximumFractionDigits: 1 })} MB`
+}
 
 export default function ProjectProgressForm({
   references,
@@ -65,6 +91,8 @@ export default function ProjectProgressForm({
     location: initial?.location || '',
     project_category: initial?.project_category || '',
     contract_quantity: toInput(initial?.contract_quantity),
+    original_contract_quantity: toInput(initial?.original_contract_quantity),
+    contract_value: toInput(initial?.contract_value),
     historical_before_system: toInput(initial?.historical_before_system),
     manual_executed_quantity: toInput(initial?.manual_executed_quantity ?? initial?.executed_quantity),
     financial_status: initial?.financial_status || '',
@@ -73,6 +101,33 @@ export default function ProjectProgressForm({
     notes: initial?.notes || '',
   }), { enabled: draftEnabled })
   const [error, setError] = useState('')
+  const [existingAttachments, setExistingAttachments] = useState([])
+  const [newFiles, setNewFiles] = useState([])
+  const [removeAttachmentIds, setRemoveAttachmentIds] = useState([])
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    if (!initial?.id) {
+      setExistingAttachments([])
+      setRemoveAttachmentIds([])
+      return () => { active = false }
+    }
+
+    setAttachmentsLoading(true)
+    appService.projectProgressAttachments(initial.id)
+      .then((rows) => {
+        if (active) setExistingAttachments(rows || [])
+      })
+      .catch((err) => {
+        if (active) setError(err.message || 'تعذر تحميل مرفقات المشروع')
+      })
+      .finally(() => {
+        if (active) setAttachmentsLoading(false)
+      })
+
+    return () => { active = false }
+  }, [initial?.id])
 
   const projects = useMemo(
     () => (references?.projects || []).slice().sort((a, b) => a.name.localeCompare(b.name, 'ar')),
@@ -88,22 +143,33 @@ export default function ProjectProgressForm({
   const contractQuantity = Number(form.contract_quantity || 0)
   const executedQuantity = projectMode === 'linked' ? beforeSystem + productivityMeters : manualExecuted
   const executionPercent = contractQuantity > 0 ? (executedQuantity / contractQuantity) * 100 : null
-  const selectedCategory = PROJECT_PROGRESS_CATEGORIES.find((item) => item.value === form.project_category)
-  const summaryProjectName = projectMode === 'linked'
-    ? (selectedProject?.name || form.project_name.trim())
-    : form.project_name.trim()
-  const summaryReady = Boolean(
-    form.report_date
-    && summaryProjectName
-    && form.project_category
-  )
-  const displayReviewDate = (value) => {
-    if (!value) return 'لم تسجل'
-    const [year, month, day] = String(value).slice(0, 10).split('-')
-    return year && month && day ? `${day}/${month}/${year}` : value
+  const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+
+  const visibleExistingAttachments = existingAttachments.filter((row) => !removeAttachmentIds.includes(row.id))
+  const attachmentCount = visibleExistingAttachments.length + newFiles.length
+
+  const onFilesSelected = (event) => {
+    const incoming = Array.from(event.target.files || [])
+    event.target.value = ''
+    if (!incoming.length) return
+
+    const invalidType = incoming.find((file) => !ALLOWED_ATTACHMENT_TYPES.has(file.type))
+    if (invalidType) return setError(`نوع الملف غير مسموح: ${invalidType.name}. المسموح PDF أو صور أو Word.`)
+
+    const oversized = incoming.find((file) => file.size > MAX_ATTACHMENT_SIZE)
+    if (oversized) return setError(`الملف ${oversized.name} أكبر من 15MB`)
+
+    if (attachmentCount + incoming.length > MAX_ATTACHMENTS) {
+      return setError('الحد الأقصى 3 مرفقات لكل متابعة مشروع')
+    }
+
+    setError('')
+    setNewFiles((current) => [...current, ...incoming])
   }
 
-  const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }))
+  const markAttachmentForRemoval = (id) => {
+    setRemoveAttachmentIds((current) => current.includes(id) ? current : [...current, id])
+  }
 
   const submit = async (event) => {
     event.preventDefault()
@@ -117,7 +183,9 @@ export default function ProjectProgressForm({
     if (projectMode === 'linked' && !form.project_id) return setError('اختار المشروع من قائمة المشاريع')
     if (projectMode === 'manual' && !form.project_name.trim() && !(initial?.source === 'excel_import' && initial?.legacy_excel_row)) return setError('اكتب اسم المشروع الجديد')
     if (!form.project_category) return setError('اختار حالة المشروع من التصنيفات الأربعة')
-    if (form.contract_quantity !== '' && Number(form.contract_quantity) < 0) return setError('كميات العقد لا يمكن أن تكون سالبة')
+    if (form.contract_quantity !== '' && Number(form.contract_quantity) < 0) return setError('كميات التعاقد + البنود المحملة على القطاعات لا يمكن أن تكون سالبة')
+    if (form.original_contract_quantity !== '' && Number(form.original_contract_quantity) < 0) return setError('كمية التعاقد الأصلية لا يمكن أن تكون سالبة')
+    if (form.contract_value !== '' && Number(form.contract_value) < 0) return setError('قيمة العقد لا يمكن أن تكون سالبة')
     if (projectMode === 'linked' && Number(form.historical_before_system || 0) < 0) return setError('كميات ما قبل النظام لا يمكن أن تكون سالبة')
     if (projectMode === 'manual' && Number(form.manual_executed_quantity || 0) < 0) return setError('الكميات المنفذة لا يمكن أن تكون سالبة')
 
@@ -135,6 +203,8 @@ export default function ProjectProgressForm({
       location: form.location.trim(),
       project_category: form.project_category,
       contract_quantity: form.contract_quantity === '' ? null : Number(form.contract_quantity),
+      original_contract_quantity: form.original_contract_quantity === '' ? null : Number(form.original_contract_quantity),
+      contract_value: form.contract_value === '' ? null : Number(form.contract_value),
       historical_before_system: projectMode === 'linked' ? Number(form.historical_before_system || 0) : 0,
       manual_executed_quantity: projectMode === 'manual' ? Number(form.manual_executed_quantity || 0) : null,
       execution_mode: projectMode,
@@ -146,7 +216,11 @@ export default function ProjectProgressForm({
     requestRef.current = progressRequest(requestRef.current, payload)
     busyRef.current = true
     try {
-      await onSubmit({ ...payload, request_id: requestRef.current.id })
+      await onSubmit({
+        payload: { ...payload, request_id: requestRef.current.id },
+        newFiles,
+        removeAttachmentIds,
+      })
       if (draftEnabled) {
         clearSessionCache('draft:project-progress:save-alias')
         clearSessionCache('draft:project-progress:mode')
@@ -295,14 +369,29 @@ export default function ProjectProgressForm({
             <span>02</span>
             <h3>الموقف التنفيذي</h3>
           </div>
-          <p>أدخل كميات العقد فقط، والسيستم هيحسب المنفذ ونسبة التنفيذ تلقائيًا حسب نوع المشروع.</p>
+          <p>سجل كميات التعاقد والبيانات المرجعية، والسيستم هيحسب المنفذ ونسبة التنفيذ من كميات التعاقد المحملة على القطاعات.</p>
         </div>
 
         <div className="progress-execution-grid">
           <label className="field">
-            <span>كميات العقد</span>
+            <span>كميات التعاقد + البنود المحملة على القطاعات</span>
             <input type="number" min="0" step="0.01" inputMode="decimal" value={form.contract_quantity} onChange={(e) => setField('contract_quantity', e.target.value)} placeholder="مثال: 1250" />
-            <small className="progress-field-hint">إجمالي الكمية المتعاقد عليها للمشروع.</small>
+            <small className="progress-field-hint">دي الكمية الأساسية اللي عليها حساب نسبة التنفيذ — نفس لوجيك كميات العقد السابق.</small>
+          </label>
+
+          <label className="field">
+            <span>كمية التعاقد الأصلية</span>
+            <input type="number" min="0" step="0.01" inputMode="decimal" value={form.original_contract_quantity} onChange={(e) => setField('original_contract_quantity', e.target.value)} placeholder="مثال: 1000" />
+            <small className="progress-field-hint">رقم مرجعي فقط ولا يدخل في أي حسابات.</small>
+          </label>
+
+          <label className="field progress-contract-value-field">
+            <span>قيمة العقد</span>
+            <div className="progress-money-input">
+              <input type="number" min="0" step="0.01" inputMode="decimal" value={form.contract_value} onChange={(e) => setField('contract_value', e.target.value)} placeholder="مثال: 1250000" />
+              <b>ج.م</b>
+            </div>
+            <small className="progress-field-hint">قيمة مرجعية للعقد بالجنيه المصري ولا تدخل في حسابات التنفيذ.</small>
           </label>
 
           {projectMode === 'linked' ? (
@@ -337,7 +426,7 @@ export default function ProjectProgressForm({
         </div>
       </section>
 
-      {executionPercent > 100 ? <div role="status" className="progress-import-note">التنفيذ تجاوز كمية العقد بـ {(executionPercent - 100).toFixed(2)}%</div> : null}
+      {executionPercent > 100 ? <div role="status" className="progress-import-note">التنفيذ تجاوز كميات التعاقد + البنود المحملة على القطاعات بـ {(executionPercent - 100).toFixed(2)}%</div> : null}
 
       <section className="progress-form-card">
         <div className="progress-form-heading">
@@ -345,7 +434,7 @@ export default function ProjectProgressForm({
             <span>03</span>
             <h3>المراجعات والبيانات الإضافية</h3>
           </div>
-          <p>سجل تواريخ المراجعة والموقف المالي والتعاقد والطاقم والملاحظات بشكل واضح.</p>
+          <p>سجل تواريخ المراجعة والموقف المالي والتعاقد والطاقم والملاحظات، وأرفق مستندات المشروع عند الحاجة.</p>
         </div>
 
         <div className="progress-subsection-title">
@@ -386,89 +475,66 @@ export default function ProjectProgressForm({
             <small className="progress-field-hint">اكتب أي نقطة محتاج الفريق يفتكرها في المتابعة الجاية.</small>
           </label>
         </div>
+
+        <div className="progress-subsection-title progress-subsection-title--spaced">
+          <strong>مرفقات المشروع</strong>
+          <span>بحد أقصى 3 ملفات — PDF أو صور أو Word — والـPDF بيتجهز له Preview للصفحة الأولى تلقائيًا.</span>
+        </div>
+
+        <div className="progress-attachments-box">
+          <label className={attachmentCount >= MAX_ATTACHMENTS ? 'progress-upload-zone is-disabled' : 'progress-upload-zone'}>
+            <UploadCloud size={22} />
+            <strong>{attachmentCount >= MAX_ATTACHMENTS ? 'وصلت للحد الأقصى' : 'إضافة مرفقات'}</strong>
+            <small>{attachmentCount} / {MAX_ATTACHMENTS} · بحد أقصى 15MB للملف</small>
+            <input
+              type="file"
+              multiple
+              disabled={attachmentCount >= MAX_ATTACHMENTS}
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,application/pdf,image/jpeg,image/png,image/webp,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={onFilesSelected}
+            />
+          </label>
+
+          {attachmentsLoading ? <div className="progress-attachments-loading">جاري تحميل المرفقات...</div> : null}
+
+          {(visibleExistingAttachments.length || newFiles.length) ? (
+            <div className="progress-attachment-list">
+              {visibleExistingAttachments.map((item) => (
+                <div className="progress-attachment-item" key={item.id}>
+                  <span className="progress-attachment-item__icon">
+                    {item.mime_type === 'application/pdf' ? <FileText size={18} /> : item.mime_type?.startsWith('image/') ? <FileImage size={18} /> : <Paperclip size={18} />}
+                  </span>
+                  <div>
+                    <strong>{item.file_name}</strong>
+                    <small>{attachmentKind(item.mime_type)} · {fileSize(item.file_size)} · محفوظ</small>
+                  </div>
+                  {item.url ? <a href={item.url} target="_blank" rel="noreferrer">فتح</a> : null}
+                  <button type="button" onClick={() => markAttachmentForRemoval(item.id)} aria-label={`حذف ${item.file_name}`}><Trash2 size={15} /></button>
+                </div>
+              ))}
+
+              {newFiles.map((file, index) => (
+                <div className="progress-attachment-item is-new" key={`${file.name}-${file.size}-${index}`}>
+                  <span className="progress-attachment-item__icon">
+                    {file.type === 'application/pdf' ? <FileText size={18} /> : file.type?.startsWith('image/') ? <FileImage size={18} /> : <Paperclip size={18} />}
+                  </span>
+                  <div>
+                    <strong>{file.name}</strong>
+                    <small>{attachmentKind(file.type)} · {fileSize(file.size)} · جاهز للرفع</small>
+                  </div>
+                  <button type="button" onClick={() => setNewFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`إزالة ${file.name}`}><Trash2 size={15} /></button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="progress-attachments-empty"><Paperclip size={17} /> لا توجد مرفقات مضافة.</div>
+          )}
+        </div>
       </section>
 
       {initial?.source === 'excel_import' ? (
         <div className="progress-import-note"><FileSpreadsheet size={16} /> السجل ده مستورد من Excel، والنسخة الأصلية من أرقامه محفوظة للمراجعة.</div>
       ) : null}
-
-      <section className="progress-final-review" aria-label="ملخص المراجعة قبل الحفظ">
-        <div className="progress-final-review__head">
-          <div className="progress-final-review__title">
-            <span><ShieldCheck size={20} /></span>
-            <div>
-              <strong>راجع المتابعة قبل الحفظ</strong>
-              <small>ده الملخص النهائي للبيانات اللي هتتسجل على المشروع.</small>
-            </div>
-          </div>
-          <span className={summaryReady ? 'progress-final-review__ready is-ready' : 'progress-final-review__ready'}>
-            {summaryReady ? <Check size={13} /> : null}
-            {summaryReady ? 'البيانات الأساسية مكتملة' : 'راجع البيانات الأساسية'}
-          </span>
-        </div>
-
-        <div className="progress-final-review__identity">
-          <div>
-            <span>المشروع</span>
-            <strong>{summaryProjectName || '—'}</strong>
-            <small>{form.location.trim() || 'الموقع غير مسجل'}</small>
-          </div>
-          <div>
-            <span>حالة المشروع</span>
-            <strong>{selectedCategory?.label || 'لم يتم اختيار الحالة'}</strong>
-            <small>{selectedCategory?.description || 'اختار حالة المشروع قبل الحفظ.'}</small>
-          </div>
-          <div>
-            <span>تاريخ المتابعة</span>
-            <strong>{displayReviewDate(form.report_date)}</strong>
-            <small>{projectMode === 'linked' ? 'مرتبط بالإنتاجية' : 'إدخال يدوي'}</small>
-          </div>
-        </div>
-
-        <div className="progress-final-review__metrics">
-          <article>
-            <span>كميات العقد</span>
-            <strong>{contractQuantity ? contractQuantity.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—'} م</strong>
-          </article>
-          <article>
-            <span>الكميات المنفذة</span>
-            <strong>{executedQuantity.toLocaleString('en-US', { maximumFractionDigits: 2 })} م</strong>
-          </article>
-          <article>
-            <span>نسبة التنفيذ</span>
-            <strong>{executionPercent == null ? '—' : `${executionPercent.toLocaleString('en-US', { maximumFractionDigits: 2 })}%`}</strong>
-          </article>
-          <article>
-            <span>{projectMode === 'linked' ? 'من الإنتاجية' : 'نوع الإدخال'}</span>
-            <strong>{projectMode === 'linked'
-              ? `${productivityMeters.toLocaleString('en-US', { maximumFractionDigits: 2 })} م`
-              : 'يدوي'}</strong>
-          </article>
-        </div>
-
-        <div className="progress-final-review__details">
-          <div className="progress-final-review__reviews">
-            <span className="progress-final-review__section-title">تواريخ المراجعة</span>
-            <div>
-              <span><small>م. يحيي حسين</small><strong>{displayReviewDate(form.review_yahya_date)}</strong></span>
-              <span><small>م. مارينا سامي</small><strong>{displayReviewDate(form.review_marina_date)}</strong></span>
-              <span><small>م. عبدالرحمن حسين</small><strong>{displayReviewDate(form.review_abdelrahman_date)}</strong></span>
-            </div>
-          </div>
-
-          <div className="progress-final-review__text-grid">
-            <div><span>نوع التعاقد</span><p>{form.contract_type.trim() || '—'}</p></div>
-            <div><span>الطاقم المسئول</span><p>{form.responsible_team.trim() || '—'}</p></div>
-            <div className="is-wide"><span>الموقف المالي</span><p>{form.financial_status.trim() || '—'}</p></div>
-            <div className="is-wide"><span>الملاحظات</span><p>{form.notes.trim() || '—'}</p></div>
-          </div>
-        </div>
-
-        <div className="progress-final-review__footer">
-          <CheckCircle2 size={16} />
-          <span>راجع الأرقام والحالة والملاحظات، وبعدها اضغط حفظ المتابعة.</span>
-        </div>
-      </section>
 
       <div className="progress-form-actions">
         {!initial && saved ? <button className="btn btn-ghost" type="button" disabled={submitting} onClick={() => {
@@ -476,6 +542,9 @@ export default function ProjectProgressForm({
           setSaved(false)
           setSaveAlias(false)
           setForm({ ...emptyForm, report_date: businessToday })
+          setNewFiles([])
+          setExistingAttachments([])
+          setRemoveAttachmentIds([])
           setProjectMode('linked')
         }}>تسجيل متابعة جديدة</button> : null}
         {onCancel ? <button className="btn btn-ghost" type="button" onClick={onCancel}><X size={16} /> إلغاء</button> : null}
