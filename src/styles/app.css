@@ -7201,3 +7201,7 @@ html[data-theme="dark"] .management-project-table .data-table tbody tr:nth-child
   }
 }
 
+
+/* Two-role admin picker alignment */
+.users-admin-role-picker{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:620px){.users-admin-role-picker{grid-template-columns:1fr}}
