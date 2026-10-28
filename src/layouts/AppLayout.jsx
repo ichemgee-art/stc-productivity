@@ -17,7 +17,7 @@ import { useTheme } from '../context/ThemeContext'
 import { readSessionCache, writeSessionCache } from '../lib/sessionCache'
 
 const pageTitles = {
-  '/': ['لوحة الإنتاجية', 'ملخص الدورة والفرق والمشاريع.'],
+  '/': ['لوحة الإدارة', 'ملخص التشغيل والمشاريع والفريق في مكان واحد.'],
   '/productivity': ['البيانات المحسوبة', 'كل عمليات الدورة مع البحث والمراجعة والإدارة.'],
   '/productivity/new': ['تسجيل إنتاجية', 'إضافة عملية جديدة وحساب الأنصبة تلقائيًا.'],
   '/attendance': ['الحضور والغياب', 'متابعة الحضور والغياب والملاحظات داخل الدورة.'],
