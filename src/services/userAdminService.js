@@ -40,6 +40,14 @@ export const userAdminService = {
     })
   },
 
+  async updateDisplayName(userId, displayName) {
+    return invokeUserAdmin({
+      action: 'update_display_name',
+      user_id: userId,
+      display_name: displayName,
+    })
+  },
+
   async updateUserPassword(userId, password) {
     return invokeUserAdmin({
       action: 'update_password',
