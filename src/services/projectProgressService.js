@@ -196,7 +196,7 @@ export const projectProgressService = {
     const remaining = current.filter((row) => !removeSet.has(row.id))
 
     if (remaining.length + newFiles.length > MAX_ATTACHMENTS) {
-      throw new Error('الحد الأقصى 3 مرفقات لكل متابعة مشروع')
+      throw new Error('الحد الأقصى 5 مرفقات لكل متابعة مشروع')
     }
 
     for (const row of toRemove) {
