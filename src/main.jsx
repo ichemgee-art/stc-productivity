@@ -9,6 +9,7 @@ import { FeedbackProvider } from './context/FeedbackContext'
 import { ThemeProvider } from './context/ThemeContext'
 import App from './App'
 import { installGlobalMonitoring } from './services/monitoringService'
+import './styles/theme.css'
 import './styles/app.css'
 import './styles/project-progress.css'
 
