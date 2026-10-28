@@ -60,8 +60,10 @@ const readStoredQuarterFilters = () => {
 
 const chartTooltipStyle = {
   borderRadius: 12,
-  border: '1px solid rgba(37,58,85,.16)',
-  boxShadow: '0 10px 30px rgba(37,58,85,.12)',
+  border: '1px solid var(--border)',
+  boxShadow: 'var(--shadow-soft)',
+  background: 'var(--surface-raised)',
+  color: 'var(--text)',
   fontFamily: 'Cairo',
   fontSize: 12,
 }
@@ -829,9 +831,9 @@ export default function QuarterReportPage() {
                 <div className="quarter-chart-wrap">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={report.cycleRows}>
-                      <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(37,58,85,.12)" />
-                      <XAxis dataKey="label" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+                      <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--chart-grid)" />
+                      <XAxis dataKey="label" tick={{ fontSize: 9, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 9, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
                       <Tooltip formatter={(value) => `${number(value)} م`} contentStyle={chartTooltipStyle} />
                       <Bar dataKey="meters" name="الأمتار" fill="var(--blue-600)" radius={[7, 7, 0, 0]} />
                     </BarChart>
@@ -844,9 +846,9 @@ export default function QuarterReportPage() {
                 <div className="quarter-chart-wrap">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={report.cycleRows}>
-                      <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(37,58,85,.12)" />
-                      <XAxis dataKey="label" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+                      <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--chart-grid)" />
+                      <XAxis dataKey="label" tick={{ fontSize: 9, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 9, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
                       <Tooltip formatter={(value) => money(value)} contentStyle={chartTooltipStyle} />
                       <Legend wrapperStyle={{ fontSize: 10 }} />
                       <Bar dataKey="revenue" name="قيمة الإنتاجية" fill="var(--brand-navy)" radius={[7, 7, 0, 0]} />
