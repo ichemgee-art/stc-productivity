@@ -17,10 +17,10 @@ const loadPdfJs = async () => {
 export async function renderPdfFirstPage(file) {
   const pdfjs = await loadPdfJs()
   const bytes = await file.arrayBuffer()
-  const document = await pdfjs.getDocument({ data: bytes }).promise
+  const pdfDocument = await pdfjs.getDocument({ data: bytes }).promise
 
   try {
-    const page = await document.getPage(1)
+    const page = await pdfDocument.getPage(1)
     const baseViewport = page.getViewport({ scale: 1 })
     const targetWidth = 1200
     const scale = Math.min(2, Math.max(1, targetWidth / baseViewport.width))
@@ -40,6 +40,6 @@ export async function renderPdfFirstPage(file) {
     if (!blob) throw new Error('تعذر إنشاء صورة معاينة للـ PDF')
     return blob
   } finally {
-    await document.destroy()
+    await pdfDocument.destroy()
   }
 }
