@@ -1390,12 +1390,17 @@ textarea:focus-visible{
   background:var(--overlay);
   cursor:default;
 }
+.notification-center > .floating-backdrop{
+  background:transparent;
+}
 .notification-popover{
   position:absolute;
   top:calc(100% + 10px);
-  left:0;
+  right:0;
+  left:auto;
   z-index:220;
   width:min(370px,calc(100vw - 24px));
+  max-height:min(460px,calc(100dvh - 96px));
   overflow:hidden;
   border:1px solid var(--border);
   border-radius:16px;
@@ -1676,7 +1681,14 @@ textarea:focus-visible{
     grid-column:2/4;
     justify-self:end;
   }
-  .notification-popover{position:fixed;top:68px;left:12px}
+  .notification-popover{
+    position:fixed;
+    top:68px;
+    left:12px;
+    right:12px;
+    width:auto;
+    max-height:min(520px,calc(100dvh - 84px));
+  }
 }
 
 @media(max-width:760px){
