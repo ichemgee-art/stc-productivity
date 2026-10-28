@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Database, FileSpreadsheet, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { Database, FileSpreadsheet, Pencil, Pin, Plus, Search, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PROJECT_PROGRESS_CATEGORIES, projectCategoryLabel, progressMetersById } from '../lib/projectProgress'
 import { appService } from '../services/appService'
@@ -27,6 +27,22 @@ const displayNumber = (value) => {
     : '—'
 }
 
+const PROJECT_PROGRESS_PIN_COLUMNS = [
+  { key: 'number', label: 'رقم' },
+  { key: 'project', label: 'المشروع' },
+  { key: 'location', label: 'الموقع' },
+  { key: 'financial', label: 'الموقف المالي' },
+  { key: 'contract', label: 'نوع التعاقد' },
+  { key: 'team', label: 'الطاقم المسئول' },
+  { key: 'notes', label: 'ملاحظات' },
+  { key: 'status', label: 'حالة المشروع' },
+]
+
+const progressPinClass = (active, key, base = '') => [
+  base,
+  active === key ? 'progress-pinned-column' : '',
+].filter(Boolean).join(' ')
+
 export default function ProjectProgressPage() {
   const { permissions } = useAuth()
   const feedback = useFeedback()
@@ -34,6 +50,7 @@ export default function ProjectProgressPage() {
   const [search, setSearch] = useSessionState('page:project-progress:search', '')
   const [source, setSource] = useSessionState('page:project-progress:source', '')
   const [category, setCategory] = useSessionState('page:project-progress:category', '')
+  const [pinnedColumn, setPinnedColumn] = useSessionState('page:project-progress:pinned-column', '')
   const [editing, setEditing] = useState(null)
   const [recentlyUpdatedId, setRecentlyUpdatedId] = useState(null)
   const highlightTimerRef = useRef(null)
@@ -167,6 +184,15 @@ export default function ProjectProgressPage() {
             <option value="linked">مرتبط بالإنتاجية</option>
             <option value="manual">يدوي</option>
           </select>
+          <label className="progress-pin-control" title="ثبّت عمود أثناء السكرول العرضي">
+            <Pin size={15} />
+            <select value={pinnedColumn} onChange={(e) => setPinnedColumn(e.target.value)} aria-label="تثبيت عمود في متابعة المشاريع">
+              <option value="">بدون تثبيت</option>
+              {PROJECT_PROGRESS_PIN_COLUMNS.map((item) => (
+                <option key={item.key} value={item.key}>تثبيت: {item.label}</option>
+              ))}
+            </select>
+          </label>
           <ExportButtons
             filename={category ? `project-progress-${category === '__unclassified__' ? 'unclassified' : category}` : 'project-progress'}
             excelSheets={excelSheets}
@@ -213,15 +239,15 @@ export default function ProjectProgressPage() {
             <thead>
               <tr>
                 <th colSpan="3" className="progress-group-head">اخر تاريخ مراجعة</th>
-                <th rowSpan="2">رقم</th>
-                <th rowSpan="2">المشروع</th>
-                <th rowSpan="2">الموقع</th>
+                <th rowSpan="2" className={progressPinClass(pinnedColumn, 'number')}>رقم</th>
+                <th rowSpan="2" className={progressPinClass(pinnedColumn, 'project')}>المشروع</th>
+                <th rowSpan="2" className={progressPinClass(pinnedColumn, 'location')}>الموقع</th>
                 <th colSpan="3" className="progress-group-head">موقف تنفيذي</th>
-                <th rowSpan="2">موقف المالي</th>
-                <th rowSpan="2">نوع التعاقد</th>
-                <th rowSpan="2">الطاقم المسئول عن استكمال الاعمال</th>
-                <th rowSpan="2">ملاحظات</th>
-                <th rowSpan="2" className="progress-status-head">حالة المشروع</th>
+                <th rowSpan="2" className={progressPinClass(pinnedColumn, 'financial')}>موقف المالي</th>
+                <th rowSpan="2" className={progressPinClass(pinnedColumn, 'contract')}>نوع التعاقد</th>
+                <th rowSpan="2" className={progressPinClass(pinnedColumn, 'team')}>الطاقم المسئول عن استكمال الاعمال</th>
+                <th rowSpan="2" className={progressPinClass(pinnedColumn, 'notes')}>ملاحظات</th>
+                <th rowSpan="2" className={progressPinClass(pinnedColumn, 'status', 'progress-status-head')}>حالة المشروع</th>
                 {(permissions.canManageProjectProgress || permissions.canDeleteProjectProgress) ? <th rowSpan="2" className="progress-actions-head">إجراءات</th> : null}
               </tr>
               <tr>
@@ -245,12 +271,12 @@ export default function ProjectProgressPage() {
                   <td>{displayDate(row.review_yahya_date)}</td>
                   <td>{displayDate(row.review_marina_date)}</td>
                   <td>{displayDate(row.review_abdelrahman_date)}</td>
-                  <td className="progress-number-cell">{row.display_number ?? '—'}</td>
-                  <td className="progress-project-cell">
+                  <td className={progressPinClass(pinnedColumn, 'number', 'progress-number-cell')}>{row.display_number ?? '—'}</td>
+                  <td className={progressPinClass(pinnedColumn, 'project', 'progress-project-cell')}>
                     <strong title={row.project || ''}>{row.project || '—'}</strong>
                     {row.source === 'excel_import' ? <small><FileSpreadsheet size={12} /> Excel</small> : null}
                   </td>
-                  <td>{row.location || '—'}</td>
+                  <td className={progressPinClass(pinnedColumn, 'location')}>{row.location || '—'}</td>
                   <td className="progress-metric-cell">{displayNumber(row.contract_quantity)}</td>
                   <td className="progress-metric-cell">
                     <strong>{displayNumber(row.executed_quantity)}</strong>
@@ -261,11 +287,11 @@ export default function ProjectProgressPage() {
                   <td className={Number(row.execution_percent || 0) > 100 ? 'progress-percent over' : 'progress-percent'}>
                     {row.execution_percent == null ? '—' : `${displayNumber(row.execution_percent)}%`}
                   </td>
-                  <td className="progress-long-cell">{row.financial_status || '—'}</td>
-                  <td className="progress-long-cell">{row.contract_type || '—'}</td>
-                  <td className="progress-long-cell">{row.responsible_team || '—'}</td>
-                  <td className="progress-notes-cell">{row.notes || '—'}</td>
-                  <td className="progress-status-cell">
+                  <td className={progressPinClass(pinnedColumn, 'financial', 'progress-long-cell')}>{row.financial_status || '—'}</td>
+                  <td className={progressPinClass(pinnedColumn, 'contract', 'progress-long-cell')}>{row.contract_type || '—'}</td>
+                  <td className={progressPinClass(pinnedColumn, 'team', 'progress-long-cell')}>{row.responsible_team || '—'}</td>
+                  <td className={progressPinClass(pinnedColumn, 'notes', 'progress-notes-cell')}>{row.notes || '—'}</td>
+                  <td className={progressPinClass(pinnedColumn, 'status', 'progress-status-cell')}>
                     <span className={`progress-status-badge status-${row.project_category || 'unclassified'}`}>
                       {projectCategoryLabel(row.project_category, { short: true })}
                     </span>
