@@ -129,7 +129,12 @@ export default function ProjectProgressPage() {
   const mutation = useMutation({
     mutationFn: async ({ payload, newFiles, removeAttachmentIds }) => {
       const saved = await appService.saveProjectProgress(payload)
-      await appService.syncProjectProgressAttachments(saved.id, { newFiles, removeAttachmentIds })
+      try {
+        await appService.syncProjectProgressAttachments(saved.id, { newFiles, removeAttachmentIds })
+      } catch (error) {
+        error.projectProgressSaved = saved
+        throw error
+      }
       return saved
     },
     onSuccess: async (data, variables) => {
@@ -146,7 +151,20 @@ export default function ProjectProgressPage() {
         `تم تحديث متابعة ${variables.payload?.project_name || 'المشروع'} والحسابات والمرفقات اتحدثت بنجاح.`,
       )
     },
-    onError: (error) => feedback.error('تعذر حفظ التعديل', error.message || 'حدث خطأ غير متوقع'),
+    onError: async (error) => {
+      if (error.projectProgressSaved) {
+        setEditing((current) => current
+          ? { ...current, updated_at: error.projectProgressSaved.updated_at || current.updated_at }
+          : current)
+        await queryClient.invalidateQueries({ queryKey: ['project-progress'] })
+        feedback.error(
+          'تم حفظ البيانات وتعذر رفع المرفق',
+          error.message || 'بيانات المشروع محفوظة، لكن المرفق لم يكتمل. جرّب رفع الملف مرة أخرى.',
+        )
+        return
+      }
+      feedback.error('تعذر حفظ التعديل', error.message || 'حدث خطأ غير متوقع')
+    },
   })
 
   const deleteMutation = useMutation({
