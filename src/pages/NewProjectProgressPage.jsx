@@ -18,12 +18,16 @@ export default function NewProjectProgressPage() {
   const projectMetersMap = useMemo(() => progressMetersById(productivityQuery.data), [productivityQuery.data])
 
   const mutation = useMutation({
-    mutationFn: appService.saveProjectProgress,
+    mutationFn: async ({ payload, newFiles, removeAttachmentIds }) => {
+      const saved = await appService.saveProjectProgress(payload)
+      await appService.syncProjectProgressAttachments(saved.id, { newFiles, removeAttachmentIds })
+      return saved
+    },
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: ['project-progress'] })
       feedback.success(
         'تم تسجيل متابعة المشروع',
-        `تم حفظ ${variables.project_name || 'المشروع'} وظهر في جدول المتابعة.`,
+        `تم حفظ ${variables.payload?.project_name || 'المشروع'} وظهر في جدول المتابعة بالمرفقات.`,
         3600,
       )
     },
@@ -39,7 +43,7 @@ export default function NewProjectProgressPage() {
         references={refsQuery.data}
         projectMetersMap={projectMetersMap}
         submitting={mutation.isPending}
-        onSubmit={(payload) => mutation.mutateAsync(payload)}
+        onSubmit={(submission) => mutation.mutateAsync(submission)}
       />
     </div>
   )
