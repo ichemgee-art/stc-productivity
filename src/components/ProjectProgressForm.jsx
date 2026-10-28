@@ -109,6 +109,7 @@ export default function ProjectProgressForm({
   const [newFiles, setNewFiles] = useState([])
   const [removeAttachmentIds, setRemoveAttachmentIds] = useState([])
   const [attachmentsLoading, setAttachmentsLoading] = useState(false)
+  const [attachmentDragActive, setAttachmentDragActive] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -152,23 +153,44 @@ export default function ProjectProgressForm({
   const visibleExistingAttachments = existingAttachments.filter((row) => !removeAttachmentIds.includes(row.id))
   const attachmentCount = visibleExistingAttachments.length + newFiles.length
 
-  const onFilesSelected = (event) => {
-    const incoming = Array.from(event.target.files || [])
-    event.target.value = ''
+  const addAttachmentFiles = (files) => {
+    const incoming = Array.from(files || [])
     if (!incoming.length) return
 
     const invalidType = incoming.find((file) => !ALLOWED_ATTACHMENT_TYPES.has(file.type))
-    if (invalidType) return setError(`نوع الملف غير مسموح: ${invalidType.name}. المسموح PDF أو صور أو Word.`)
+    if (invalidType) return setError(`نوع الملف غير مسموح: ${invalidType.name}. المسموح PDF أو صور أو Word أو Excel.`)
 
     const oversized = incoming.find((file) => file.size > MAX_ATTACHMENT_SIZE)
     if (oversized) return setError(`الملف ${oversized.name} أكبر من 15MB`)
 
     if (attachmentCount + incoming.length > MAX_ATTACHMENTS) {
-      return setError('الحد الأقصى 5 مرفقات لكل متابعة مشروع')
+      return setError(`متاح ${Math.max(0, MAX_ATTACHMENTS - attachmentCount)} مرفق فقط — الحد الأقصى 5 مرفقات لكل متابعة مشروع`)
     }
 
     setError('')
     setNewFiles((current) => [...current, ...incoming])
+  }
+
+  const onFilesSelected = (event) => {
+    addAttachmentFiles(event.target.files)
+    event.target.value = ''
+  }
+
+  const onAttachmentDragOver = (event) => {
+    event.preventDefault()
+    if (attachmentCount < MAX_ATTACHMENTS) setAttachmentDragActive(true)
+  }
+
+  const onAttachmentDragLeave = (event) => {
+    event.preventDefault()
+    setAttachmentDragActive(false)
+  }
+
+  const onAttachmentDrop = (event) => {
+    event.preventDefault()
+    setAttachmentDragActive(false)
+    if (attachmentCount >= MAX_ATTACHMENTS) return
+    addAttachmentFiles(event.dataTransfer.files)
   }
 
   const markAttachmentForRemoval = (id) => {
@@ -488,10 +510,33 @@ export default function ProjectProgressForm({
         </div>
 
         <div className="progress-attachments-box">
-          <label className={attachmentCount >= MAX_ATTACHMENTS ? 'progress-upload-zone is-disabled' : 'progress-upload-zone'}>
+          <div className="progress-attachment-slots" aria-label="أماكن المرفقات الخمسة">
+            {Array.from({ length: MAX_ATTACHMENTS }).map((_, index) => {
+              const filled = index < attachmentCount
+              return (
+                <div className={filled ? 'progress-attachment-slot is-filled' : 'progress-attachment-slot'} key={index}>
+                  {filled ? <CheckCircle2 size={17} /> : <UploadCloud size={17} />}
+                  <strong>{filled ? `مرفق ${index + 1}` : `مكان ${index + 1} متاح`}</strong>
+                  <small>{filled ? 'مستخدم' : 'يمكن إضافة ملف هنا'}</small>
+                </div>
+              )
+            })}
+          </div>
+
+          <label
+            className={[
+              'progress-upload-zone',
+              attachmentCount >= MAX_ATTACHMENTS ? 'is-disabled' : '',
+              attachmentDragActive ? 'is-dragging' : '',
+            ].filter(Boolean).join(' ')}
+            onDragOver={onAttachmentDragOver}
+            onDragEnter={onAttachmentDragOver}
+            onDragLeave={onAttachmentDragLeave}
+            onDrop={onAttachmentDrop}
+          >
             <UploadCloud size={22} />
-            <strong>{attachmentCount >= MAX_ATTACHMENTS ? 'وصلت للحد الأقصى' : 'إضافة مرفقات'}</strong>
-            <small>{attachmentCount} / {MAX_ATTACHMENTS} · بحد أقصى 15MB للملف</small>
+            <strong>{attachmentCount >= MAX_ATTACHMENTS ? 'وصلت للحد الأقصى 5 مرفقات' : attachmentDragActive ? 'سيب الملفات هنا' : 'إضافة مرفقات أو اسحبها هنا'}</strong>
+            <small>{attachmentCount} / {MAX_ATTACHMENTS} · المتاح {Math.max(0, MAX_ATTACHMENTS - attachmentCount)} · بحد أقصى 15MB للملف</small>
             <input
               type="file"
               multiple
