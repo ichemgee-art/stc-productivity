@@ -162,18 +162,18 @@
 .project-progress-table thead th{
   position:sticky;
   z-index:8;
-  background:var(--table-head);
+  background:var(--brand-navy);
   color:#fff;
   font-weight:900;
   line-height:1.55;
   white-space:normal;
 }
 .project-progress-table thead tr:first-child th{top:0;height:41px}
-.project-progress-table thead tr:nth-child(2) th{top:41px;height:40px;background:var(--surface-3)}
+.project-progress-table thead tr:nth-child(2) th{top:41px;height:40px;background:#314a68}
 .project-progress-table thead .progress-group-head{color:var(--brand-gold)}
-.project-progress-table tbody tr:hover td{background:var(--surface-hover)}
-.project-progress-table tbody tr.is-linked td{background:color-mix(in srgb,var(--success) 7%,var(--surface))}
-.project-progress-table tbody tr.is-linked:hover td{background:color-mix(in srgb,var(--success) 12%,var(--surface-hover))}
+.project-progress-table tbody tr:hover td{background:var(--surface)}
+.project-progress-table tbody tr.is-linked td{background:var(--surface)}
+.project-progress-table tbody tr.is-linked:hover td{background:var(--surface)}
 .project-progress-table th:nth-child(1),
 .project-progress-table th:nth-child(2),
 .project-progress-table th:nth-child(3),
@@ -377,10 +377,10 @@
   box-shadow:5px 0 12px rgba(37,58,85,.08);
 }
 .project-progress-table tbody tr.is-linked .progress-row-actions{
-  background:color-mix(in srgb,var(--success) 1.8%,var(--surface))!important;
+  background:var(--surface)!important;
 }
 .project-progress-table tbody tr:hover .progress-row-actions{
-  background:var(--surface-hover)!important;
+  background:var(--surface)!important;
 }
 .progress-edit-btn{
   width:100%;
@@ -802,9 +802,7 @@
 .progress-row-actions{
   background:var(--surface)!important;
 }
-.project-progress-table tbody tr.is-linked .progress-row-actions{
-  background:color-mix(in srgb,var(--success) 1.8%,var(--surface))!important;
-}
+.project-progress-table tbody tr.is-linked .progress-row-actions{background:var(--surface)!important;}
 .progress-row-action-buttons{
   display:flex;
   align-items:center;
@@ -1405,21 +1403,12 @@
 }
 
 .project-progress-table tbody tr td{
-  transition:background-color .16s ease,box-shadow .16s ease;
+  transition:background-color .16s ease;
 }
-.project-progress-table tbody tr:hover td{background:var(--surface-hover)}
-.project-progress-table tbody tr.is-linked:hover td{background:color-mix(in srgb,var(--success) 12%,var(--surface-hover))}
-.project-progress-table tbody tr:hover td:first-child{
-  box-shadow:inset 3px 0 0 color-mix(in srgb,var(--brand-gold) 65%,transparent);
-}
-
-@keyframes progressRowSaved{
-  0%{background:color-mix(in srgb,var(--success) 22%,var(--surface))}
-  40%{background:color-mix(in srgb,var(--success) 12%,var(--surface))}
-  100%{background:inherit}
-}
+.project-progress-table tbody tr:hover td,
+.project-progress-table tbody tr.is-linked:hover td,
 .project-progress-table tbody tr.is-just-updated td{
-  animation:progressRowSaved 1.6s ease-out;
+  background:var(--surface);
 }
 
 .progress-save-success{
