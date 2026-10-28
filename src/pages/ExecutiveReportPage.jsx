@@ -10,6 +10,7 @@ import { appService } from '../services/appService'
 import { exportExecutiveExcel } from '../lib/exporters'
 import { date, money, monthName, number, roleLabels } from '../lib/format'
 import { normalizeSearch, smartIncludes } from '../lib/smartSearch'
+import { projectCategoryLabel } from '../lib/projectProgress'
 
 const PROJECT_HISTORY_SEARCH_KEY = 'stc_project_history_search'
 const PROJECT_HISTORY_SELECTED_KEY = 'stc_project_history_selected'
@@ -105,17 +106,19 @@ export default function ExecutiveReportPage() {
   const historyQuery = useQuery({
     queryKey: ['all-time', 'project-history-report'],
     queryFn: async () => {
-      const [rows, peopleOps] = await Promise.all([
+      const [rows, peopleOps, projectProgress] = await Promise.all([
         appService.historicalProductivityRows(),
         appService.historicalPersonOperations(),
+        appService.projectProgressRows(),
       ])
-      return { rows, peopleOps }
+      return { rows, peopleOps, projectProgress }
     },
     staleTime: 60_000,
   })
 
   const allRows = historyQuery.data?.rows || []
   const allPeopleOps = historyQuery.data?.peopleOps || []
+  const allProjectProgress = historyQuery.data?.projectProgress || []
 
   const saveSelectedProject = (projectName) => {
     setSelectedProject(projectName)
@@ -185,8 +188,11 @@ export default function ExecutiveReportPage() {
   const hasDateRange = Boolean(dateFrom || dateTo)
 
   const projectNames = useMemo(
-    () => [...new Set(allRows.map((row) => row.project_current_name || row.project).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar')),
-    [allRows],
+    () => [...new Set([
+      ...allRows.map((row) => row.project_current_name || row.project),
+      ...allProjectProgress.map((row) => row.project || row.project_name_snapshot || row.original_project_name),
+    ].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar')),
+    [allRows, allProjectProgress],
   )
 
   const matchedProjectNames = useMemo(() => {
@@ -222,15 +228,39 @@ export default function ExecutiveReportPage() {
     if (!effectiveProject) return null
 
     const normalizedProject = normalizeSearch(effectiveProject)
-    const rows = allRows
+    const projectIdentityRows = allRows.filter(
+      (row) => normalizeSearch(row.project_current_name || row.project) === normalizedProject,
+    )
+    const projectIds = new Set(projectIdentityRows.map((row) => row.project_id).filter(Boolean))
+
+    const rows = projectIdentityRows
       .filter((row) => {
-        if (normalizeSearch(row.project_current_name || row.project) !== normalizedProject) return false
         const workDate = String(row.work_date || '').slice(0, 10)
         if (dateFrom && workDate < dateFrom) return false
         if (dateTo && workDate > dateTo) return false
         return true
       })
       .sort((a, b) => String(a.work_date).localeCompare(String(b.work_date)))
+
+    const progressRows = allProjectProgress
+      .filter((row) => {
+        if (row.project_id && projectIds.size) return projectIds.has(row.project_id)
+        return [row.project, row.project_name_snapshot, row.original_project_name]
+          .filter(Boolean)
+          .some((name) => normalizeSearch(name) === normalizedProject)
+      })
+      .sort((a, b) => {
+        const aKey = `${a.report_date || ''}T${a.updated_at || a.created_at || ''}`
+        const bKey = `${b.report_date || ''}T${b.updated_at || b.created_at || ''}`
+        return bKey.localeCompare(aKey)
+      })
+
+    const latestProgress = progressRows[0] || null
+    const progressSummary = latestProgress ? {
+      latest: latestProgress,
+      recordCount: progressRows.length,
+      attachmentCount: progressRows.reduce((sum, row) => sum + Number(row.attachment_count || 0), 0),
+    } : null
 
     const rowIds = new Set(rows.map((row) => String(row.id)))
     const peopleOps = allPeopleOps.filter((row) => rowIds.has(String(row.submission_id)))
@@ -292,10 +322,12 @@ export default function ExecutiveReportPage() {
       lastDate,
       cycleRows,
       projectNames: [effectiveProject],
+      progressRows,
+      progressSummary,
     }
-  }, [effectiveProject, allRows, allPeopleOps, cycles, dateFrom, dateTo])
+  }, [effectiveProject, allRows, allPeopleOps, allProjectProgress, cycles, dateFrom, dateTo])
 
-  const hasResults = Boolean(report?.rows.length)
+  const hasResults = Boolean(report?.rows.length || report?.progressRows.length)
 
   const sheets = report ? [
     {
@@ -311,7 +343,37 @@ export default function ExecutiveReportPage() {
         'متوسط سعر المتر': report.summary.avgPrice,
         'مستحقات فريق التنفيذ': report.labor,
         'عدد أفراد التنفيذ': report.people.length,
+        'قيمة العقد الحالية': report.progressSummary?.latest?.contract_value == null ? '' : Number(report.progressSummary.latest.contract_value),
+        'كميات التعاقد الحالية': report.progressSummary?.latest?.contract_quantity == null ? '' : Number(report.progressSummary.latest.contract_quantity),
+        'المنفذ الحالي': report.progressSummary?.latest?.executed_quantity == null ? '' : Number(report.progressSummary.latest.executed_quantity),
+        'نسبة التنفيذ الحالية %': report.progressSummary?.latest?.execution_percent == null ? '' : Number(report.progressSummary.latest.execution_percent),
+        'حالة المشروع': report.progressSummary ? projectCategoryLabel(report.progressSummary.latest.project_category) : '',
+        'عدد سجلات متابعة المشروع': report.progressSummary?.recordCount || 0,
+        'إجمالي المرفقات': report.progressSummary?.attachmentCount || 0,
       }],
+    },
+    {
+      name: 'العقد والمتابعة',
+      rows: report.progressRows.map((row) => ({
+        'رقم المتابعة': row.display_number ?? '',
+        'تاريخ المتابعة': date(row.report_date),
+        'المشروع': row.project || row.project_name_snapshot || '',
+        'الموقع': row.location || '',
+        'حالة المشروع': projectCategoryLabel(row.project_category),
+        'نوع التعاقد': row.contract_type || '',
+        'قيمة العقد (ج.م)': row.contract_value == null ? '' : Number(row.contract_value),
+        'كمية التعاقد الأصلية': row.original_contract_quantity == null ? '' : Number(row.original_contract_quantity),
+        'كميات التعاقد + البنود المحملة': row.contract_quantity == null ? '' : Number(row.contract_quantity),
+        'الكميات المنفذة': row.executed_quantity == null ? '' : Number(row.executed_quantity),
+        'نسبة التنفيذ %': row.execution_percent == null ? '' : Number(row.execution_percent),
+        'الموقف المالي': row.financial_status || '',
+        'الطاقم المسئول': row.responsible_team || '',
+        'مراجعة م. يحيي': date(row.review_yahya_date),
+        'مراجعة م. مارينا': date(row.review_marina_date),
+        'مراجعة م. عبدالرحمن': date(row.review_abdelrahman_date),
+        'عدد المرفقات': Number(row.attachment_count || 0),
+        'ملاحظات': row.notes || '',
+      })),
     },
     {
       name: 'الحصر حسب الدورات',
@@ -565,6 +627,59 @@ export default function ExecutiveReportPage() {
               <article><span>آخر عملية</span><strong>{date(report.lastDate)}</strong></article>
               <article><span>متوسط سعر المتر</span><strong>{money(report.summary.avgPrice)}</strong></article>
               <article><span>عدد القطاعات</span><strong>{number(report.sections.length)}</strong></article>
+            </section>
+
+            <section className="report-section project-contract-summary">
+              <header>
+                <div>
+                  <span>CONTRACT & PROJECT FOLLOW-UP</span>
+                  <h2>ملخص العقد ومتابعة المشروع</h2>
+                </div>
+                <small>
+                  {report.progressSummary
+                    ? `آخر متابعة ${date(report.progressSummary.latest.report_date)} · ${number(report.progressSummary.recordCount)} سجل`
+                    : 'لا توجد بيانات متابعة للمشروع'}
+                </small>
+              </header>
+
+              {report.progressSummary ? (
+                <>
+                  <div className="project-contract-kpis">
+                    <div><CircleDollarSign /><span>قيمة العقد</span><strong>{money(report.progressSummary.latest.contract_value)}</strong></div>
+                    <div><Ruler /><span>كميات التعاقد</span><strong>{number(report.progressSummary.latest.contract_quantity)} م</strong></div>
+                    <div><TrendingUp /><span>الكميات المنفذة</span><strong>{number(report.progressSummary.latest.executed_quantity)} م</strong></div>
+                    <div><BarChart3 /><span>نسبة التنفيذ</span><strong>{number(report.progressSummary.latest.execution_percent)}%</strong></div>
+                    <div><FolderKanban /><span>كمية العقد الأصلية</span><strong>{number(report.progressSummary.latest.original_contract_quantity)} م</strong></div>
+                    <div><FileSpreadsheet /><span>المرفقات</span><strong>{number(report.progressSummary.attachmentCount)}</strong></div>
+                  </div>
+
+                  <div className="project-contract-details">
+                    <div><span>حالة المشروع</span><strong>{projectCategoryLabel(report.progressSummary.latest.project_category)}</strong></div>
+                    <div><span>نوع التعاقد</span><strong>{report.progressSummary.latest.contract_type || '—'}</strong></div>
+                    <div><span>الموقع</span><strong>{report.progressSummary.latest.location || '—'}</strong></div>
+                    <div><span>عدد سجلات المتابعة</span><strong>{number(report.progressSummary.recordCount)}</strong></div>
+                    <div><span>الطاقم المسئول</span><strong>{report.progressSummary.latest.responsible_team || '—'}</strong></div>
+                    <div><span>آخر تحديث متابعة</span><strong>{date(report.progressSummary.latest.report_date)}</strong></div>
+                  </div>
+
+                  <div className="project-contract-text-grid">
+                    <article>
+                      <span>الموقف المالي</span>
+                      <p>{report.progressSummary.latest.financial_status || 'لا يوجد موقف مالي مسجل.'}</p>
+                    </article>
+                    <article>
+                      <span>آخر مراجعات مسجلة</span>
+                      <p>
+                        يحيي: {date(report.progressSummary.latest.review_yahya_date)}
+                        {' · '}مارينا: {date(report.progressSummary.latest.review_marina_date)}
+                        {' · '}عبدالرحمن: {date(report.progressSummary.latest.review_abdelrahman_date)}
+                      </p>
+                    </article>
+                  </div>
+                </>
+              ) : (
+                <div className="project-contract-empty">المشروع موجود في الإنتاجية، لكن لا توجد له بيانات عقد أو متابعة مسجلة في قسم متابعة المشاريع حتى الآن.</div>
+              )}
             </section>
 
             <section className="report-section">
