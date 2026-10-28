@@ -1632,3 +1632,109 @@ html[data-theme="dark"] .project-progress-table tbody tr.is-linked:hover td{
     width:100%;
   }
 }
+
+/* PROJECT PROGRESS DARK MODE V3 — 2026-10-28 */
+html[data-theme="dark"] .project-progress-page{
+  color:var(--text);
+}
+
+html[data-theme="dark"] :where(
+  .progress-table-panel,.progress-form-card,.progress-live-hint,.progress-preview-banner,
+  .progress-form-guide,.progress-form-guide>div,.progress-category-filter,
+  .progress-category-selector>button,.progress-mode-selector>button,
+  .progress-review-card,.progress-execution-card,.progress-summary-card
+){
+  background:linear-gradient(180deg,var(--surface-2),var(--surface))!important;
+  color:var(--text)!important;
+  border-color:var(--border)!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.13)!important;
+}
+
+html[data-theme="dark"] :where(
+  .progress-form-heading h3,.progress-field-label>span,.progress-table-toolbar__title strong,
+  .progress-summary-card strong,.progress-review-card strong,.progress-execution-card strong
+){
+  color:var(--text)!important;
+}
+html[data-theme="dark"] :where(
+  .progress-form-heading p,.progress-field-label>small,.progress-table-toolbar__title span,
+  .progress-live-hint,.progress-preview-banner small,.progress-form-guide p
+){
+  color:var(--muted)!important;
+}
+
+html[data-theme="dark"] :where(
+  .progress-entry-form input,.progress-entry-form select,.progress-entry-form textarea,
+  .progress-search input,.progress-table-toolbar__actions select
+){
+  background:#0C1724!important;
+  color:var(--text)!important;
+  border-color:var(--border)!important;
+}
+html[data-theme="dark"] :where(
+  .progress-entry-form input,.progress-entry-form select,.progress-entry-form textarea,
+  .progress-search input,.progress-table-toolbar__actions select
+):focus{
+  border-color:rgba(243,184,32,.68)!important;
+  box-shadow:0 0 0 3px rgba(243,184,32,.10)!important;
+}
+
+html[data-theme="dark"] .project-progress-table th{
+  background:#18283A!important;
+  color:#DDE7F1!important;
+  border-color:var(--border)!important;
+}
+html[data-theme="dark"] .project-progress-table td,
+html[data-theme="dark"] .progress-row-actions{
+  background:var(--surface)!important;
+  color:#E8EEF5!important;
+  border-color:var(--border)!important;
+}
+html[data-theme="dark"] .project-progress-table tbody tr:nth-child(even) td{
+  background:#121F2F!important;
+}
+html[data-theme="dark"] .project-progress-table tbody tr:hover td,
+html[data-theme="dark"] .project-progress-table tbody tr:hover .progress-row-actions{
+  background:#1C3044!important;
+}
+html[data-theme="dark"] .project-progress-table tbody tr.is-linked td,
+html[data-theme="dark"] .project-progress-table tbody tr.is-linked .progress-row-actions{
+  background:color-mix(in srgb,var(--success) 8%,var(--surface))!important;
+}
+html[data-theme="dark"] .progress-actions-head{
+  background:#18283A!important;
+  color:var(--brand-gold)!important;
+  border-color:var(--border)!important;
+}
+
+html[data-theme="dark"] .progress-mode-selector>button:hover,
+html[data-theme="dark"] .progress-category-selector>button:hover{
+  background:var(--surface-raised)!important;
+  border-color:var(--border-strong)!important;
+}
+html[data-theme="dark"] .progress-mode-selector>button.is-active,
+html[data-theme="dark"] .progress-category-selector>button.is-active{
+  background:rgba(243,184,32,.11)!important;
+  color:#FFF!important;
+  border-color:rgba(243,184,32,.42)!important;
+  box-shadow:0 0 0 2px rgba(243,184,32,.07)!important;
+}
+html[data-theme="dark"] .progress-mode-selector>button.is-active svg,
+html[data-theme="dark"] .progress-category-selector>button.is-active svg{
+  color:var(--brand-gold)!important;
+}
+
+html[data-theme="dark"] .progress-live-hint{
+  background:rgba(71,201,139,.08)!important;
+  border-color:rgba(71,201,139,.22)!important;
+}
+html[data-theme="dark"] .progress-preview-banner{
+  background:rgba(243,184,32,.07)!important;
+  border-color:rgba(243,184,32,.18)!important;
+}
+
+html[data-theme="dark"] .progress-status-pill,
+html[data-theme="dark"] .project-status-badge{
+  border-color:var(--border)!important;
+}
+
