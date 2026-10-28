@@ -1938,3 +1938,67 @@
   opacity:.55;
   cursor:not-allowed;
 }
+
+
+/* Project workflow readability bump — 2026-10-28 */
+.progress-form-heading h3{font-size:18px}
+.progress-form-heading p{font-size:11.5px}
+.progress-form-guide strong{font-size:12.5px}
+.progress-form-guide small{font-size:10px}
+.progress-entry-form .field>span{font-size:13.5px}
+.progress-entry-form .field input,
+.progress-entry-form .field select,
+.progress-entry-form .field textarea{font-size:13px}
+.progress-field-hint{font-size:10.5px!important}
+.progress-subsection-title strong{font-size:12.5px}
+.progress-subsection-title span{font-size:10.5px}
+.progress-readonly-metric span,
+.progress-calculated-card span{font-size:11px}
+.progress-readonly-metric small{font-size:10px}
+.progress-import-note{font-size:11px}
+
+.project-progress-table{font-size:12.5px}
+.project-progress-table thead th{font-size:12px}
+.project-progress-table tbody td{font-size:12.5px}
+.progress-project-cell strong{font-size:13px}
+.progress-project-cell>small{font-size:9px}
+.progress-metric-cell strong{font-size:14px}
+.progress-metric-cell>small{font-size:8px}
+.progress-long-cell,
+.progress-notes-cell{font-size:12.5px}
+.progress-attachment-count{font-size:9.5px}
+.progress-edit-btn,
+.progress-delete-btn{font-size:11px}
+
+.progress-upload-zone strong{font-size:12.5px}
+.progress-upload-zone small{font-size:9.5px}
+.progress-attachment-item strong{font-size:11px}
+.progress-attachment-item small{font-size:9px}
+.progress-attachment-item a{font-size:9px}
+
+.project-record-hero .eyebrow{font-size:9.5px}
+.project-record-hero h2{font-size:30px}
+.project-record-hero p{font-size:11.5px}
+.project-record-hero__meta small{font-size:9.5px}
+.project-record-kpis span{font-size:10px}
+.project-record-kpis strong{font-size:20px}
+.project-record-kpis small{font-size:9px}
+.project-record-card>header strong{font-size:13px}
+.project-record-card>header small{font-size:9.5px}
+.project-record-review-list span,
+.project-record-facts span{font-size:9.5px}
+.project-record-review-list strong,
+.project-record-facts strong{font-size:11px}
+.project-record-long-text{font-size:11.5px}
+.project-record-attachment__info strong{font-size:11px}
+.project-record-attachment__info small{font-size:9.5px}
+.project-record-attachment__info a{font-size:9.5px}
+.project-record-attachment__delete{font-size:9.5px}
+.project-record-attachments-empty{font-size:10px}
+.project-record-footer{font-size:8.5px}
+
+@media(max-width:760px){
+  .project-progress-table{font-size:12px}
+  .project-record-hero h2{font-size:24px}
+  .project-record-kpis strong{font-size:19px}
+}
