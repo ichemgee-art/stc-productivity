@@ -261,7 +261,7 @@ export default function ProjectProgressForm({
                     role="radio"
                     aria-checked={active}
                     className={active ? `is-active status-${item.value}` : `status-${item.value}`}
-                    onClick={() => setField('project_category', item.value)}
+                    onClick={() => setField('project_category', active ? '' : item.value)}
                   >
                     <span className="progress-category-selector__icon"><Icon size={19} /></span>
                     <span><strong>{item.label}</strong><small>{item.description}</small></span>
