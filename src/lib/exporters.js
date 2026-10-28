@@ -963,10 +963,49 @@ const normalizeCssColorFunctions = (value) => {
   return output
 }
 
+const fallbackForColorProperty = (property) => {
+  const key = String(property || '').toLowerCase()
+  if (key.includes('shadow')) return 'none'
+  if (key.includes('background-image')) return 'none'
+  if (key.includes('background')) return 'rgba(0,0,0,0)'
+  if (key.includes('border') || key.includes('outline') || key.includes('column-rule')) return '#DCE4EC'
+  return '#253A55'
+}
+
+const sanitizeStyleDeclaration = (style) => {
+  if (!style) return
+  const properties = Array.from({ length: style.length }, (_, index) => style.item(index)).filter(Boolean)
+  properties.forEach((property) => {
+    const value = style.getPropertyValue(property)
+    if (!value || (!/color\(/i.test(value) && !MODERN_COLOR_FUNCTION.test(value))) return
+    const normalized = normalizeCssColorFunctions(value)
+    style.setProperty(property, normalized || fallbackForColorProperty(property), style.getPropertyPriority(property))
+  })
+}
+
+const sanitizeCssRules = (rules) => {
+  Array.from(rules || []).forEach((rule) => {
+    try {
+      if (rule.style) sanitizeStyleDeclaration(rule.style)
+      if (rule.cssRules) sanitizeCssRules(rule.cssRules)
+    } catch (_) {
+      // Some browser-owned rules are read-only. Inline computed styles below still cover the capture tree.
+    }
+  })
+}
+
 const sanitizePdfCloneColors = (clonedDocument) => {
-  const root = clonedDocument.querySelector(`[${PDF_CAPTURE_ATTR}="true"]`) || clonedDocument.body
+  const captureRoot = clonedDocument.querySelector(`[${PDF_CAPTURE_ATTR}="true"]`) || clonedDocument.body
   const view = clonedDocument.defaultView
-  if (!root || !view) return
+  if (!captureRoot || !view) return
+
+  Array.from(clonedDocument.styleSheets || []).forEach((sheet) => {
+    try {
+      sanitizeCssRules(sheet.cssRules)
+    } catch (_) {
+      // Ignore cross-origin/read-only stylesheets.
+    }
+  })
 
   const colorProperties = [
     ['color', '#253A55'],
@@ -983,7 +1022,10 @@ const sanitizePdfCloneColors = (clonedDocument) => {
     ['stroke', '#253A55'],
   ]
 
-  const nodes = [root, ...root.querySelectorAll('*')]
+  // html2canvas also inspects ancestors while resolving layout, so sanitize the whole clone,
+  // not only the exported element. This avoids Chrome returning CSS Color 4 values such as color(srgb ...).
+  const scanRoot = clonedDocument.body || captureRoot
+  const nodes = [scanRoot, ...scanRoot.querySelectorAll('*')]
   nodes.forEach((node) => {
     if (!(node instanceof clonedDocument.defaultView.Element)) return
     const computed = view.getComputedStyle(node)
@@ -996,8 +1038,7 @@ const sanitizePdfCloneColors = (clonedDocument) => {
 
     const backgroundImage = computed.backgroundImage
     if (backgroundImage && (/color\(/i.test(backgroundImage) || MODERN_COLOR_FUNCTION.test(backgroundImage))) {
-      const normalized = normalizeCssColorFunctions(backgroundImage)
-      node.style.backgroundImage = normalized || 'none'
+      node.style.backgroundImage = normalizeCssColorFunctions(backgroundImage) || 'none'
     }
 
     for (const property of ['boxShadow', 'textShadow']) {
