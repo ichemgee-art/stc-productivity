@@ -1,14 +1,16 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle, ArrowDownLeft, ArrowUpRight, BarChart3, BriefcaseBusiness,
-  CalendarCheck2, CircleDollarSign, Gauge, Ruler, TrendingUp, Users,
+  CalendarCheck2, CircleDollarSign, Gauge, Ruler, TrendingUp, Users, ClipboardPlus, FileText, ClipboardList,
 } from 'lucide-react'
 import {
   Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
 import { useCycle } from '../context/CycleContext'
+import { useAuth } from '../context/AuthContext'
 import { appService } from '../services/appService'
 import EmptyState from '../components/EmptyState'
 import { date, money, monthName, number, roleLabels } from '../lib/format'
@@ -126,6 +128,7 @@ function median(values) {
 
 export default function DashboardPage() {
   const { monthKey, selectedCycle } = useCycle()
+  const { permissions } = useAuth()
 
   const query = useQuery({
     queryKey: ['cycle-data', 'management-dashboard', monthKey],
@@ -401,12 +404,26 @@ export default function DashboardPage() {
   return (
     <div className="page-stack management-dashboard">
       <section className="hero-strip dashboard-hero management-dashboard-hero">
-        <div>
-          <span className="eyebrow">MANAGEMENT DASHBOARD</span>
+        <div className="dashboard-hero__copy">
+          <span className="eyebrow">STC OPERATIONS PLATFORM</span>
           <h2>لوحة الإدارة التنفيذية</h2>
-          <p>مقارنة حتى اليوم {view.elapsedDays} من الدورة مع نفس عدد الأيام من {monthName(view.previousKey)} — عشان المقارنة ما تتظلمش بسبب دورة غير مكتملة.</p>
+          <p>مقارنة حتى اليوم {view.elapsedDays} من الدورة مع نفس عدد الأيام من {monthName(view.previousKey)} — قراءة سريعة للتشغيل والمشاريع والفريق من مكان واحد.</p>
+          <div className="dashboard-hero__actions">
+            {permissions.canCreateSubmission ? (
+              <Link className="btn btn-primary" to="/productivity/new"><ClipboardPlus size={16} /> تسجيل إنتاجية</Link>
+            ) : null}
+            <Link className="btn dashboard-hero__secondary" to="/project-progress"><ClipboardList size={16} /> متابعة المشاريع</Link>
+            <Link className="btn dashboard-hero__secondary" to="/report"><FileText size={16} /> التقرير التنفيذي</Link>
+          </div>
         </div>
-        <div className="hero-strip__mark"><Gauge size={34} /></div>
+        <div className="dashboard-hero__side">
+          <div className="dashboard-cycle-card">
+            <span>الدورة الحالية</span>
+            <strong>{monthName(monthKey)}</strong>
+            <small>{date(selectedCycle?.cycle_start)} → {date(selectedCycle?.cycle_end)}</small>
+          </div>
+          <div className="hero-strip__mark"><Gauge size={34} /></div>
+        </div>
       </section>
 
       <section className="dashboard-export-toolbar">
