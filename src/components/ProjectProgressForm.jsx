@@ -221,6 +221,8 @@ export default function ProjectProgressForm({
         newFiles,
         removeAttachmentIds,
       })
+      setNewFiles([])
+      setRemoveAttachmentIds([])
       if (draftEnabled) {
         clearSessionCache('draft:project-progress:save-alias')
         clearSessionCache('draft:project-progress:mode')
