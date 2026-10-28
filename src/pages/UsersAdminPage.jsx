@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Eye, KeyRound, ShieldCheck, Trash2, UserPlus, UsersRound } from 'lucide-react'
+import { Eye, KeyRound, Pencil, ShieldCheck, Trash2, UserPlus, UsersRound } from 'lucide-react'
 import { userAdminService } from '../services/userAdminService'
 import { useFeedback } from '../context/FeedbackContext'
+import { useAuth } from '../context/AuthContext'
 import Modal from '../components/Modal'
 
 const roleOptions = [
@@ -27,7 +28,10 @@ const formatLastSeen = (value) => {
 export default function UsersAdminPage() {
   const queryClient = useQueryClient()
   const feedback = useFeedback()
+  const { refreshProfile } = useAuth()
   const [createOpen, setCreateOpen] = useState(false)
+  const [nameTarget, setNameTarget] = useState(null)
+  const [displayNameValue, setDisplayNameValue] = useState('')
   const [passwordTarget, setPasswordTarget] = useState(null)
   const [passwordValue, setPasswordValue] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -71,6 +75,19 @@ export default function UsersAdminPage() {
     onError: (error) => feedback.error(error.message || 'تعذر تحديث الصلاحية'),
   })
 
+  const displayNameMutation = useMutation({
+    mutationFn: ({ userId, displayName }) => userAdminService.updateDisplayName(userId, displayName),
+    onSuccess: async () => {
+      const wasCurrent = Boolean(nameTarget?.is_current)
+      setNameTarget(null)
+      setDisplayNameValue('')
+      await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+      if (wasCurrent) await refreshProfile()
+      feedback.success('تم تحديث الاسم الظاهر للمستخدم')
+    },
+    onError: (error) => feedback.error(error.message || 'تعذر تحديث الاسم الظاهر'),
+  })
+
   const passwordMutation = useMutation({
     mutationFn: ({ userId, password }) => userAdminService.updateUserPassword(userId, password),
     onSuccess: () => {
@@ -96,6 +113,12 @@ export default function UsersAdminPage() {
     createMutation.mutate(form)
   }
 
+  const submitDisplayName = (event) => {
+    event.preventDefault()
+    if (!nameTarget) return
+    displayNameMutation.mutate({ userId: nameTarget.id, displayName: displayNameValue })
+  }
+
   const submitPassword = (event) => {
     event.preventDefault()
     if (!passwordTarget) return
@@ -108,7 +131,7 @@ export default function UsersAdminPage() {
         <div>
           <span className="eyebrow">ACCESS CONTROL</span>
           <h2>إدارة المستخدمين والصلاحيات</h2>
-          <p>إنشاء الحسابات، تغيير الدور، وتحديث كلمة المرور من داخل النظام بدون الدخول إلى Supabase.</p>
+          <p>إنشاء الحسابات، تعديل الاسم الظاهر، تغيير الدور، وتحديث كلمة المرور من داخل النظام بدون الدخول إلى Supabase.</p>
         </div>
         <button className="btn btn-primary" type="button" onClick={() => setCreateOpen(true)}>
           <UserPlus size={17} /> مستخدم جديد
@@ -182,6 +205,15 @@ export default function UsersAdminPage() {
                             {!user.app_role ? <option value="">بدون صلاحية</option> : null}
                             {roleOptions.map((role) => <option key={role.value} value={role.value}>{role.label}</option>)}
                           </select>
+                          <button
+                            className="icon-btn small"
+                            type="button"
+                            onClick={() => { setNameTarget(user); setDisplayNameValue(user.display_name || '') }}
+                            title="تعديل الاسم الظاهر"
+                            aria-label={`تعديل الاسم الظاهر لـ ${user.email}`}
+                          >
+                            <Pencil size={15} />
+                          </button>
                           <button className="icon-btn small" type="button" onClick={() => { setPasswordTarget(user); setPasswordValue('') }} title="تغيير كلمة المرور">
                             <KeyRound size={15} />
                           </button>
@@ -265,6 +297,34 @@ export default function UsersAdminPage() {
               {createMutation.isPending ? 'جاري الإنشاء...' : 'إنشاء الحساب'}
             </button>
             <button className="btn btn-ghost" type="button" onClick={() => setCreateOpen(false)}>إلغاء</button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal open={Boolean(nameTarget)} onClose={() => { setNameTarget(null); setDisplayNameValue('') }} title="تعديل الاسم الظاهر">
+        <form className="modal-form users-admin-form" onSubmit={submitDisplayName}>
+          <div className="users-admin-password-target">
+            <Pencil size={18} />
+            <div><strong>{nameTarget?.display_name || nameTarget?.email}</strong><span>{nameTarget?.email}</span></div>
+          </div>
+          <label className="field">
+            <span>الاسم اللي هيظهر داخل النظام *</span>
+            <input
+              required
+              minLength={2}
+              maxLength={80}
+              value={displayNameValue}
+              onChange={(event) => setDisplayNameValue(event.target.value)}
+              placeholder="مثال: STC Admin"
+              autoComplete="off"
+            />
+          </label>
+          <div className="form-hint">البريد الإلكتروني لن يتغير؛ ده الاسم الظاهر فقط في الـ Topbar وإدارة المستخدمين وباقي واجهة النظام.</div>
+          <div className="form-actions">
+            <button className="btn btn-primary" type="submit" disabled={displayNameMutation.isPending || displayNameValue.trim().length < 2}>
+              {displayNameMutation.isPending ? 'جاري الحفظ...' : 'حفظ الاسم'}
+            </button>
+            <button className="btn btn-ghost" type="button" onClick={() => { setNameTarget(null); setDisplayNameValue('') }}>إلغاء</button>
           </div>
         </form>
       </Modal>
