@@ -187,13 +187,27 @@ export default function ExecutiveReportPage() {
   const normalizedSearch = search.trim()
   const hasDateRange = Boolean(dateFrom || dateTo)
 
-  const projectNames = useMemo(
-    () => [...new Set([
-      ...allRows.map((row) => row.project_current_name || row.project),
-      ...allProjectProgress.map((row) => row.project || row.project_name_snapshot || row.original_project_name),
-    ].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar')),
-    [allRows, allProjectProgress],
-  )
+  const projectNames = useMemo(() => {
+    const canonical = new Map()
+
+    // Prefer the real linked project name from productivity as the canonical label.
+    allRows.forEach((row) => {
+      const name = String(row.project_current_name || row.project || '').trim()
+      const key = normalizeSearch(name)
+      if (!key) return
+      if (row.project_id || !canonical.has(key)) canonical.set(key, name)
+    })
+
+    // Manual / imported follow-up names collapse into the same normalized project label.
+    allProjectProgress.forEach((row) => {
+      const name = String(row.project || row.project_name_snapshot || row.original_project_name || '').trim()
+      const key = normalizeSearch(name)
+      if (!key || canonical.has(key)) return
+      canonical.set(key, name)
+    })
+
+    return [...canonical.values()].sort((a, b) => a.localeCompare(b, 'ar'))
+  }, [allRows, allProjectProgress])
 
   const matchedProjectNames = useMemo(() => {
     if (!normalizedSearch) return []
@@ -244,7 +258,7 @@ export default function ExecutiveReportPage() {
 
     const progressRows = allProjectProgress
       .filter((row) => {
-        if (row.project_id && projectIds.size) return projectIds.has(row.project_id)
+        if (row.project_id && projectIds.has(row.project_id)) return true
         return [row.project, row.project_name_snapshot, row.original_project_name]
           .filter(Boolean)
           .some((name) => normalizeSearch(name) === normalizedProject)
