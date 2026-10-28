@@ -43,11 +43,17 @@ export default function ProductivityPage() {
   const { permissions } = useAuth()
   const queryClient = useQueryClient()
   const feedback = useFeedback()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const routeQuery = searchParams.get('q') || ''
   const routeReview = searchParams.get('review') || ''
+  const routeAlert = searchParams.get('alert') || ''
+  const routeDates = useMemo(
+    () => (searchParams.get('dates') || '').split(',').map((item) => item.trim()).filter(Boolean),
+    [searchParams],
+  )
   const hasRouteQuery = searchParams.has('q')
   const hasRouteReview = searchParams.has('review')
+  const hasRouteAlert = searchParams.has('alert')
   const [queryText, setQueryText] = useSessionState('page:productivity:query', routeQuery)
   const [project, setProject] = useSessionState('page:productivity:project', '')
   const [section, setSection] = useSessionState('page:productivity:section', '')
@@ -69,9 +75,19 @@ export default function ProductivityPage() {
   const rows = rowsQuery.data || []
 
   useEffect(() => {
+    if (hasRouteAlert) {
+      setQueryText('')
+      setProject('')
+      setSection('')
+      setReview('')
+      return
+    }
     if (hasRouteQuery) setQueryText(routeQuery)
     if (hasRouteReview) setReview(routeReview)
-  }, [hasRouteQuery, hasRouteReview, routeQuery, routeReview, setQueryText, setReview])
+  }, [
+    hasRouteAlert, hasRouteQuery, hasRouteReview, routeQuery, routeReview,
+    setProject, setQueryText, setReview, setSection,
+  ])
 
   useEffect(() => {
     window.localStorage.setItem(PRODUCTIVITY_PIN_KEY, pinnedColumn)
@@ -82,13 +98,62 @@ export default function ProductivityPage() {
   const projects = useMemo(() => [...new Set(rows.map((row) => row.project).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar')), [rows])
   const sections = useMemo(() => [...new Set(rows.map((row) => row.section).filter(Boolean))].sort(), [rows])
 
+  const routeDateSet = useMemo(() => new Set(routeDates), [routeDates])
+
+  const alertFilterMeta = useMemo(() => {
+    if (!routeAlert) return null
+    if (routeAlert === 'zero_price') {
+      return {
+        title: 'أمتار بسعر صفر',
+        description: 'يعرض العمليات التي بها أمتار منفذة وسعر المتر = 0.',
+      }
+    }
+    if (routeAlert === 'no_team') {
+      return {
+        title: 'عمليات بدون فريق',
+        description: 'يعرض العمليات المسجلة بدون مهندس أو فني أو مساعد أو عامل.',
+      }
+    }
+    if (routeAlert === 'zero_meters') {
+      return {
+        title: 'إنتاجية صفر',
+        description: 'يعرض العمليات التي تم تسجيلها بأمتار = 0.',
+      }
+    }
+    if (routeAlert === 'high_days') {
+      return {
+        title: 'أيام أعلى من المعتاد',
+        description: routeDates.length ? `العمليات المسجلة في: ${routeDates.join(' · ')}` : 'العمليات في الأيام الأعلى من المعتاد.',
+      }
+    }
+    if (routeAlert === 'no_operations') {
+      return {
+        title: 'أيام عمل بلا عمليات',
+        description: routeDates.length ? `لا توجد عمليات إنتاجية مسجلة في: ${routeDates.join(' · ')}` : 'لا توجد عمليات مسجلة في أيام العمل المحددة.',
+      }
+    }
+    return null
+  }, [routeAlert, routeDates])
+
   const filtered = useMemo(() => rows.filter((row) => {
+    if (routeAlert === 'zero_price' && !(Number(row.meters || 0) > 0 && Number(row.price_per_meter || 0) === 0)) return false
+    if (routeAlert === 'no_team' && (row.engineers || row.technicians || row.assistants || row.workers)) return false
+    if (routeAlert === 'zero_meters' && Number(row.meters || 0) !== 0) return false
+    if (routeAlert === 'high_days' && !routeDateSet.has(row.work_date)) return false
+    if (routeAlert === 'no_operations') return false
     if (project && row.project !== project) return false
     if (section && row.section !== section) return false
     if (review && row.review_status !== review) return false
     if (!smartIncludes(queryText, row.project, row.section, row.engineers, row.technicians, row.assistants, row.workers, row.work_date, row.meters, row.price_per_meter, row.total, row.note)) return false
     return true
-  }), [rows, project, section, review, queryText])
+  }), [rows, routeAlert, routeDateSet, project, section, review, queryText])
+
+  const clearAlertFilter = () => {
+    const next = new URLSearchParams(searchParams)
+    next.delete('alert')
+    next.delete('dates')
+    setSearchParams(next, { replace: true })
+  }
 
   const totals = useMemo(() => filtered.reduce((acc, row) => ({
     meters: acc.meters + Number(row.meters || 0),
@@ -230,6 +295,17 @@ export default function ProductivityPage() {
         />
       </section>
 
+      {alertFilterMeta ? (
+        <section className="productivity-drilldown-banner" aria-live="polite">
+          <div>
+            <span>فلتر من تنبيهات المراجعة</span>
+            <strong>{alertFilterMeta.title}</strong>
+            <small>{alertFilterMeta.description}</small>
+          </div>
+          <button className="btn btn-ghost btn-sm" type="button" onClick={clearAlertFilter}>مسح فلتر التنبيه</button>
+        </section>
+      ) : null}
+
       <section className="summary-line">
         <div><span>النتائج المعروضة</span><strong>{number(filtered.length)} عملية</strong></div>
         <div><span>إجمالي الأمتار</span><strong>{number(totals.meters)} م</strong></div>
@@ -299,12 +375,20 @@ export default function ProductivityPage() {
           </table>
           {!filtered.length ? (
             <EmptyState
-              title={rows.length ? 'مفيش نتائج مطابقة للفلاتر' : 'الدورة دي لسه مفيهاش عمليات'}
-              description={rows.length ? 'غيّر البحث أو الفلاتر عشان تظهر العمليات.' : 'ابدأ بإضافة أول عملية إنتاجية للدورة الحالية.'}
-              actionLabel={rows.length ? 'مسح الفلاتر' : permissions.canCreateSubmission ? 'إدخال أول عملية' : ''}
-              actionTo={!rows.length && permissions.canCreateSubmission ? '/productivity/new' : ''}
-              onAction={rows.length ? () => { setQueryText(''); setProject(''); setSection(''); setReview('') } : undefined}
-              hint={rows.length ? 'البيانات موجودة، لكن الفلاتر الحالية مخفية النتائج.' : 'أول عملية هتبدأ تظهر تلقائيًا في الـDashboard والتقارير.'}
+              title={routeAlert === 'no_operations'
+                ? 'مفيش عمليات في أيام العمل المحددة'
+                : rows.length ? 'مفيش نتائج مطابقة للفلاتر' : 'الدورة دي لسه مفيهاش عمليات'}
+              description={routeAlert === 'no_operations'
+                ? (routeDates.length ? `الأيام: ${routeDates.join(' · ')} — التنبيه معناه إن مفيش إنتاجية مسجلة في الأيام دي.` : 'لا توجد عمليات مسجلة في أيام العمل المحددة.')
+                : rows.length ? 'غيّر البحث أو الفلاتر عشان تظهر العمليات.' : 'ابدأ بإضافة أول عملية إنتاجية للدورة الحالية.'}
+              actionLabel={routeAlert ? 'مسح فلتر التنبيه' : rows.length ? 'مسح الفلاتر' : permissions.canCreateSubmission ? 'إدخال أول عملية' : ''}
+              actionTo={!routeAlert && !rows.length && permissions.canCreateSubmission ? '/productivity/new' : ''}
+              onAction={routeAlert
+                ? clearAlertFilter
+                : rows.length ? () => { setQueryText(''); setProject(''); setSection(''); setReview('') } : undefined}
+              hint={routeAlert === 'no_operations'
+                ? 'راجع التاريخ أو أضف العملية لو كان المفروض فيه شغل في اليوم ده.'
+                : rows.length ? 'البيانات موجودة، لكن الفلاتر الحالية مخفية النتائج.' : 'أول عملية هتبدأ تظهر تلقائيًا في الـDashboard والتقارير.'}
             />
           ) : null}
         </div>
