@@ -148,7 +148,7 @@
   min-width:100%;
   border-collapse:separate;
   border-spacing:0;
-  table-layout:auto;
+  table-layout:fixed;
   font-size:10px;
 }
 .project-progress-table th,.project-progress-table td{
@@ -180,62 +180,6 @@
   overflow-wrap:anywhere;
 }
 
-/* Content-fit column sizing */
-.project-progress-table th:nth-child(1),
-.project-progress-table th:nth-child(2),
-.project-progress-table th:nth-child(3),
-.project-progress-table th:nth-child(4),
-.project-progress-table th:nth-child(7),
-.project-progress-table th:nth-child(8),
-.project-progress-table th:nth-child(9),
-.project-progress-table th:nth-child(14),
-.project-progress-table td:nth-child(1),
-.project-progress-table td:nth-child(2),
-.project-progress-table td:nth-child(3),
-.project-progress-table td:nth-child(4),
-.project-progress-table td:nth-child(7),
-.project-progress-table td:nth-child(8),
-.project-progress-table td:nth-child(9),
-.project-progress-table td:nth-child(14){
-  width:1%;
-  white-space:nowrap;
-}
-
-.project-progress-table th:nth-child(5),
-.project-progress-table td:nth-child(5){
-  max-width:280px;
-}
-
-.project-progress-table th:nth-child(6),
-.project-progress-table td:nth-child(6){
-  max-width:190px;
-}
-
-.project-progress-table th:nth-child(10),
-.project-progress-table td:nth-child(10),
-.project-progress-table th:nth-child(11),
-.project-progress-table td:nth-child(11),
-.project-progress-table th:nth-child(12),
-.project-progress-table td:nth-child(12){
-  max-width:260px;
-}
-
-.project-progress-table th:nth-child(13),
-.project-progress-table td:nth-child(13){
-  max-width:340px;
-}
-
-.project-progress-table th,
-.project-progress-table td{
-  min-width:0;
-}
-
-.project-progress-table .progress-number-cell,
-.project-progress-table .progress-metric-cell,
-.project-progress-table .progress-percent,
-.project-progress-table .progress-status-cell{
-  white-space:nowrap;
-}
 .progress-number-cell{font-weight:900}
 .progress-project-cell{text-align:right!important}
 .progress-project-cell button{
@@ -321,7 +265,7 @@
 }
 
 .project-progress-table{
-  min-width:100%;
+  min-width:2040px;
   font-size:11.5px;
 }
 .project-progress-table th,
@@ -1018,9 +962,9 @@
 
 .project-progress-table th.progress-status-head,
 .project-progress-table td.progress-status-cell{
-  width:180px!important;
-  min-width:180px!important;
-  max-width:180px!important;
+  width:155px!important;
+  min-width:155px!important;
+  max-width:155px!important;
 }
 .progress-status-cell{
   text-align:center!important;
@@ -1071,7 +1015,7 @@
   color:var(--muted);
 }
 .project-progress-table{
-  min-width:100%;
+  min-width:2040px;
 }
 @media(max-width:760px){
   .progress-category-selector{grid-template-columns:1fr}
@@ -1508,3 +1452,103 @@
     width:100%;
   }
 }
+
+/* Project progress stable compact columns + pinning — 2026-10-28 */
+.project-progress-table{
+  width:max-content;
+  min-width:2040px;
+  table-layout:fixed;
+}
+
+.project-progress-table th:nth-child(1),
+.project-progress-table th:nth-child(2),
+.project-progress-table th:nth-child(3),
+.project-progress-table td:nth-child(1),
+.project-progress-table td:nth-child(2),
+.project-progress-table td:nth-child(3){width:95px}
+
+.project-progress-table th:nth-child(4),
+.project-progress-table td:nth-child(4){width:55px}
+
+.project-progress-table th:nth-child(5),
+.project-progress-table td:nth-child(5){width:230px}
+
+.project-progress-table th:nth-child(6),
+.project-progress-table td:nth-child(6){width:120px}
+
+.project-progress-table th:nth-child(7),
+.project-progress-table th:nth-child(8),
+.project-progress-table th:nth-child(9),
+.project-progress-table td:nth-child(7),
+.project-progress-table td:nth-child(8),
+.project-progress-table td:nth-child(9){width:95px}
+
+.project-progress-table th:nth-child(10),
+.project-progress-table td:nth-child(10){width:240px}
+
+.project-progress-table th:nth-child(11),
+.project-progress-table td:nth-child(11){width:160px}
+
+.project-progress-table th:nth-child(12),
+.project-progress-table td:nth-child(12){width:210px}
+
+.project-progress-table th:nth-child(13),
+.project-progress-table td:nth-child(13){width:260px}
+
+.project-progress-table th:nth-child(14),
+.project-progress-table td:nth-child(14){width:155px}
+
+.project-progress-table th:nth-child(15),
+.project-progress-table td:nth-child(15){width:140px}
+
+.progress-pin-control{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-height:44px;
+  padding:0 9px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface);
+  color:var(--brand-gold);
+  flex:0 0 auto;
+}
+.progress-pin-control select{
+  min-width:150px;
+  border:0!important;
+  background:transparent!important;
+  color:var(--text);
+  outline:none;
+  font-weight:700;
+}
+.progress-pin-control:focus-within{
+  border-color:var(--brand-gold);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--brand-gold) 12%,transparent);
+}
+
+.progress-table-scroll .progress-pinned-column{
+  position:sticky!important;
+  inset-inline-start:0!important;
+  z-index:12!important;
+  background:var(--surface)!important;
+  box-shadow:-10px 0 18px -14px rgba(37,58,85,.42)!important;
+}
+.progress-table-scroll thead .progress-pinned-column{
+  z-index:18!important;
+  background:var(--brand-navy)!important;
+  color:#fff!important;
+}
+.progress-table-scroll tbody tr:hover .progress-pinned-column{
+  background:var(--surface)!important;
+}
+
+@media(max-width:760px){
+  .progress-pin-control{
+    width:100%;
+  }
+  .progress-pin-control select{
+    width:100%;
+    min-width:0;
+  }
+}
+
