@@ -924,25 +924,120 @@ export async function exportTablePdf({ filename, sheets }) {
 }
 
 
+const PDF_CAPTURE_ATTR = 'data-stc-pdf-capture-root'
+const MODERN_COLOR_FUNCTION = /(color-mix|oklch|oklab|lab|lch)\(/i
+const CSS_COLOR_FUNCTION = /color\(\s*(?:srgb|display-p3)\s+([^)]*)\)/gi
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+
+const colorChannelToByte = (token) => {
+  const raw = String(token || '').trim()
+  const parsed = Number.parseFloat(raw)
+  if (!Number.isFinite(parsed)) return 0
+  const normalized = raw.endsWith('%') ? parsed / 100 : parsed
+  return Math.round(clamp(normalized, 0, 1) * 255)
+}
+
+const colorAlpha = (token) => {
+  if (token == null || token === '') return 1
+  const raw = String(token).trim()
+  const parsed = Number.parseFloat(raw)
+  if (!Number.isFinite(parsed)) return 1
+  return clamp(raw.endsWith('%') ? parsed / 100 : parsed, 0, 1)
+}
+
+const normalizeCssColorFunctions = (value) => {
+  if (!value) return value
+  let output = String(value).replace(CSS_COLOR_FUNCTION, (_match, body) => {
+    const [channelsPart, alphaPart] = String(body).split('/')
+    const channels = channelsPart.trim().split(/\s+/).filter(Boolean)
+    if (channels.length < 3) return 'rgba(37,58,85,1)'
+    const r = colorChannelToByte(channels[0])
+    const g = colorChannelToByte(channels[1])
+    const b = colorChannelToByte(channels[2])
+    const a = colorAlpha(alphaPart)
+    return `rgba(${r},${g},${b},${a})`
+  })
+
+  if (/color\(/i.test(output) || MODERN_COLOR_FUNCTION.test(output)) return null
+  return output
+}
+
+const sanitizePdfCloneColors = (clonedDocument) => {
+  const root = clonedDocument.querySelector(`[${PDF_CAPTURE_ATTR}="true"]`) || clonedDocument.body
+  const view = clonedDocument.defaultView
+  if (!root || !view) return
+
+  const colorProperties = [
+    ['color', '#253A55'],
+    ['backgroundColor', 'rgba(0,0,0,0)'],
+    ['borderTopColor', '#DCE4EC'],
+    ['borderRightColor', '#DCE4EC'],
+    ['borderBottomColor', '#DCE4EC'],
+    ['borderLeftColor', '#DCE4EC'],
+    ['outlineColor', '#DCE4EC'],
+    ['textDecorationColor', '#253A55'],
+    ['columnRuleColor', '#DCE4EC'],
+    ['caretColor', '#253A55'],
+    ['fill', '#253A55'],
+    ['stroke', '#253A55'],
+  ]
+
+  const nodes = [root, ...root.querySelectorAll('*')]
+  nodes.forEach((node) => {
+    if (!(node instanceof clonedDocument.defaultView.Element)) return
+    const computed = view.getComputedStyle(node)
+
+    colorProperties.forEach(([property, fallback]) => {
+      const value = computed[property]
+      if (!value || (!/color\(/i.test(value) && !MODERN_COLOR_FUNCTION.test(value))) return
+      node.style[property] = normalizeCssColorFunctions(value) || fallback
+    })
+
+    const backgroundImage = computed.backgroundImage
+    if (backgroundImage && (/color\(/i.test(backgroundImage) || MODERN_COLOR_FUNCTION.test(backgroundImage))) {
+      const normalized = normalizeCssColorFunctions(backgroundImage)
+      node.style.backgroundImage = normalized || 'none'
+    }
+
+    for (const property of ['boxShadow', 'textShadow']) {
+      const value = computed[property]
+      if (!value || value === 'none') continue
+      if (/color\(/i.test(value) || MODERN_COLOR_FUNCTION.test(value)) {
+        node.style[property] = normalizeCssColorFunctions(value) || 'none'
+      }
+    }
+  })
+}
+
 export async function exportElementPdf(element, filename) {
   if (!element) throw new Error('لا يوجد محتوى جاهز للتصدير')
-  const canvas = await html2canvas(element, {
-    scale: 1.7,
-    useCORS: true,
-    backgroundColor: '#ffffff',
-    windowWidth: Math.max(element.scrollWidth, element.clientWidth),
-    windowHeight: Math.max(element.scrollHeight, element.clientHeight),
-    onclone: (clonedDocument) => {
-      clonedDocument.querySelectorAll('.data-table-wrap, .compact-table, .productivity-scroll, .person-operation-notes__list').forEach((node) => {
-        node.style.maxHeight = 'none'
-        node.style.height = 'auto'
-        node.style.overflow = 'visible'
-      })
-      clonedDocument.querySelectorAll('.data-table th').forEach((node) => {
-        node.style.position = 'static'
-      })
-    },
-  })
+
+  element.setAttribute(PDF_CAPTURE_ATTR, 'true')
+  let canvas
+  try {
+    canvas = await html2canvas(element, {
+      scale: 1.7,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      windowWidth: Math.max(element.scrollWidth, element.clientWidth),
+      windowHeight: Math.max(element.scrollHeight, element.clientHeight),
+      onclone: (clonedDocument) => {
+        sanitizePdfCloneColors(clonedDocument)
+
+        clonedDocument.querySelectorAll('.data-table-wrap, .compact-table, .productivity-scroll, .person-operation-notes__list').forEach((node) => {
+          node.style.maxHeight = 'none'
+          node.style.height = 'auto'
+          node.style.overflow = 'visible'
+        })
+        clonedDocument.querySelectorAll('.data-table th').forEach((node) => {
+          node.style.position = 'static'
+        })
+      },
+    })
+  } finally {
+    element.removeAttribute(PDF_CAPTURE_ATTR)
+  }
 
   const pdf = new jsPDF({
     orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
