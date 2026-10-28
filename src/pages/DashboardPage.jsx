@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle, ArrowDownLeft, ArrowUpRight, BarChart3, BriefcaseBusiness,
-  CalendarCheck2, CircleDollarSign, Gauge, Ruler, TrendingUp, Users, ClipboardPlus, FileText, ClipboardList,
+  CalendarCheck2, CircleDollarSign, Gauge, Ruler, TrendingUp, Users, ClipboardPlus, FileText, ClipboardList, ArrowLeft,
 } from 'lucide-react'
 import {
   Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
@@ -239,11 +239,41 @@ export default function DashboardPage() {
       .sort((a, b) => b[1] - a[1])
 
     const alerts = [
-      zeroPriceWithMeters.length ? { tone: 'danger', title: 'أمتار بسعر صفر', value: zeroPriceWithMeters.length, text: 'عملية بها تنفيذ فعلي وسعر المتر يساوي صفر.' } : null,
-      noTeam.length ? { tone: 'warning', title: 'عمليات بدون فريق', value: noTeam.length, text: 'عمليات مسجلة بدون أي فرد في فريق التنفيذ.' } : null,
-      zeroMeters.length ? { tone: 'neutral', title: 'إنتاجية صفر', value: zeroMeters.length, text: 'عمليات مسجلة بأمتار = 0 للمراجعة التشغيلية.' } : null,
-      noProductionDays.length ? { tone: 'warning', title: 'أيام عمل بلا عمليات', value: noProductionDays.length, text: noProductionDays.slice(0, 4).join(' · ') } : null,
-      highDays.length ? { tone: 'info', title: 'أيام أعلى من المعتاد', value: highDays.length, text: `أعلى يوم: ${highDays[0][0]} · ${number(highDays[0][1])} م` } : null,
+      zeroPriceWithMeters.length ? {
+        tone: 'danger',
+        title: 'أمتار بسعر صفر',
+        value: zeroPriceWithMeters.length,
+        text: 'عملية بها تنفيذ فعلي وسعر المتر يساوي صفر.',
+        to: '/productivity?alert=zero_price',
+      } : null,
+      noTeam.length ? {
+        tone: 'warning',
+        title: 'عمليات بدون فريق',
+        value: noTeam.length,
+        text: 'عمليات مسجلة بدون أي فرد في فريق التنفيذ.',
+        to: '/productivity?alert=no_team',
+      } : null,
+      zeroMeters.length ? {
+        tone: 'neutral',
+        title: 'إنتاجية صفر',
+        value: zeroMeters.length,
+        text: 'عمليات مسجلة بأمتار = 0 للمراجعة التشغيلية.',
+        to: '/productivity?alert=zero_meters',
+      } : null,
+      noProductionDays.length ? {
+        tone: 'warning',
+        title: 'أيام عمل بلا عمليات',
+        value: noProductionDays.length,
+        text: noProductionDays.slice(0, 4).join(' · '),
+        to: `/productivity?alert=no_operations&dates=${encodeURIComponent(noProductionDays.join(','))}`,
+      } : null,
+      highDays.length ? {
+        tone: 'info',
+        title: 'أيام أعلى من المعتاد',
+        value: highDays.length,
+        text: `أعلى يوم: ${highDays[0][0]} · ${number(highDays[0][1])} م`,
+        to: `/productivity?alert=high_days&dates=${encodeURIComponent(highDays.map(([day]) => day).join(','))}`,
+      } : null,
     ].filter(Boolean)
 
     return {
@@ -501,10 +531,19 @@ export default function DashboardPage() {
           </header>
           <div className="management-alert-list">
             {view.alerts.map((alert) => (
-              <div className={`management-alert alert-${alert.tone}`} key={alert.title}>
+              <Link
+                className={`management-alert management-alert-link alert-${alert.tone}`}
+                key={alert.title}
+                to={alert.to}
+                title={`عرض العمليات المرتبطة بـ ${alert.title}`}
+              >
                 <strong>{alert.value}</strong>
-                <div><span>{alert.title}</span><small>{alert.text}</small></div>
-              </div>
+                <div>
+                  <span>{alert.title}</span>
+                  <small>{alert.text}</small>
+                </div>
+                <span className="management-alert__open">عرض <ArrowLeft size={13} /></span>
+              </Link>
             ))}
             {!view.alerts.length ? <div className="management-all-clear"><CalendarCheck2 size={20} /><span>لا توجد تنبيهات تشغيلية واضحة في البيانات الحالية.</span></div> : null}
           </div>
