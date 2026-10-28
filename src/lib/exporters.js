@@ -1,6 +1,7 @@
 import writeExcelFile from 'write-excel-file/browser'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
+import { renderPdfPagesFromUrl } from './pdfPreview'
 
 const safeName = (value) => String(value || 'export').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 80)
 
@@ -1051,7 +1052,103 @@ const sanitizePdfCloneColors = (clonedDocument) => {
   })
 }
 
-export async function exportElementPdf(element, filename) {
+const loadImageAsJpeg = async (url, maxWidth = 2400, quality = 0.95) => {
+  if (!url) throw new Error('رابط الصورة غير متاح')
+  const response = await fetch(url)
+  if (!response.ok) throw new Error('تعذر تحميل صورة المرفق')
+  const blob = await response.blob()
+  const objectUrl = URL.createObjectURL(blob)
+
+  try {
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => resolve(img)
+      img.onerror = () => reject(new Error('تعذر قراءة صورة المرفق'))
+      img.src = objectUrl
+    })
+
+    const scale = image.naturalWidth > maxWidth ? maxWidth / image.naturalWidth : 1
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+
+    const context = canvas.getContext('2d', { alpha: false })
+    context.fillStyle = '#ffffff'
+    context.fillRect(0, 0, canvas.width, canvas.height)
+    context.drawImage(image, 0, 0, canvas.width, canvas.height)
+
+    const dataUrl = canvas.toDataURL('image/jpeg', quality)
+    const result = { dataUrl, width: canvas.width, height: canvas.height }
+    canvas.width = 1
+    canvas.height = 1
+    return result
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
+}
+
+const addFullPageImageToPdf = (pdf, pageImage) => {
+  const { dataUrl, width, height } = pageImage
+  const orientation = width > height ? 'landscape' : 'portrait'
+  pdf.addPage('a4', orientation)
+
+  const pageWidth = pdf.internal.pageSize.getWidth()
+  const pageHeight = pdf.internal.pageSize.getHeight()
+  const margin = 5
+  const usableWidth = pageWidth - margin * 2
+  const usableHeight = pageHeight - margin * 2
+  const imageRatio = width / height
+  const boxRatio = usableWidth / usableHeight
+
+  let drawWidth
+  let drawHeight
+  if (imageRatio > boxRatio) {
+    drawWidth = usableWidth
+    drawHeight = usableWidth / imageRatio
+  } else {
+    drawHeight = usableHeight
+    drawWidth = usableHeight * imageRatio
+  }
+
+  const x = (pageWidth - drawWidth) / 2
+  const y = (pageHeight - drawHeight) / 2
+  pdf.addImage(dataUrl, 'JPEG', x, y, drawWidth, drawHeight, undefined, 'FAST')
+}
+
+const appendAttachmentPages = async (pdf, attachments = []) => {
+  for (const attachment of attachments || []) {
+    if (!attachment?.url) continue
+
+    if (attachment.mime_type === 'application/pdf') {
+      try {
+        await renderPdfPagesFromUrl(attachment.url, {
+          targetWidth: 2400,
+          maxScale: 4,
+          quality: 0.95,
+          onPage: async (pageData) => addFullPageImageToPdf(pdf, pageData),
+        })
+        continue
+      } catch (_) {
+        if (attachment.preview_url) {
+          const fallback = await loadImageAsJpeg(attachment.preview_url)
+          addFullPageImageToPdf(pdf, fallback)
+        }
+        continue
+      }
+    }
+
+    if (attachment.mime_type?.startsWith('image/')) {
+      try {
+        const image = await loadImageAsJpeg(attachment.url)
+        addFullPageImageToPdf(pdf, image)
+      } catch (_) {
+        // Keep the main report export successful even if one image attachment cannot be fetched.
+      }
+    }
+  }
+}
+
+export async function exportElementPdf(element, filename, { attachments = [] } = {}) {
   if (!element) throw new Error('لا يوجد محتوى جاهز للتصدير')
 
   element.setAttribute(PDF_CAPTURE_ATTR, 'true')
@@ -1114,6 +1211,8 @@ export async function exportElementPdf(element, filename) {
       page += 1
     }
   }
+
+  await appendAttachmentPages(pdf, attachments)
 
   pdf.save(`${safeName(filename)}.pdf`)
 }
