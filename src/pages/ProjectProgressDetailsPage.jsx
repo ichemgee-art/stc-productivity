@@ -1,11 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowRight, CalendarDays, ClipboardList, Coins, ExternalLink, File, FileImage, FileSpreadsheet,
-  FileText, MapPin, Paperclip, Percent, Ruler, Trash2, Users,
+  FileText, MapPin, Paperclip, Percent, Ruler, Trash2, UploadCloud, Users,
 } from 'lucide-react'
 import { appService } from '../services/appService'
+import { ALLOWED_ATTACHMENT_TYPES, MAX_ATTACHMENTS, MAX_ATTACHMENT_SIZE } from '../services/projectProgressService'
 import { projectCategoryLabel } from '../lib/projectProgress'
 import ExportButtons from '../components/ExportButtons'
 import EmptyState from '../components/EmptyState'
@@ -50,6 +51,8 @@ export default function ProjectProgressDetailsPage() {
   const queryClient = useQueryClient()
   const { permissions } = useAuth()
   const feedback = useFeedback()
+  const attachmentInputRef = useRef(null)
+  const [attachmentDragActive, setAttachmentDragActive] = useState(false)
 
   const recordQuery = useQuery({
     queryKey: ['project-progress', 'record', recordId],
@@ -76,6 +79,76 @@ export default function ProjectProgressDetailsPage() {
     },
     onError: (error) => feedback.error('تعذر مسح المرفق', error.message || 'حدث خطأ غير متوقع'),
   })
+
+  const uploadAttachmentMutation = useMutation({
+    mutationFn: (newFiles) => appService.syncProjectProgressAttachments(recordId, { newFiles }),
+    onSuccess: async (rows) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['project-progress', 'attachments', recordId] }),
+        queryClient.invalidateQueries({ queryKey: ['project-progress', 'record', recordId] }),
+        queryClient.invalidateQueries({ queryKey: ['project-progress', 'rows'] }),
+      ])
+      const count = Array.isArray(rows) ? rows.length : null
+      feedback.success('تم رفع المرفقات', count ? `عدد المرفقات الآن ${count} من ${MAX_ATTACHMENTS}.` : 'تمت إضافة المرفقات بنجاح.')
+    },
+    onError: (error) => feedback.error('تعذر رفع المرفق', error.message || 'حدث خطأ أثناء رفع الملف'),
+  })
+
+  const uploadFiles = async (files) => {
+    const incoming = Array.from(files || [])
+    if (!incoming.length) return
+
+    const currentCount = attachmentsQuery.data?.length || 0
+    const available = Math.max(0, MAX_ATTACHMENTS - currentCount)
+    if (!available) {
+      feedback.error('وصلت للحد الأقصى', `مسموح بحد أقصى ${MAX_ATTACHMENTS} مرفقات لكل متابعة مشروع.`)
+      return
+    }
+
+    if (incoming.length > available) {
+      feedback.error('عدد ملفات أكبر من المتاح', `متاح ${available} مرفق فقط لإكمال الحد الأقصى ${MAX_ATTACHMENTS}.`)
+      return
+    }
+
+    const invalidType = incoming.find((file) => !ALLOWED_ATTACHMENT_TYPES.has(file.type))
+    if (invalidType) {
+      feedback.error('نوع ملف غير مدعوم', `${invalidType.name} غير مسموح. استخدم PDF أو صور أو Word أو Excel.`)
+      return
+    }
+
+    const oversized = incoming.find((file) => file.size > MAX_ATTACHMENT_SIZE)
+    if (oversized) {
+      feedback.error('الملف كبير', `${oversized.name} أكبر من 15MB.`)
+      return
+    }
+
+    await uploadAttachmentMutation.mutateAsync(incoming)
+  }
+
+  const onAttachmentInput = async (event) => {
+    const files = event.target.files
+    event.target.value = ''
+    await uploadFiles(files)
+  }
+
+  const onAttachmentDragOver = (event) => {
+    event.preventDefault()
+    if ((attachmentsQuery.data?.length || 0) < MAX_ATTACHMENTS && !uploadAttachmentMutation.isPending) {
+      setAttachmentDragActive(true)
+    }
+  }
+
+  const onAttachmentDragLeave = (event) => {
+    event.preventDefault()
+    setAttachmentDragActive(false)
+  }
+
+  const onAttachmentDrop = async (event) => {
+    event.preventDefault()
+    setAttachmentDragActive(false)
+    if (uploadAttachmentMutation.isPending) return
+    await uploadFiles(event.dataTransfer.files)
+  }
 
   const removeAttachment = async (item) => {
     const accepted = await feedback.confirm({
@@ -164,6 +237,7 @@ export default function ProjectProgressDetailsPage() {
           compact
           showSuccess
           preferElementPdf
+          pdfAttachments={attachments}
         />
       </div>
 
@@ -245,8 +319,80 @@ export default function ProjectProgressDetailsPage() {
         <section className="project-record-card project-record-attachments" id="attachments">
           <header>
             <Paperclip size={18} />
-            <div><strong>مرفقات المشروع</strong><small>{attachments.length ? `${attachments.length} مرفق محفوظ` : 'لا توجد مرفقات'}</small></div>
+            <div>
+              <strong>مرفقات المشروع</strong>
+              <small>{attachments.length ? `${attachments.length} من ${MAX_ATTACHMENTS} مرفق محفوظ` : `لا توجد مرفقات · متاح حتى ${MAX_ATTACHMENTS}`}</small>
+            </div>
           </header>
+
+          {permissions.canManageProjectProgress ? (
+            <div className="project-record-upload-panel" data-html2canvas-ignore="true">
+              <div className="project-record-attachment-slots" aria-label="أماكن المرفقات الخمسة">
+                {Array.from({ length: MAX_ATTACHMENTS }).map((_, index) => {
+                  const filled = index < attachments.length
+                  return (
+                    <button
+                      type="button"
+                      key={index}
+                      className={filled ? 'project-record-attachment-slot is-filled' : 'project-record-attachment-slot'}
+                      onClick={() => {
+                        if (!filled && attachments.length < MAX_ATTACHMENTS) attachmentInputRef.current?.click()
+                      }}
+                      disabled={filled || attachments.length >= MAX_ATTACHMENTS || uploadAttachmentMutation.isPending}
+                      title={filled ? `المرفق ${index + 1} مستخدم` : `إضافة المرفق ${index + 1}`}
+                    >
+                      {filled ? <FileText size={17} /> : <UploadCloud size={17} />}
+                      <strong>{filled ? `مرفق ${index + 1}` : `إضافة ${index + 1}`}</strong>
+                      <small>{filled ? 'مستخدم' : 'مكان متاح'}</small>
+                    </button>
+                  )
+                })}
+              </div>
+
+              <div
+                className={[
+                  'project-record-dropzone',
+                  attachments.length >= MAX_ATTACHMENTS ? 'is-disabled' : '',
+                  attachmentDragActive ? 'is-dragging' : '',
+                ].filter(Boolean).join(' ')}
+                role="button"
+                tabIndex={attachments.length >= MAX_ATTACHMENTS ? -1 : 0}
+                onClick={() => attachments.length < MAX_ATTACHMENTS && !uploadAttachmentMutation.isPending && attachmentInputRef.current?.click()}
+                onKeyDown={(event) => {
+                  if ((event.key === 'Enter' || event.key === ' ') && attachments.length < MAX_ATTACHMENTS) {
+                    event.preventDefault()
+                    attachmentInputRef.current?.click()
+                  }
+                }}
+                onDragOver={onAttachmentDragOver}
+                onDragEnter={onAttachmentDragOver}
+                onDragLeave={onAttachmentDragLeave}
+                onDrop={onAttachmentDrop}
+              >
+                <UploadCloud size={22} />
+                <strong>
+                  {attachments.length >= MAX_ATTACHMENTS
+                    ? 'اكتملت المرفقات الخمسة'
+                    : uploadAttachmentMutation.isPending
+                      ? 'جاري رفع المرفق...'
+                      : attachmentDragActive
+                        ? 'سيب الملف هنا'
+                        : 'اضغط لإضافة مرفق أو اسحب الملف هنا'}
+                </strong>
+                <small>المتاح {Math.max(0, MAX_ATTACHMENTS - attachments.length)} من {MAX_ATTACHMENTS} · PDF / صور / Word / Excel · حتى 15MB</small>
+              </div>
+
+              <input
+                ref={attachmentInputRef}
+                className="project-record-hidden-file-input"
+                type="file"
+                multiple
+                disabled={attachments.length >= MAX_ATTACHMENTS || uploadAttachmentMutation.isPending}
+                accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,image/webp,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                onChange={onAttachmentInput}
+              />
+            </div>
+          ) : null}
 
           {attachments.length ? (
             <div className="project-record-attachment-grid">
