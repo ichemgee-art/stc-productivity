@@ -925,6 +925,18 @@ export async function exportTablePdf({ filename, sheets }) {
 }
 
 
+const HTML2CANVAS_PRO_URL = 'https://cdn.jsdelivr.net/npm/html2canvas-pro@2.5.2/dist/html2canvas-pro.esm.js'
+let html2CanvasProPromise
+
+const getPdfCaptureEngine = async () => {
+  if (!html2CanvasProPromise) {
+    html2CanvasProPromise = import(/* @vite-ignore */ HTML2CANVAS_PRO_URL)
+      .then((module) => module.default || module.html2canvas)
+      .catch(() => html2canvas)
+  }
+  return html2CanvasProPromise
+}
+
 const PDF_CAPTURE_ATTR = 'data-stc-pdf-capture-root'
 const MODERN_COLOR_FUNCTION = /(color-mix|oklch|oklab|lab|lch)\(/i
 const CSS_COLOR_FUNCTION = /color\(\s*(?:srgb|display-p3)\s+([^)]*)\)/gi
@@ -1154,7 +1166,8 @@ export async function exportElementPdf(element, filename, { attachments = [] } =
   element.setAttribute(PDF_CAPTURE_ATTR, 'true')
   let canvas
   try {
-    canvas = await html2canvas(element, {
+    const captureElement = await getPdfCaptureEngine()
+    canvas = await captureElement(element, {
       scale: 1.7,
       useCORS: true,
       backgroundColor: '#ffffff',
