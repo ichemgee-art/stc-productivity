@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import {
-  ArrowRight, CalendarDays, ClipboardList, Coins, ExternalLink, File, FileImage,
+  ArrowRight, CalendarDays, ClipboardList, Coins, ExternalLink, File, FileImage, FileSpreadsheet,
   FileText, MapPin, Paperclip, Percent, Ruler, Trash2, Users,
 } from 'lucide-react'
 import { appService } from '../services/appService'
@@ -40,7 +40,9 @@ const attachmentType = (mime) => mime === 'application/pdf'
   ? 'PDF'
   : mime?.startsWith('image/')
     ? 'صورة'
-    : 'Word'
+    : mime === 'application/vnd.ms-excel' || mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ? 'Excel'
+      : 'Word'
 
 export default function ProjectProgressDetailsPage() {
   const { recordId } = useParams()
@@ -258,7 +260,7 @@ export default function ProjectProgressDetailsPage() {
                       {preview ? (
                         <img src={preview} crossOrigin="anonymous" alt={isPdf ? `معاينة الصفحة الأولى من ${item.file_name}` : item.file_name} />
                       ) : (
-                        <span>{isPdf ? <FileText size={34} /> : isImage ? <FileImage size={34} /> : <File size={34} />}</span>
+                        <span>{isPdf ? <FileText size={34} /> : isImage ? <FileImage size={34} /> : attachmentType(item.mime_type) === 'Excel' ? <FileSpreadsheet size={34} /> : <File size={34} />}</span>
                       )}
                       {isPdf ? <b>PDF · الصفحة الأولى</b> : null}
                     </div>
