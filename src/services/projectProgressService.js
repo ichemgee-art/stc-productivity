@@ -20,13 +20,16 @@ const normalizeOptionalNumber = (value, label) => {
   return parsed
 }
 
-const safeFileName = (value) => String(value || 'file')
-  .normalize('NFKC')
-  .replace(/[\\/:*?"<>|#%{}~]+/g, '-')
-  .replace(/\s+/g, '-')
-  .replace(/-+/g, '-')
-  .replace(/^[-.]+|[-.]+$/g, '')
-  .slice(0, 120) || 'file'
+const STORAGE_EXTENSION_BY_MIME = {
+  'application/pdf': '.pdf',
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'application/msword': '.doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+}
+
+const storageExtensionFor = (file) => STORAGE_EXTENSION_BY_MIME[file?.type] || ''
 
 const getSignedUrl = async (path) => {
   if (!path) return null
@@ -94,7 +97,7 @@ const uploadAttachment = async (projectProgressId, file) => {
   if (!userData?.user?.id) throw new Error('يجب تسجيل الدخول لرفع المرفقات')
 
   const token = crypto.randomUUID()
-  const originalPath = `${projectProgressId}/files/${token}-${safeFileName(file.name)}`
+  const originalPath = `${projectProgressId}/files/${token}${storageExtensionFor(file)}`
   let previewPath = null
   let metadataId = null
 
