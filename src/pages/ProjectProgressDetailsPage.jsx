@@ -80,30 +80,43 @@ export default function ProjectProgressDetailsPage() {
     )
   }
 
-  const excelSheets = [{
-    name: row.project || 'المشروع',
-    subtitle: `ملف متابعة مشروع · ${displayDate(row.report_date)}`,
-    rows: [{
-      'رقم المتابعة': row.display_number ?? '',
-      'المشروع': row.project || '',
-      'الموقع': row.location || '',
-      'حالة المشروع': projectCategoryLabel(row.project_category),
-      'تاريخ المتابعة': displayDate(row.report_date),
-      'مراجعة م. يحيي حسين': displayDate(row.review_yahya_date),
-      'مراجعة م. مارينا سامي': displayDate(row.review_marina_date),
-      'مراجعة م. عبدالرحمن حسين': displayDate(row.review_abdelrahman_date),
-      'كميات التعاقد + البنود المحملة على القطاعات': row.contract_quantity == null ? '' : Number(row.contract_quantity),
-      'الكميات المنفذة': row.executed_quantity == null ? '' : Number(row.executed_quantity),
-      'نسبة التنفيذ %': row.execution_percent == null ? '' : Number(row.execution_percent),
-      'كمية التعاقد الأصلية': row.original_contract_quantity == null ? '' : Number(row.original_contract_quantity),
-      'قيمة العقد (ج.م)': row.contract_value == null ? '' : Number(row.contract_value),
-      'الموقف المالي': row.financial_status || '',
-      'نوع التعاقد': row.contract_type || '',
-      'الطاقم المسئول': row.responsible_team || '',
-      'ملاحظات': row.notes || '',
-      'عدد المرفقات': attachments.length,
-    }],
-  }]
+  const excelSheets = [
+    {
+      name: row.project || 'المشروع',
+      subtitle: `ملف متابعة مشروع · ${displayDate(row.report_date)}`,
+      rows: [{
+        'رقم المتابعة': row.display_number ?? '',
+        'المشروع': row.project || '',
+        'الموقع': row.location || '',
+        'حالة المشروع': projectCategoryLabel(row.project_category),
+        'تاريخ المتابعة': displayDate(row.report_date),
+        'مراجعة م. يحيي حسين': displayDate(row.review_yahya_date),
+        'مراجعة م. مارينا سامي': displayDate(row.review_marina_date),
+        'مراجعة م. عبدالرحمن حسين': displayDate(row.review_abdelrahman_date),
+        'كميات التعاقد + البنود المحملة على القطاعات': row.contract_quantity == null ? '' : Number(row.contract_quantity),
+        'الكميات المنفذة': row.executed_quantity == null ? '' : Number(row.executed_quantity),
+        'نسبة التنفيذ %': row.execution_percent == null ? '' : Number(row.execution_percent),
+        'كمية التعاقد الأصلية': row.original_contract_quantity == null ? '' : Number(row.original_contract_quantity),
+        'قيمة العقد (ج.م)': row.contract_value == null ? '' : Number(row.contract_value),
+        'الموقف المالي': row.financial_status || '',
+        'نوع التعاقد': row.contract_type || '',
+        'الطاقم المسئول': row.responsible_team || '',
+        'ملاحظات': row.notes || '',
+        'عدد المرفقات': attachments.length,
+      }],
+    },
+    {
+      name: 'المرفقات',
+      subtitle: `مرفقات مشروع ${row.project || ''}`,
+      rows: attachments.map((item, index) => ({
+        'م': index + 1,
+        'اسم الملف': item.file_name,
+        'النوع': attachmentType(item.mime_type),
+        'الحجم': fileSize(item.file_size),
+        'تاريخ الرفع': displayDate(item.created_at?.slice(0, 10)),
+      })),
+    },
+  ]
 
   return (
     <div className="project-record-page">
