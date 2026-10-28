@@ -53,9 +53,9 @@ export async function renderPdfFirstPage(file) {
   try {
     const page = await pdfDocument.getPage(1)
     const rendered = await renderPageToJpeg(page, {
-      targetWidth: 1200,
-      maxScale: 2,
-      quality: 0.88,
+      targetWidth: 900,
+      maxScale: 1.6,
+      quality: 0.82,
     })
     return rendered.blob
   } finally {
