@@ -66,6 +66,14 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  const refreshProfile = async () => {
+    const userId = session?.user?.id
+    if (!userId) return null
+    const nextProfile = await appService.profile(userId)
+    setProfile(nextProfile)
+    return nextProfile
+  }
+
   const signOut = async () => {
     queryClient.clear()
     clearAllSessionCache()
@@ -84,6 +92,7 @@ export function AuthProvider({ children }) {
     error,
     signIn,
     signOut,
+    refreshProfile,
     permissions,
   }), [session, profile, loading, error, permissions])
 
