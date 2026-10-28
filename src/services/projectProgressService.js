@@ -4,17 +4,6 @@ import { fetchAll, supabase, unwrap } from './serviceUtils'
 const ATTACHMENT_BUCKET = 'project-progress-attachments'
 const MAX_ATTACHMENT_SIZE = 15 * 1024 * 1024
 const MAX_ATTACHMENTS = 5
-const ALLOWED_ATTACHMENT_TYPES = new Set([
-  'application/pdf',
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-])
-
 const normalizeOptionalNumber = (value, label) => {
   if (value === '' || value == null) return null
   const parsed = Number(value)
@@ -22,18 +11,12 @@ const normalizeOptionalNumber = (value, label) => {
   return parsed
 }
 
-const STORAGE_EXTENSION_BY_MIME = {
-  'application/pdf': '.pdf',
-  'image/jpeg': '.jpg',
-  'image/png': '.png',
-  'image/webp': '.webp',
-  'application/msword': '.doc',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
-  'application/vnd.ms-excel': '.xls',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+const storageExtensionFor = (file) => {
+  const match = String(file?.name || '').match(/\.([a-z0-9]{1,12})$/i)
+  return match ? `.${match[1].toLowerCase()}` : ''
 }
 
-const storageExtensionFor = (file) => STORAGE_EXTENSION_BY_MIME[file?.type] || ''
+const isPdfFile = (file) => file?.type === 'application/pdf' || /\.pdf$/i.test(String(file?.name || ''))
 
 const getSignedUrl = async (path) => {
   if (!path) return null
@@ -85,9 +68,6 @@ const deleteAttachmentRow = async (row) => {
 
 const validateAttachment = (file) => {
   if (!file) throw new Error('الملف غير صالح')
-  if (!ALLOWED_ATTACHMENT_TYPES.has(file.type)) {
-    throw new Error(`نوع الملف غير مسموح: ${file.name}`)
-  }
   if (file.size > MAX_ATTACHMENT_SIZE) {
     throw new Error(`الملف ${file.name} أكبر من 15MB`)
   }
@@ -110,12 +90,12 @@ const uploadAttachment = async (projectProgressId, file) => {
       .from(ATTACHMENT_BUCKET)
       .upload(originalPath, file, {
         cacheControl: '3600',
-        contentType: file.type,
+        contentType: file.type || 'application/octet-stream',
         upsert: false,
       })
     if (originalUpload.error) throw originalUpload.error
 
-    if (file.type === 'application/pdf') {
+    if (isPdfFile(file)) {
       try {
         const previewBlob = await renderPdfFirstPage(file)
         const candidatePreviewPath = `${projectProgressId}/previews/${token}.jpg`
@@ -252,4 +232,4 @@ export const projectProgressService = {
   },
 }
 
-export { ATTACHMENT_BUCKET, MAX_ATTACHMENTS, MAX_ATTACHMENT_SIZE, ALLOWED_ATTACHMENT_TYPES }
+export { ATTACHMENT_BUCKET, MAX_ATTACHMENTS, MAX_ATTACHMENT_SIZE }
