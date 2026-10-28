@@ -102,9 +102,15 @@ export default function PersonDetailsModal({ person, selectedCycle, monthKey, on
     setToDate('')
   }
 
+  const employeeName = person?.name || 'موظف'
+  const employeeRole = roleLabels[person?.role] || person?.role || 'موظف'
+  const cycleLabel = `${date(selectedCycle?.cycle_start)} — ${date(selectedCycle?.cycle_end)}`
+  const exportSubtitle = `ملف تشغيلي للموظف: ${employeeName} · ${employeeRole} · الدورة: ${cycleLabel}`
+
   const excelSheets = [
     {
-      name: 'العمليات',
+      name: `العمليات — ${employeeName}`,
+      subtitle: exportSubtitle,
       rows: filteredOperations.map((row) => ({
         'التاريخ': date(row.work_date),
         'المشروع': row.project || '—',
@@ -116,7 +122,8 @@ export default function PersonDetailsModal({ person, selectedCycle, monthKey, on
       })),
     },
     {
-      name: 'الحضور والغياب',
+      name: `الحضور والغياب — ${employeeName}`,
+      subtitle: exportSubtitle,
       rows: filteredAttendance.map((row) => ({
         'التاريخ': date(row.attendance_date),
         'الحالة': statusLabel(row),
@@ -231,7 +238,7 @@ export default function PersonDetailsModal({ person, selectedCycle, monthKey, on
 
             <div className="hr-toolbar-actions">
               <button className="btn btn-ghost btn-sm clear-filters-btn" type="button" onClick={clearFilters}><RotateCcw size={15} /> مسح الفلاتر</button>
-              <ExportButtons filename={`${person?.name || 'person'}-${monthKey}-details`} excelSheets={excelSheets} pdfTarget={printRef} compact />
+              <ExportButtons filename={`ملف-تشغيلي-${employeeName}-${monthKey}`} excelSheets={excelSheets} pdfTarget={printRef} compact />
             </div>
           </section>
 
