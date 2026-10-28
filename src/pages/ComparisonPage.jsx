@@ -258,10 +258,10 @@ export default function ComparisonPage() {
                 {projectChartData.length ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={projectChartData} margin={{ top: 16, right: 10, left: 4, bottom: 55 }}>
-                      <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="rgba(37,58,85,.12)" />
-                      <XAxis dataKey="name" angle={-18} textAnchor="end" height={76} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <Tooltip formatter={(value) => `${number(value)} م`} contentStyle={{ borderRadius: 12, border: '1px solid rgba(37,58,85,.16)', fontFamily: 'Cairo', fontSize: 12 }} />
+                      <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--chart-grid)" />
+                      <XAxis dataKey="name" angle={-18} textAnchor="end" height={76} tick={{ fontSize: 10, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+                      <Tooltip formatter={(value) => `${number(value)} م`} contentStyle={{ borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-raised)', color: 'var(--text)', fontFamily: 'Cairo', fontSize: 12 }} />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
                       <Bar dataKey="previous" name={monthName(previousKey)} fill="var(--navy-800)" radius={[7, 7, 0, 0]} />
                       <Bar dataKey="current" name={monthName(currentKey)} fill="var(--blue-500)" radius={[7, 7, 0, 0]} />
@@ -277,10 +277,10 @@ export default function ComparisonPage() {
                 {peopleChartData.length ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={peopleChartData} layout="vertical" margin={{ top: 12, right: 20, left: 50, bottom: 12 }}>
-                      <CartesianGrid strokeDasharray="4 4" horizontal={false} stroke="rgba(37,58,85,.12)" />
-                      <XAxis type="number" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <Tooltip formatter={(value) => money(value)} contentStyle={{ borderRadius: 12, border: '1px solid rgba(37,58,85,.16)', fontFamily: 'Cairo', fontSize: 12 }} />
+                      <CartesianGrid strokeDasharray="4 4" horizontal={false} stroke="var(--chart-grid)" />
+                      <XAxis type="number" tick={{ fontSize: 10, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+                      <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
+                      <Tooltip formatter={(value) => money(value)} contentStyle={{ borderRadius: 12, border: '1px solid var(--border)', background: 'var(--surface-raised)', color: 'var(--text)', fontFamily: 'Cairo', fontSize: 12 }} />
                       <Legend wrapperStyle={{ fontSize: 11 }} />
                       <Bar dataKey="previous" name={monthName(previousKey)} fill="var(--navy-800)" radius={[0, 7, 7, 0]} />
                       <Bar dataKey="current" name={monthName(currentKey)} fill="var(--blue-500)" radius={[0, 7, 7, 0]} />
