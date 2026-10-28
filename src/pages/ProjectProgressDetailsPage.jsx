@@ -1,14 +1,16 @@
 import { useEffect, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowRight, CalendarDays, ClipboardList, Coins, ExternalLink, File, FileImage,
-  FileText, MapPin, Paperclip, Percent, Ruler, Users,
+  FileText, MapPin, Paperclip, Percent, Ruler, Trash2, Users,
 } from 'lucide-react'
 import { appService } from '../services/appService'
 import { projectCategoryLabel } from '../lib/projectProgress'
 import ExportButtons from '../components/ExportButtons'
 import EmptyState from '../components/EmptyState'
+import { useAuth } from '../context/AuthContext'
+import { useFeedback } from '../context/FeedbackContext'
 
 const displayDate = (value) => {
   if (!value) return '—'
@@ -43,6 +45,9 @@ const attachmentType = (mime) => mime === 'application/pdf'
 export default function ProjectProgressDetailsPage() {
   const { recordId } = useParams()
   const exportRef = useRef(null)
+  const queryClient = useQueryClient()
+  const { permissions } = useAuth()
+  const feedback = useFeedback()
 
   const recordQuery = useQuery({
     queryKey: ['project-progress', 'record', recordId],
@@ -54,6 +59,34 @@ export default function ProjectProgressDetailsPage() {
     queryFn: () => appService.projectProgressAttachments(recordId),
     enabled: Boolean(recordId),
   })
+
+  const deleteAttachmentMutation = useMutation({
+    mutationFn: (attachmentId) => appService.syncProjectProgressAttachments(recordId, {
+      removeAttachmentIds: [attachmentId],
+    }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['project-progress', 'attachments', recordId] }),
+        queryClient.invalidateQueries({ queryKey: ['project-progress', 'record', recordId] }),
+        queryClient.invalidateQueries({ queryKey: ['project-progress', 'rows'] }),
+      ])
+      feedback.deleted('تم مسح المرفق', 'تم حذف الملف من المشروع بنجاح.')
+    },
+    onError: (error) => feedback.error('تعذر مسح المرفق', error.message || 'حدث خطأ غير متوقع'),
+  })
+
+  const removeAttachment = async (item) => {
+    const accepted = await feedback.confirm({
+      title: 'مسح المرفق؟',
+      message: 'سيتم حذف الملف نهائيًا من المشروع.',
+      details: item.file_name,
+      confirmLabel: 'مسح',
+      cancelLabel: 'إلغاء',
+      tone: 'danger',
+    })
+    if (!accepted) return
+    await deleteAttachmentMutation.mutateAsync(item.id)
+  }
 
   useEffect(() => {
     if (window.location.hash === '#attachments' && !recordQuery.isLoading && !attachmentsQuery.isLoading) {
@@ -232,11 +265,24 @@ export default function ProjectProgressDetailsPage() {
                     <div className="project-record-attachment__info">
                       <strong>{item.file_name}</strong>
                       <small>{attachmentType(item.mime_type)} · {fileSize(item.file_size)}</small>
-                      {item.url ? (
-                        <a href={item.url} target="_blank" rel="noreferrer" data-html2canvas-ignore="true">
-                          فتح المرفق <ExternalLink size={13} />
-                        </a>
-                      ) : null}
+                      <div className="project-record-attachment__actions" data-html2canvas-ignore="true">
+                        {item.url ? (
+                          <a href={item.url} target="_blank" rel="noreferrer">
+                            فتح المرفق <ExternalLink size={13} />
+                          </a>
+                        ) : null}
+                        {permissions.canManageProjectProgress ? (
+                          <button
+                            type="button"
+                            className="project-record-attachment__delete"
+                            onClick={() => removeAttachment(item)}
+                            disabled={deleteAttachmentMutation.isPending && deleteAttachmentMutation.variables === item.id}
+                          >
+                            <Trash2 size={13} />
+                            {deleteAttachmentMutation.isPending && deleteAttachmentMutation.variables === item.id ? '...' : 'مسح'}
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
                   </article>
                 )
