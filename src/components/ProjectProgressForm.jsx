@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Activity, Building2, Calculator, CheckCircle2, Clock, Database, FileSpreadsheet, Layers, Link2, PenLine, Save, X } from 'lucide-react'
+import { Activity, Building2, Calculator, Check, CheckCircle2, Clock, Database, FileSpreadsheet, Layers, Link2, PenLine, Save, X } from 'lucide-react'
 
 import { useAuth } from '../context/AuthContext'
 import { PROJECT_PROGRESS_CATEGORIES, progressRequest } from '../lib/projectProgress'
@@ -265,6 +265,7 @@ export default function ProjectProgressForm({
                   >
                     <span className="progress-category-selector__icon"><Icon size={19} /></span>
                     <span><strong>{item.label}</strong><small>{item.description}</small></span>
+                    {active ? <span className="progress-category-selector__selected" aria-hidden="true"><Check size={14} /></span> : null}
                   </button>
                 )
               })}
