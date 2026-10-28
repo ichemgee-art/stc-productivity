@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { Activity, Building2, Calculator, Check, CheckCircle2, Clock, Database, FileSpreadsheet, Layers, Link2, PenLine, Save, X } from 'lucide-react'
+import { Activity, Building2, Calculator, Check, CheckCircle2, Clock, Database, FileSpreadsheet, Layers, Link2, PenLine, Save, ShieldCheck, X } from 'lucide-react'
 
 import { useAuth } from '../context/AuthContext'
 import { PROJECT_PROGRESS_CATEGORIES, progressRequest } from '../lib/projectProgress'
@@ -88,6 +88,20 @@ export default function ProjectProgressForm({
   const contractQuantity = Number(form.contract_quantity || 0)
   const executedQuantity = projectMode === 'linked' ? beforeSystem + productivityMeters : manualExecuted
   const executionPercent = contractQuantity > 0 ? (executedQuantity / contractQuantity) * 100 : null
+  const selectedCategory = PROJECT_PROGRESS_CATEGORIES.find((item) => item.value === form.project_category)
+  const summaryProjectName = projectMode === 'linked'
+    ? (selectedProject?.name || form.project_name.trim())
+    : form.project_name.trim()
+  const summaryReady = Boolean(
+    form.report_date
+    && summaryProjectName
+    && form.project_category
+  )
+  const displayReviewDate = (value) => {
+    if (!value) return 'لم تسجل'
+    const [year, month, day] = String(value).slice(0, 10).split('-')
+    return year && month && day ? `${day}/${month}/${year}` : value
+  }
 
   const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }))
 
@@ -377,6 +391,84 @@ export default function ProjectProgressForm({
       {initial?.source === 'excel_import' ? (
         <div className="progress-import-note"><FileSpreadsheet size={16} /> السجل ده مستورد من Excel، والنسخة الأصلية من أرقامه محفوظة للمراجعة.</div>
       ) : null}
+
+      <section className="progress-final-review" aria-label="ملخص المراجعة قبل الحفظ">
+        <div className="progress-final-review__head">
+          <div className="progress-final-review__title">
+            <span><ShieldCheck size={20} /></span>
+            <div>
+              <strong>راجع المتابعة قبل الحفظ</strong>
+              <small>ده الملخص النهائي للبيانات اللي هتتسجل على المشروع.</small>
+            </div>
+          </div>
+          <span className={summaryReady ? 'progress-final-review__ready is-ready' : 'progress-final-review__ready'}>
+            {summaryReady ? <Check size={13} /> : null}
+            {summaryReady ? 'البيانات الأساسية مكتملة' : 'راجع البيانات الأساسية'}
+          </span>
+        </div>
+
+        <div className="progress-final-review__identity">
+          <div>
+            <span>المشروع</span>
+            <strong>{summaryProjectName || '—'}</strong>
+            <small>{form.location.trim() || 'الموقع غير مسجل'}</small>
+          </div>
+          <div>
+            <span>حالة المشروع</span>
+            <strong>{selectedCategory?.label || 'لم يتم اختيار الحالة'}</strong>
+            <small>{selectedCategory?.description || 'اختار حالة المشروع قبل الحفظ.'}</small>
+          </div>
+          <div>
+            <span>تاريخ المتابعة</span>
+            <strong>{displayReviewDate(form.report_date)}</strong>
+            <small>{projectMode === 'linked' ? 'مرتبط بالإنتاجية' : 'إدخال يدوي'}</small>
+          </div>
+        </div>
+
+        <div className="progress-final-review__metrics">
+          <article>
+            <span>كميات العقد</span>
+            <strong>{contractQuantity ? contractQuantity.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—'} م</strong>
+          </article>
+          <article>
+            <span>الكميات المنفذة</span>
+            <strong>{executedQuantity.toLocaleString('en-US', { maximumFractionDigits: 2 })} م</strong>
+          </article>
+          <article>
+            <span>نسبة التنفيذ</span>
+            <strong>{executionPercent == null ? '—' : `${executionPercent.toLocaleString('en-US', { maximumFractionDigits: 2 })}%`}</strong>
+          </article>
+          <article>
+            <span>{projectMode === 'linked' ? 'من الإنتاجية' : 'نوع الإدخال'}</span>
+            <strong>{projectMode === 'linked'
+              ? `${productivityMeters.toLocaleString('en-US', { maximumFractionDigits: 2 })} م`
+              : 'يدوي'}</strong>
+          </article>
+        </div>
+
+        <div className="progress-final-review__details">
+          <div className="progress-final-review__reviews">
+            <span className="progress-final-review__section-title">تواريخ المراجعة</span>
+            <div>
+              <span><small>م. يحيي حسين</small><strong>{displayReviewDate(form.review_yahya_date)}</strong></span>
+              <span><small>م. مارينا سامي</small><strong>{displayReviewDate(form.review_marina_date)}</strong></span>
+              <span><small>م. عبدالرحمن حسين</small><strong>{displayReviewDate(form.review_abdelrahman_date)}</strong></span>
+            </div>
+          </div>
+
+          <div className="progress-final-review__text-grid">
+            <div><span>نوع التعاقد</span><p>{form.contract_type.trim() || '—'}</p></div>
+            <div><span>الطاقم المسئول</span><p>{form.responsible_team.trim() || '—'}</p></div>
+            <div className="is-wide"><span>الموقف المالي</span><p>{form.financial_status.trim() || '—'}</p></div>
+            <div className="is-wide"><span>الملاحظات</span><p>{form.notes.trim() || '—'}</p></div>
+          </div>
+        </div>
+
+        <div className="progress-final-review__footer">
+          <CheckCircle2 size={16} />
+          <span>راجع الأرقام والحالة والملاحظات، وبعدها اضغط حفظ المتابعة.</span>
+        </div>
+      </section>
 
       <div className="progress-form-actions">
         {!initial && saved ? <button className="btn btn-ghost" type="button" disabled={submitting} onClick={() => {
