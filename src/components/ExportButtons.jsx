@@ -3,7 +3,7 @@ import { BarChart3, Download, FileSpreadsheet, FileText } from 'lucide-react'
 import { exportElementPdf, exportExcel, exportExecutiveExcel, exportTablePdf } from '../lib/exporters'
 import { useFeedback } from '../context/FeedbackContext'
 
-export default function ExportButtons({ filename, excelSheets, executiveExcel, pdfTarget, compact = false, hideQuickExcel = false, showSuccess = false, preferElementPdf = false }) {
+export default function ExportButtons({ filename, excelSheets, executiveExcel, pdfTarget, pdfAttachments = [], compact = false, hideQuickExcel = false, showSuccess = false, preferElementPdf = false }) {
   const [busy, setBusy] = useState('')
   const feedback = useFeedback()
 
@@ -44,11 +44,11 @@ export default function ExportButtons({ filename, excelSheets, executiveExcel, p
       const element = typeof pdfTarget === 'function' ? pdfTarget() : pdfTarget?.current || pdfTarget
       const hasTabularData = Array.isArray(excelSheets) && excelSheets.some((sheet) => Array.isArray(sheet?.rows))
       if (preferElementPdf && element) {
-        await exportElementPdf(element, filename)
+        await exportElementPdf(element, filename, { attachments: pdfAttachments })
       } else if (hasTabularData) {
         await exportTablePdf({ filename, sheets: excelSheets })
       } else {
-        await exportElementPdf(element, filename)
+        await exportElementPdf(element, filename, { attachments: pdfAttachments })
       }
       if (showSuccess) feedback.success('تم تجهيز PDF', 'تم فتح نسخة الطباعة الاحترافية للتقرير.', 2800)
     } catch (error) {
