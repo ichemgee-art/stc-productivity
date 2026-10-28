@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowRight, CalendarDays, ClipboardList, Coins, ExternalLink, File, FileImage, FileSpreadsheet,
-  FileText, MapPin, Paperclip, Percent, Ruler, Trash2, UploadCloud, Users,
+  FileText, LoaderCircle, MapPin, Paperclip, Percent, Ruler, Trash2, UploadCloud, Users,
 } from 'lucide-react'
 import { appService } from '../services/appService'
 import { ALLOWED_ATTACHMENT_TYPES, MAX_ATTACHMENTS, MAX_ATTACHMENT_SIZE } from '../services/projectProgressService'
@@ -126,7 +126,7 @@ export default function ProjectProgressDetailsPage() {
   }
 
   const onAttachmentInput = async (event) => {
-    const files = event.target.files
+    const files = Array.from(event.target.files || [])
     event.target.value = ''
     await uploadFiles(files)
   }
@@ -369,7 +369,9 @@ export default function ProjectProgressDetailsPage() {
                 onDragLeave={onAttachmentDragLeave}
                 onDrop={onAttachmentDrop}
               >
-                <UploadCloud size={22} />
+                {uploadAttachmentMutation.isPending
+                  ? <LoaderCircle className="project-record-upload-spinner" size={24} />
+                  : <UploadCloud size={22} />}
                 <strong>
                   {attachments.length >= MAX_ATTACHMENTS
                     ? 'اكتملت المرفقات الخمسة'
@@ -379,7 +381,11 @@ export default function ProjectProgressDetailsPage() {
                         ? 'سيب الملف هنا'
                         : 'اضغط لإضافة مرفق أو اسحب الملف هنا'}
                 </strong>
-                <small>المتاح {Math.max(0, MAX_ATTACHMENTS - attachments.length)} من {MAX_ATTACHMENTS} · PDF / صور / Word / Excel · حتى 15MB</small>
+                <small>
+                  {uploadAttachmentMutation.isPending
+                    ? `${uploadAttachmentMutation.variables?.map((file) => file.name).join('، ') || 'جاري تجهيز الملف'} · متسيبش الصفحة لحد ما الرفع يكتمل`
+                    : `المتاح ${Math.max(0, MAX_ATTACHMENTS - attachments.length)} من ${MAX_ATTACHMENTS} · PDF / صور / Word / Excel · حتى 15MB`}
+                </small>
               </div>
 
               <input
