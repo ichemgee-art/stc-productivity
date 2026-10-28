@@ -2002,3 +2002,118 @@
   .project-record-hero h2{font-size:24px}
   .project-record-kpis strong{font-size:19px}
 }
+
+
+/* Five-slot attachment UX + drag and drop — 2026-10-29 */
+.progress-attachment-slots,
+.project-record-attachment-slots{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+}
+.progress-attachment-slot,
+.project-record-attachment-slot{
+  min-width:0;
+  min-height:72px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:3px;
+  padding:9px 7px;
+  border:1px dashed var(--border);
+  border-radius:11px;
+  background:var(--surface-soft);
+  color:var(--muted);
+  text-align:center;
+}
+.project-record-attachment-slot{
+  cursor:pointer;
+}
+.progress-attachment-slot svg,
+.project-record-attachment-slot svg{
+  color:var(--brand-gold);
+}
+.progress-attachment-slot strong,
+.project-record-attachment-slot strong{
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--text);
+  font-size:9px;
+}
+.progress-attachment-slot small,
+.project-record-attachment-slot small{
+  color:var(--muted);
+  font-size:7.5px;
+}
+.progress-attachment-slot.is-filled,
+.project-record-attachment-slot.is-filled{
+  border-style:solid;
+  border-color:var(--success-border);
+  background:var(--success-soft);
+}
+.progress-attachment-slot.is-filled svg,
+.project-record-attachment-slot.is-filled svg{
+  color:var(--success);
+}
+.project-record-attachment-slot:disabled{
+  cursor:default;
+  opacity:1;
+}
+.progress-upload-zone.is-dragging,
+.project-record-dropzone.is-dragging{
+  border-color:var(--brand-gold);
+  background:var(--warning-soft);
+  box-shadow:0 0 0 4px rgba(243,184,32,.12);
+  transform:translateY(-1px);
+}
+
+.project-record-upload-panel{
+  display:grid;
+  gap:10px;
+  margin:0 0 14px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:var(--surface-soft);
+}
+.project-record-dropzone{
+  min-height:92px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:4px;
+  padding:14px;
+  border:1.5px dashed var(--border);
+  border-radius:12px;
+  background:var(--surface);
+  color:var(--text);
+  text-align:center;
+  cursor:pointer;
+  transition:.16s ease;
+}
+.project-record-dropzone:hover{
+  border-color:var(--brand-gold);
+}
+.project-record-dropzone svg{color:var(--brand-gold)}
+.project-record-dropzone strong{font-size:10px}
+.project-record-dropzone small{color:var(--muted);font-size:8px}
+.project-record-dropzone.is-disabled{
+  opacity:.58;
+  cursor:not-allowed;
+}
+.project-record-hidden-file-input{
+  display:none;
+}
+
+@media(max-width:760px){
+  .progress-attachment-slots,
+  .project-record-attachment-slots{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .progress-attachment-slot:last-child,
+  .project-record-attachment-slot:last-child{
+    grid-column:span 2;
+  }
+}
