@@ -367,8 +367,8 @@ export default function ProductivityPage() {
         </div>
         {error ? <div className="inline-error">{error}</div> : null}
         <div className="table-scroll-shell productivity-table-shell">
-          <button className="table-side-scroll-btn is-left" type="button" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={22} /></button>
-          <button className="table-side-scroll-btn is-right" type="button" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={22} /></button>
+          <button className="table-side-scroll-btn is-left" type="button" data-html2canvas-ignore="true" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={22} /></button>
+          <button className="table-side-scroll-btn is-right" type="button" data-html2canvas-ignore="true" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={22} /></button>
           <div className="data-table-wrap productivity-scroll" ref={tableScrollRef}>
           <table className="data-table">
             <thead><tr>
