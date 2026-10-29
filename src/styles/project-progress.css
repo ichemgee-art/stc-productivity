@@ -2126,3 +2126,148 @@
 @keyframes stc-upload-spin{
   to{transform:rotate(360deg)}
 }
+
+
+/* Full-screen project table workspace — 2026-10-29 */
+.progress-table-workspace{
+  width:100%;
+  min-width:0;
+}
+.progress-table-expand-btn{
+  white-space:nowrap;
+}
+.progress-table-workspace.is-expanded{
+  position:fixed;
+  inset:8px;
+  z-index:1300;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  min-height:0;
+  padding:12px;
+  overflow:hidden;
+  border:1px solid var(--border-strong);
+  border-radius:18px;
+  background:var(--surface);
+  box-shadow:0 26px 80px rgba(13,31,52,.28);
+}
+.progress-table-workspace.is-expanded .progress-table-toolbar{
+  flex:0 0 auto;
+  margin-bottom:8px;
+  padding:12px 14px;
+  box-shadow:none;
+}
+.progress-table-workspace.is-expanded .progress-table-toolbar__title strong{
+  font-size:18px;
+}
+.progress-table-workspace.is-expanded .progress-table-toolbar__title small{
+  font-size:10px;
+}
+.progress-table-workspace.is-expanded .progress-category-filter{
+  flex:0 0 auto;
+  margin-bottom:8px;
+}
+.progress-table-workspace.is-expanded .progress-live-hint{
+  display:none;
+}
+.progress-table-workspace.is-expanded .progress-table-panel{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:hidden;
+  border-radius:12px;
+  box-shadow:none;
+}
+.progress-table-workspace.is-expanded .progress-table-scroll{
+  width:100%;
+  height:100%;
+  min-height:0;
+  max-height:none;
+  overflow:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable both-edges;
+  scrollbar-width:auto;
+  scrollbar-color:color-mix(in srgb,var(--brand-navy) 60%,var(--border)) var(--surface-soft);
+}
+.progress-table-workspace.is-expanded .progress-table-scroll::-webkit-scrollbar{
+  width:13px;
+  height:13px;
+}
+.progress-table-workspace.is-expanded .progress-table-scroll::-webkit-scrollbar-track{
+  background:var(--surface-soft);
+  border-radius:999px;
+}
+.progress-table-workspace.is-expanded .progress-table-scroll::-webkit-scrollbar-thumb{
+  border:3px solid var(--surface-soft);
+  border-radius:999px;
+  background:color-mix(in srgb,var(--brand-navy) 66%,var(--border));
+}
+.progress-table-workspace.is-expanded .progress-table-scroll::-webkit-scrollbar-thumb:hover{
+  background:var(--brand-navy);
+}
+.progress-table-workspace.is-expanded .project-progress-table thead th{
+  box-shadow:0 1px 0 rgba(255,255,255,.08),0 6px 14px rgba(13,31,52,.11);
+}
+.progress-table-workspace.is-expanded .project-progress-table tbody tr:hover td{
+  background:color-mix(in srgb,var(--brand-gold) 4%,var(--surface))!important;
+}
+.progress-table-workspace.is-expanded .progress-pinned-column{
+  box-shadow:-10px 0 20px -14px rgba(13,31,52,.55)!important;
+}
+.progress-table-workspace.is-expanded .progress-table-toolbar__actions{
+  flex-wrap:wrap;
+}
+.progress-table-workspace.is-expanded .progress-search{
+  min-width:280px;
+}
+
+@media(max-width:1100px){
+  .progress-table-workspace.is-expanded{
+    inset:5px;
+    padding:8px;
+    border-radius:14px;
+  }
+  .progress-table-workspace.is-expanded .progress-table-toolbar{
+    padding:10px;
+  }
+  .progress-table-workspace.is-expanded .progress-table-toolbar__actions{
+    display:flex;
+    flex-wrap:wrap;
+  }
+  .progress-table-workspace.is-expanded .progress-search{
+    flex:1 1 100%;
+    min-width:0;
+  }
+  .progress-table-workspace.is-expanded .progress-table-scroll{
+    height:100%;
+    max-height:none;
+  }
+}
+@media(max-width:760px){
+  .progress-table-workspace.is-expanded{
+    inset:0;
+    padding:7px;
+    border:0;
+    border-radius:0;
+  }
+  .progress-table-workspace.is-expanded .progress-table-toolbar__actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+  .progress-table-workspace.is-expanded .progress-search,
+  .progress-table-workspace.is-expanded .progress-pin-control{
+    grid-column:1 / -1;
+    width:100%;
+  }
+  .progress-table-workspace.is-expanded .progress-table-toolbar__actions select,
+  .progress-table-workspace.is-expanded .progress-table-toolbar__actions .btn,
+  .progress-table-workspace.is-expanded .progress-table-toolbar__actions .export-actions{
+    width:100%;
+  }
+  .progress-table-workspace.is-expanded .progress-category-filter{
+    padding:6px;
+  }
+  .progress-table-workspace.is-expanded .progress-category-filter>button{
+    flex-basis:135px;
+    min-height:44px;
+  }
+}
