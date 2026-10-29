@@ -314,10 +314,6 @@ export default function ProductivityPage() {
           <span>تصدير البيانات المعروضة حاليًا بنفس الفلاتر المطبقة</span>
         </div>
         <div className="productivity-toolbar-actions">
-          <div className="table-horizontal-nav" aria-label="تحريك جدول الإنتاجية أفقيًا">
-            <button type="button" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={18} /></button>
-            <button type="button" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={18} /></button>
-          </div>
           <button
             className="btn btn-secondary productivity-expand-btn"
             type="button"
@@ -370,7 +366,10 @@ export default function ProductivityPage() {
           </label>
         </div>
         {error ? <div className="inline-error">{error}</div> : null}
-        <div className="data-table-wrap productivity-scroll" ref={tableScrollRef}>
+        <div className="table-scroll-shell productivity-table-shell">
+          <button className="table-side-scroll-btn is-left" type="button" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={22} /></button>
+          <button className="table-side-scroll-btn is-right" type="button" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={22} /></button>
+          <div className="data-table-wrap productivity-scroll" ref={tableScrollRef}>
           <table className="data-table">
             <thead><tr>
               <th className={pinClass('date')}>التاريخ</th>
@@ -432,6 +431,7 @@ export default function ProductivityPage() {
                 : rows.length ? 'البيانات موجودة، لكن الفلاتر الحالية مخفية النتائج.' : 'أول عملية هتبدأ تظهر تلقائيًا في الـDashboard والتقارير.'}
             />
           ) : null}
+          </div>
         </div>
       </section>
       </div>
