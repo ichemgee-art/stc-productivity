@@ -198,7 +198,20 @@ export default function ProjectProgressPage() {
   const scrollTableHorizontally = (direction) => {
     const scroller = tableScrollRef.current
     if (!scroller) return
-    const distance = Math.max(320, Math.round(scroller.clientWidth * 0.72))
+
+    const cells = Array.from(scroller.querySelectorAll('tbody tr:first-child > td'))
+    if (!cells.length) return
+
+    const viewport = scroller.getBoundingClientRect()
+    const visibleCells = cells
+      .map((cell) => ({ rect: cell.getBoundingClientRect() }))
+      .filter(({ rect }) => rect.right > viewport.left && rect.left < viewport.right)
+      .sort((a, b) => direction > 0 ? b.rect.right - a.rect.right : a.rect.left - b.rect.left)
+
+    const source = visibleCells.length ? visibleCells : cells.map((cell) => ({ rect: cell.getBoundingClientRect() }))
+    const distance = source.slice(0, 3).reduce((sum, { rect }) => sum + rect.width, 0)
+    if (!distance) return
+
     scroller.scrollBy({ left: direction * distance, behavior: 'smooth' })
   }
 
