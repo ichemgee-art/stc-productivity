@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Database, ExternalLink, FileSpreadsheet, Maximize2, Minimize2, Paperclip, Pencil, Pin, Plus, Search, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Database, ExternalLink, FileSpreadsheet, Maximize2, Minimize2, Paperclip, Pencil, Pin, Plus, Search, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PROJECT_PROGRESS_CATEGORIES, projectCategoryLabel, progressMetersById } from '../lib/projectProgress'
 import { appService } from '../services/appService'
@@ -57,6 +57,7 @@ export default function ProjectProgressPage() {
   const [tableExpanded, setTableExpanded] = useState(false)
   const [recentlyUpdatedId, setRecentlyUpdatedId] = useState(null)
   const highlightTimerRef = useRef(null)
+  const tableScrollRef = useRef(null)
 
   useEffect(() => () => {
     if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current)
@@ -194,6 +195,13 @@ export default function ProjectProgressPage() {
     onError: (error) => feedback.error('تعذر حذف المتابعة', error.message || 'حدث خطأ غير متوقع'),
   })
 
+  const scrollTableHorizontally = (direction) => {
+    const scroller = tableScrollRef.current
+    if (!scroller) return
+    const distance = Math.max(320, Math.round(scroller.clientWidth * 0.72))
+    scroller.scrollBy({ left: direction * distance, behavior: 'smooth' })
+  }
+
   const openEdit = (row) => {
     setTableExpanded(false)
     setEditing(row)
@@ -242,6 +250,10 @@ export default function ProjectProgressPage() {
               ))}
             </select>
           </label>
+          <div className="table-horizontal-nav" aria-label="تحريك الجدول أفقيًا">
+            <button type="button" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={18} /></button>
+            <button type="button" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={18} /></button>
+          </div>
           <button
             className="btn btn-secondary progress-table-expand-btn"
             type="button"
@@ -293,7 +305,7 @@ export default function ProjectProgressPage() {
       </section>
 
       <section className={`progress-table-panel ${!filtered.length ? 'is-empty' : ''}`}>
-        {filtered.length ? <div className="progress-table-scroll">
+        {filtered.length ? <div className="progress-table-scroll" ref={tableScrollRef}>
           <table className="project-progress-table">
             <thead>
               <tr>
