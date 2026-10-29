@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Database, ExternalLink, FileSpreadsheet, Paperclip, Pencil, Pin, Plus, Search, Trash2 } from 'lucide-react'
+import { Database, ExternalLink, FileSpreadsheet, Maximize2, Minimize2, Paperclip, Pencil, Pin, Plus, Search, Trash2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { PROJECT_PROGRESS_CATEGORIES, projectCategoryLabel, progressMetersById } from '../lib/projectProgress'
 import { appService } from '../services/appService'
@@ -54,12 +54,30 @@ export default function ProjectProgressPage() {
   const [category, setCategory] = useSessionState('page:project-progress:category', '')
   const [pinnedColumn, setPinnedColumn] = useSessionState('page:project-progress:pinned-column', '')
   const [editing, setEditing] = useState(null)
+  const [tableExpanded, setTableExpanded] = useState(false)
   const [recentlyUpdatedId, setRecentlyUpdatedId] = useState(null)
   const highlightTimerRef = useRef(null)
 
   useEffect(() => () => {
     if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current)
   }, [])
+
+  useEffect(() => {
+    if (!tableExpanded) return undefined
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setTableExpanded(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [tableExpanded])
 
   const rowsQuery = useQuery({
     queryKey: ['project-progress', 'rows'],
@@ -177,6 +195,7 @@ export default function ProjectProgressPage() {
   })
 
   const openEdit = (row) => {
+    setTableExpanded(false)
     setEditing(row)
     feedback.info('وضع التعديل', `تم فتح متابعة ${row.project || 'المشروع'} للتعديل.`, 2200)
   }
@@ -199,6 +218,7 @@ export default function ProjectProgressPage() {
 
   return (
     <div className="project-progress-page">
+      <div className={tableExpanded ? 'progress-table-workspace is-expanded' : 'progress-table-workspace'}>
       <section className="progress-table-toolbar">
         <div className="progress-table-toolbar__title">
           <div>
@@ -222,6 +242,16 @@ export default function ProjectProgressPage() {
               ))}
             </select>
           </label>
+          <button
+            className="btn btn-secondary progress-table-expand-btn"
+            type="button"
+            onClick={() => setTableExpanded((current) => !current)}
+            aria-pressed={tableExpanded}
+            title={tableExpanded ? 'الرجوع للعرض العادي (Esc)' : 'عرض الجدول على الشاشة بالكامل'}
+          >
+            {tableExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            {tableExpanded ? 'إغلاق العرض' : 'عرض الجدول'}
+          </button>
           <ExportButtons
             filename={category ? `project-progress-${category === '__unclassified__' ? 'unclassified' : category}` : 'project-progress'}
             excelSheets={excelSheets}
@@ -384,6 +414,7 @@ export default function ProjectProgressPage() {
           </div>
         )}
       </section>
+      </div>
 
       <Modal open={Boolean(editing)} title={editing ? `تعديل متابعة — ${editing.project || 'مشروع'}` : 'تعديل المتابعة'} onClose={() => setEditing(null)} width="xl">
         {editing ? (
