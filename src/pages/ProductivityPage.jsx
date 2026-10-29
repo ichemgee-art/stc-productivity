@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { CheckCircle2, Pencil, Pin, Search, Trash2, XCircle } from 'lucide-react'
+import { CheckCircle2, ChevronLeft, ChevronRight, Maximize2, Minimize2, Pencil, Pin, Search, Trash2, XCircle } from 'lucide-react'
 import { useCycle } from '../context/CycleContext'
 import { useAuth } from '../context/AuthContext'
 import { appService } from '../services/appService'
@@ -63,7 +63,9 @@ export default function ProductivityPage() {
   const [editInitial, setEditInitial] = useState(null)
   const [error, setError] = useState('')
   const [reviewCelebration, setReviewCelebration] = useState(null)
+  const [tableExpanded, setTableExpanded] = useState(false)
   const exportRef = useRef(null)
+  const tableScrollRef = useRef(null)
 
   const rowsQuery = useQuery({
     queryKey: ['cycle-data', 'productivity', monthKey],
@@ -92,6 +94,20 @@ export default function ProductivityPage() {
   useEffect(() => {
     window.localStorage.setItem(PRODUCTIVITY_PIN_KEY, pinnedColumn)
   }, [pinnedColumn])
+
+  useEffect(() => {
+    if (!tableExpanded) return undefined
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setTableExpanded(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [tableExpanded])
 
   const pinClass = (key, base = '') => [base, pinnedColumn === key ? 'productivity-pinned-column' : ''].filter(Boolean).join(' ')
 
@@ -236,7 +252,15 @@ export default function ProductivityPage() {
     onError: (err) => feedback.error('تعذر حفظ التعديلات', err.message || 'حدث خطأ غير متوقع'),
   })
 
+  const scrollTableHorizontally = (direction) => {
+    const scroller = tableScrollRef.current
+    if (!scroller) return
+    const distance = Math.max(320, Math.round(scroller.clientWidth * 0.72))
+    scroller.scrollBy({ left: direction * distance, behavior: 'smooth' })
+  }
+
   const beginEdit = async (row) => {
+    setTableExpanded(false)
     setError('')
     setEditing(row)
     try {
@@ -283,16 +307,33 @@ export default function ProductivityPage() {
 
   return (
     <div className="page-stack">
+      <div className={tableExpanded ? 'productivity-table-workspace is-expanded' : 'productivity-table-workspace'}>
       <section className="productivity-export-toolbar">
         <div className="productivity-export-toolbar__copy">
           <strong>لوحة الإنتاجية</strong>
           <span>تصدير البيانات المعروضة حاليًا بنفس الفلاتر المطبقة</span>
         </div>
-        <ExportButtons
-          filename={`productivity-${monthKey}`}
-          excelSheets={excelSheets}
-          pdfTarget={exportRef}
-        />
+        <div className="productivity-toolbar-actions">
+          <div className="table-horizontal-nav" aria-label="تحريك جدول الإنتاجية أفقيًا">
+            <button type="button" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={18} /></button>
+            <button type="button" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={18} /></button>
+          </div>
+          <button
+            className="btn btn-secondary productivity-expand-btn"
+            type="button"
+            onClick={() => setTableExpanded((current) => !current)}
+            aria-pressed={tableExpanded}
+            title={tableExpanded ? 'الرجوع للعرض العادي (Esc)' : 'عرض جدول الإنتاجية على الشاشة بالكامل'}
+          >
+            {tableExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+            {tableExpanded ? 'إغلاق العرض' : 'عرض الجدول'}
+          </button>
+          <ExportButtons
+            filename={`productivity-${monthKey}`}
+            excelSheets={excelSheets}
+            pdfTarget={exportRef}
+          />
+        </div>
       </section>
 
       {alertFilterMeta ? (
@@ -329,7 +370,7 @@ export default function ProductivityPage() {
           </label>
         </div>
         {error ? <div className="inline-error">{error}</div> : null}
-        <div className="data-table-wrap productivity-scroll">
+        <div className="data-table-wrap productivity-scroll" ref={tableScrollRef}>
           <table className="data-table">
             <thead><tr>
               <th className={pinClass('date')}>التاريخ</th>
@@ -393,6 +434,7 @@ export default function ProductivityPage() {
           ) : null}
         </div>
       </section>
+      </div>
 
       {reviewCelebration ? (
         <div className="review-complete-backdrop" role="presentation">
