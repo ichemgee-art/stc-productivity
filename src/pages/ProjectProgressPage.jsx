@@ -302,8 +302,8 @@ export default function ProjectProgressPage() {
 
       <section className={`progress-table-panel ${!filtered.length ? 'is-empty' : ''}`}>
         {filtered.length ? <div className="table-scroll-shell">
-          <button className="table-side-scroll-btn is-left" type="button" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={22} /></button>
-          <button className="table-side-scroll-btn is-right" type="button" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={22} /></button>
+          <button className="table-side-scroll-btn is-left" type="button" data-html2canvas-ignore="true" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={22} /></button>
+          <button className="table-side-scroll-btn is-right" type="button" data-html2canvas-ignore="true" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={22} /></button>
           <div className="progress-table-scroll" ref={tableScrollRef}>
           <table className="project-progress-table">
             <thead>
