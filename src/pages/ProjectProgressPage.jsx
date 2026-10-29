@@ -250,10 +250,6 @@ export default function ProjectProgressPage() {
               ))}
             </select>
           </label>
-          <div className="table-horizontal-nav" aria-label="تحريك الجدول أفقيًا">
-            <button type="button" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={18} /></button>
-            <button type="button" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={18} /></button>
-          </div>
           <button
             className="btn btn-secondary progress-table-expand-btn"
             type="button"
@@ -305,7 +301,10 @@ export default function ProjectProgressPage() {
       </section>
 
       <section className={`progress-table-panel ${!filtered.length ? 'is-empty' : ''}`}>
-        {filtered.length ? <div className="progress-table-scroll" ref={tableScrollRef}>
+        {filtered.length ? <div className="table-scroll-shell">
+          <button className="table-side-scroll-btn is-left" type="button" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={22} /></button>
+          <button className="table-side-scroll-btn is-right" type="button" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={22} /></button>
+          <div className="progress-table-scroll" ref={tableScrollRef}>
           <table className="project-progress-table">
             <thead>
               <tr>
@@ -415,6 +414,7 @@ export default function ProjectProgressPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div> : (
           <div className="progress-empty-state">
             <EmptyState
