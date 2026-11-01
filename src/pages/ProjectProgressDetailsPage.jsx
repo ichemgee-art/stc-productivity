@@ -31,6 +31,17 @@ const displayMoney = (value) => value == null || value === ''
   ? '—'
   : `${displayNumber(value)} ج.م`
 
+const progressToneClass = (value) => {
+  const percent = Number(value)
+  if (!Number.isFinite(percent) || percent <= 0) return 'progress-tone-empty'
+  if (percent > 100) return 'progress-tone-over'
+  if (percent >= 100) return 'progress-tone-complete'
+  if (percent >= 75) return 'progress-tone-near'
+  if (percent >= 50) return 'progress-tone-mid'
+  if (percent >= 25) return 'progress-tone-early'
+  return 'progress-tone-start'
+}
+
 const fileSize = (bytes) => {
   const value = Number(bytes || 0)
   if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024)).toLocaleString('en-US')} KB`
@@ -287,7 +298,7 @@ export default function ProjectProgressDetailsPage() {
             </div>
             <b>{row.execution_percent == null ? '—' : `${displayNumber(row.execution_percent)}%`}</b>
           </div>
-          <div className="project-record-progress-track" aria-hidden="true">
+          <div className={`project-record-progress-track ${progressToneClass(row.execution_percent)}`} aria-hidden="true">
             <span style={{ width: `${Math.max(0, Math.min(100, Number(row.execution_percent || 0)))}%` }} />
           </div>
           <small>{row.execution_percent == null ? 'أضف كمية التعاقد لاحتساب نسبة التنفيذ.' : Number(row.execution_percent || 0) > 100 ? 'التنفيذ تجاوز كمية التعاقد المسجلة — راجع الكميات.' : 'النسبة محسوبة من الكميات المنفذة مقابل الكميات المحملة على القطاعات.'}</small>
