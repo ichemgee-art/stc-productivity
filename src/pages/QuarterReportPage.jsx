@@ -173,6 +173,7 @@ export default function QuarterReportPage() {
   const [selectedKeys, setSelectedKeys] = useState(readStoredQuarterSelection)
   const [exporting, setExporting] = useState(false)
   const [filters, setFilters] = useState(readStoredQuarterFilters)
+  const [filtersExpanded, setFiltersExpanded] = useState(false)
 
   useEffect(() => {
     if (cycles.length >= 3 && selectedKeys.every((value) => !value)) {
@@ -646,12 +647,16 @@ export default function QuarterReportPage() {
               </div>
               <div className="quarter-filter-panel__actions">
                 {activeFilterCount ? <span className="quarter-filter-count">{activeFilterCount} فلتر نشط</span> : <span className="quarter-filter-count is-empty">بدون فلاتر</span>}
+                <button className="btn btn-secondary btn-sm" type="button" onClick={() => setFiltersExpanded((current) => !current)} aria-expanded={filtersExpanded}>
+                  <SlidersHorizontal size={14} /> {filtersExpanded ? 'إخفاء الفلاتر' : 'فلاتر متقدمة'}
+                </button>
                 <button className="btn btn-ghost btn-sm" type="button" onClick={resetFilters} disabled={!activeFilterCount}>
                   <RotateCcw size={14} /> مسح الكل
                 </button>
               </div>
             </header>
 
+            {filtersExpanded ? (
             <div className="quarter-filter-grid">
               <label className="quarter-filter-search">
                 <span>بحث عام</span>
@@ -758,6 +763,8 @@ export default function QuarterReportPage() {
                 </select>
               </label>
             </div>
+
+            ) : null}
           </section>
 
           <section className="report-actions no-print">
