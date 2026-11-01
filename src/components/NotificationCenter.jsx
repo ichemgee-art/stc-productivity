@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, Bell, CheckCircle2, CircleAlert, ClipboardCheck, Users } from 'lucide-react'
+import { AlertTriangle, Bell, CheckCircle2, CircleAlert, ClipboardCheck, Users, X } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { useCycle } from '../context/CycleContext'
 import { appService } from '../services/appService'
@@ -13,6 +14,8 @@ export default function NotificationCenter() {
   const { monthKey, selectedCycle } = useCycle()
   const { alert: alertFeedback } = useFeedback()
   const [open, setOpen] = useState(false)
+  const triggerRef = useRef(null)
+  const [popoverStyle, setPopoverStyle] = useState({})
 
   const rowsQuery = useQuery({
     queryKey: ['cycle-data', 'productivity', monthKey],
@@ -115,6 +118,46 @@ export default function NotificationCenter() {
   const count = items.filter((item) => !item.passive).length
 
   useEffect(() => {
+    if (!open) return undefined
+
+    const updatePopoverPosition = () => {
+      const trigger = triggerRef.current
+      if (!trigger) return
+
+      const rect = trigger.getBoundingClientRect()
+      const margin = 12
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+      const width = Math.min(390, Math.max(280, viewportWidth - (margin * 2)))
+
+      let left = rect.right - width
+      if (left < margin) left = rect.left
+      left = Math.max(margin, Math.min(left, viewportWidth - width - margin))
+
+      const preferredTop = rect.bottom + 10
+      const top = Math.max(margin, Math.min(preferredTop, viewportHeight - 210))
+      const maxHeight = Math.max(180, viewportHeight - top - margin)
+
+      setPopoverStyle({ left, top, width, maxHeight })
+    }
+
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+
+    updatePopoverPosition()
+    window.addEventListener('resize', updatePopoverPosition)
+    window.addEventListener('scroll', updatePopoverPosition, true)
+    window.addEventListener('keydown', closeOnEscape)
+
+    return () => {
+      window.removeEventListener('resize', updatePopoverPosition)
+      window.removeEventListener('scroll', updatePopoverPosition, true)
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [open])
+
+  useEffect(() => {
     if (rowsQuery.isLoading || attendanceQuery.isLoading) return undefined
 
     const runDigest = () => {
@@ -148,6 +191,7 @@ export default function NotificationCenter() {
   return (
     <div className="notification-center">
       <button
+        ref={triggerRef}
         className={`icon-btn notification-trigger ${count ? 'has-alerts' : ''}`}
         type="button"
         onClick={async () => {
@@ -168,16 +212,27 @@ export default function NotificationCenter() {
         {count ? <span className="notification-count">{count > 9 ? '9+' : count}</span> : null}
       </button>
 
-      {open ? (
+      {open && typeof document !== 'undefined' ? createPortal(
         <>
-          <button className="floating-backdrop" type="button" aria-label="إغلاق التنبيهات" onClick={() => setOpen(false)} />
-          <section className="notification-popover">
+          <button className="floating-backdrop notification-backdrop" type="button" aria-label="إغلاق التنبيهات" onClick={() => setOpen(false)} />
+          <section
+            className="notification-popover"
+            style={popoverStyle}
+            role="dialog"
+            aria-modal="true"
+            aria-label="مركز التنبيهات"
+          >
             <header>
               <div>
                 <strong>مركز التنبيهات</strong>
-                <span>الدورة المعروضة حاليًا</span>
+                <span>الدورة المعروضة حاليًا · {count ? `${count} تنبيه يحتاج متابعة` : 'الحالة مستقرة'}</span>
               </div>
-              {count ? <b>{count}</b> : null}
+              <div className="notification-popover__header-actions">
+                {count ? <b>{count}</b> : null}
+                <button type="button" onClick={() => setOpen(false)} aria-label="إغلاق مركز التنبيهات" title="إغلاق">
+                  <X size={17} />
+                </button>
+              </div>
             </header>
             <div className="notification-list">
               {items.map((item) => {
@@ -189,14 +244,15 @@ export default function NotificationCenter() {
                     to={item.to}
                     onClick={() => setOpen(false)}
                   >
-                    <span className="notification-item__icon"><Icon size={17} /></span>
+                    <span className="notification-item__icon"><Icon size={18} /></span>
                     <div><strong>{item.title}</strong><small>{item.text}</small></div>
                   </Link>
                 )
               })}
             </div>
           </section>
-        </>
+        </>,
+        document.body,
       ) : null}
     </div>
   )
