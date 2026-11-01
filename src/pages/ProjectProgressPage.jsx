@@ -53,6 +53,7 @@ export default function ProjectProgressPage() {
   const [source, setSource] = useSessionState('page:project-progress:source', '')
   const [category, setCategory] = useSessionState('page:project-progress:category', '')
   const [pinnedColumn, setPinnedColumn] = useSessionState('page:project-progress:pinned-column', '')
+  const [tableDensity, setTableDensity] = useSessionState('page:project-progress:density', 'comfortable')
   const [editing, setEditing] = useState(null)
   const [tableExpanded, setTableExpanded] = useState(false)
   const [recentlyUpdatedId, setRecentlyUpdatedId] = useState(null)
@@ -263,6 +264,10 @@ export default function ProjectProgressPage() {
               ))}
             </select>
           </label>
+          <div className="table-density-control" role="group" aria-label="كثافة جدول متابعة المشاريع">
+            <button type="button" className={tableDensity === 'comfortable' ? 'is-active' : ''} onClick={() => setTableDensity('comfortable')}>مريح</button>
+            <button type="button" className={tableDensity === 'compact' ? 'is-active' : ''} onClick={() => setTableDensity('compact')}>مضغوط</button>
+          </div>
           <button
             className="btn btn-secondary progress-table-expand-btn"
             type="button"
@@ -318,7 +323,7 @@ export default function ProjectProgressPage() {
           <button className="table-side-scroll-btn is-left" type="button" data-html2canvas-ignore="true" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={22} /></button>
           <button className="table-side-scroll-btn is-right" type="button" data-html2canvas-ignore="true" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={22} /></button>
           <div className="progress-table-scroll" ref={tableScrollRef}>
-          <table className="project-progress-table">
+          <table className={`project-progress-table table-density-${tableDensity}`}>
             <thead>
               <tr>
                 <th colSpan="3" className="progress-group-head">اخر تاريخ مراجعة</th>
