@@ -7855,3 +7855,94 @@ a,button,input,select,textarea,[tabindex]{
     transition-duration:.01ms!important;
   }
 }
+
+
+/* Productivity entry two-column workspace */
+.submission-form-workspace{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(320px,370px);
+  gap:18px;
+  align-items:start;
+}
+.submission-form-main{
+  min-width:0;
+  display:grid;
+  gap:14px;
+}
+.submission-form-sidebar{
+  min-width:0;
+  position:sticky;
+  top:98px;
+  display:grid;
+  gap:12px;
+  align-self:start;
+}
+.submission-form-sidebar .calc-preview{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.submission-form-sidebar .calc-preview>div{
+  min-height:78px;
+}
+.submission-form-sidebar .calc-preview>div:nth-child(2){
+  border-color:color-mix(in srgb,var(--brand-gold) 34%,var(--border));
+  background:color-mix(in srgb,var(--brand-gold) 6%,var(--surface));
+}
+.submission-form-sidebar .calc-preview>div:nth-child(5){
+  grid-column:1 / -1;
+}
+.submission-form-sidebar .submission-review-card{
+  margin:0;
+}
+.submission-form-sidebar .review-card-head{
+  align-items:flex-start;
+  flex-direction:column;
+}
+.submission-form-sidebar .review-grid{
+  grid-template-columns:1fr 1fr;
+}
+.submission-form-sidebar .review-team-grid{
+  grid-template-columns:1fr;
+}
+.submission-form-sidebar .review-operation-note{
+  margin-top:10px;
+}
+
+@media(max-width:1180px){
+  .submission-form-workspace{
+    grid-template-columns:1fr;
+  }
+  .submission-form-sidebar{
+    position:static;
+  }
+  .submission-form-sidebar .calc-preview{
+    grid-template-columns:repeat(5,minmax(0,1fr));
+  }
+  .submission-form-sidebar .calc-preview>div:nth-child(5){
+    grid-column:auto;
+  }
+  .submission-form-sidebar .review-card-head{
+    flex-direction:row;
+  }
+  .submission-form-sidebar .review-team-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+}
+
+@media(max-width:760px){
+  .submission-form-sidebar .calc-preview{
+    grid-template-columns:1fr 1fr;
+  }
+  .submission-form-sidebar .calc-preview>div:nth-child(5){
+    grid-column:1 / -1;
+  }
+  .submission-form-sidebar .review-card-head{
+    flex-direction:column;
+  }
+  .submission-form-sidebar .review-grid{
+    grid-template-columns:1fr 1fr;
+  }
+  .submission-form-sidebar .review-team-grid{
+    grid-template-columns:1fr;
+  }
+}
