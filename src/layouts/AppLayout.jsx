@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   BarChart3, ClipboardPlus, Database, FolderKanban, Gauge, LogOut, Menu,
   Settings2, ShieldCheck, UserRoundCog, Users, X, CalendarDays, Wrench, ArrowLeftRight, History, RefreshCw, FileText, CalendarRange,
-  Moon, Sun, Home, MoreHorizontal, ClipboardList, UsersRound,
+  Moon, Sun, Home, MoreHorizontal, ClipboardList, UsersRound, ChevronDown,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCycle } from '../context/CycleContext'
@@ -43,6 +43,30 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [settingActive, setSettingActive] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef(null)
+
+  useEffect(() => {
+    if (!userMenuOpen) return undefined
+
+    const handlePointerDown = (event) => {
+      if (!userMenuRef.current?.contains(event.target)) setUserMenuOpen(false)
+    }
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setUserMenuOpen(false)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [userMenuOpen])
+
+  useEffect(() => {
+    setUserMenuOpen(false)
+  }, [location.pathname])
 
   useEffect(() => {
     const cacheKey = `scroll:${location.pathname}`
@@ -206,21 +230,37 @@ export default function AppLayout() {
               <GlobalSearch />
               <NotificationCenter />
             </div>
-            <details className="user-menu">
-              <summary className="user-chip" aria-label="قائمة المستخدم">
+            <div className={`user-menu ${userMenuOpen ? 'is-open' : ''}`} ref={userMenuRef}>
+              <button
+                className="user-chip user-menu-trigger"
+                type="button"
+                onClick={() => setUserMenuOpen((current) => !current)}
+                aria-label="فتح قائمة الحساب والإعدادات"
+                aria-expanded={userMenuOpen}
+                title="الحساب والإعدادات"
+              >
                 <div className="user-avatar">{(profile?.display_name || user?.email || 'U').slice(0, 1).toUpperCase()}</div>
-                <div><strong>{profile?.display_name || 'مستخدم'}</strong><small>{roleLabels[profile?.app_role] || profile?.app_role}</small></div>
-              </summary>
-              <div className="user-menu__popover">
-                <div className="user-menu__identity">
+                <div className="user-chip__copy">
                   <strong>{profile?.display_name || 'مستخدم'}</strong>
-                  <span>{user?.email}</span>
+                  <small>{roleLabels[profile?.app_role] || profile?.app_role} · إعدادات الحساب</small>
                 </div>
-                <button type="button" onClick={toggleTheme}>{isDark ? <Sun size={17} /> : <Moon size={17} />}<span>{isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}</span></button>
-                <button type="button" onClick={refreshSystem} disabled={refreshing}><RefreshCw size={17} /><span>{refreshing ? 'جاري التحديث...' : 'تحديث البيانات'}</span></button>
-                <button className="danger" type="button" onClick={signOut}><LogOut size={17} /><span>تسجيل الخروج</span></button>
-              </div>
-            </details>
+                <span className="user-chip__menu-indicator" aria-hidden="true">
+                  <ChevronDown size={16} />
+                </span>
+              </button>
+              {userMenuOpen ? (
+                <div className="user-menu__popover">
+                  <div className="user-menu__identity">
+                    <strong>{profile?.display_name || 'مستخدم'}</strong>
+                    <span>{user?.email}</span>
+                    <small>الحساب والإعدادات</small>
+                  </div>
+                  <button type="button" onClick={() => { toggleTheme(); setUserMenuOpen(false) }}>{isDark ? <Sun size={17} /> : <Moon size={17} />}<span>{isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}</span></button>
+                  <button type="button" onClick={async () => { await refreshSystem(); setUserMenuOpen(false) }} disabled={refreshing}><RefreshCw size={17} /><span>{refreshing ? 'جاري التحديث...' : 'تحديث البيانات'}</span></button>
+                  <button className="danger" type="button" onClick={signOut}><LogOut size={17} /><span>تسجيل الخروج</span></button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </header>
         <main className="page-content">
