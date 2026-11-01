@@ -279,6 +279,20 @@ export default function ProjectProgressDetailsPage() {
           </article>
         </section>
 
+        <section className="project-record-progress-overview no-pdf-break" aria-label="نسبة تنفيذ المشروع">
+          <div className="project-record-progress-overview__head">
+            <div>
+              <span>التقدم التنفيذي</span>
+              <strong>{displayNumber(row.executed_quantity)} م من {displayNumber(row.contract_quantity)} م</strong>
+            </div>
+            <b>{row.execution_percent == null ? '—' : `${displayNumber(row.execution_percent)}%`}</b>
+          </div>
+          <div className="project-record-progress-track" aria-hidden="true">
+            <span style={{ width: `${Math.max(0, Math.min(100, Number(row.execution_percent || 0)))}%` }} />
+          </div>
+          <small>{row.execution_percent == null ? 'أضف كمية التعاقد لاحتساب نسبة التنفيذ.' : Number(row.execution_percent || 0) > 100 ? 'التنفيذ تجاوز كمية التعاقد المسجلة — راجع الكميات.' : 'النسبة محسوبة من الكميات المنفذة مقابل الكميات المحملة على القطاعات.'}</small>
+        </section>
+
         <section className="project-record-grid">
           <article className="project-record-card project-record-reviews no-pdf-break">
             <header><CalendarDays size={18} /><div><strong>تواريخ آخر مراجعة</strong><small>آخر تاريخ مسجل لكل مهندس</small></div></header>
