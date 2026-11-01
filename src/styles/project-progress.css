@@ -3354,3 +3354,74 @@
 @media(prefers-reduced-motion:reduce){
   .progress-save-success--toast{animation:none!important}
 }
+
+
+/* Execution progress language — direction + completion tones */
+.project-record-progress-track,
+.progress-wizard-summary__progress{
+  display:flex;
+  justify-content:flex-start;
+  direction:rtl;
+  overflow:hidden;
+  background:var(--surface-3);
+}
+.project-record-progress-track>span,
+.progress-wizard-summary__progress>span{
+  flex:0 0 auto;
+  margin:0;
+  transform-origin:right center;
+  background:var(--progress-fill, var(--brand-gold))!important;
+  transition:width .28s ease,background-color .22s ease;
+}
+
+/* 0–24%: still at the beginning */
+.progress-tone-empty{--progress-fill:#cbd5e1}
+.progress-tone-start{--progress-fill:#dc2626}
+
+/* 25–49%: moving */
+.progress-tone-early{--progress-fill:#ea580c}
+
+/* 50–74%: halfway+ */
+.progress-tone-mid{--progress-fill:#d99a00}
+
+/* 75–99%: getting close */
+.progress-tone-near{--progress-fill:#65a30d}
+
+/* 100%: complete */
+.progress-tone-complete{--progress-fill:#16a34a}
+
+/* >100%: needs review, not a success state */
+.progress-tone-over{--progress-fill:#b91c1c}
+
+.project-record-progress-track.progress-tone-near>span,
+.project-record-progress-track.progress-tone-complete>span,
+.progress-wizard-summary__progress.progress-tone-near>span,
+.progress-wizard-summary__progress.progress-tone-complete>span{
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--progress-fill) 22%,transparent);
+}
+
+.progress-wizard-summary__executed{
+  grid-column:1 / -1;
+  min-height:76px!important;
+  background:color-mix(in srgb,var(--brand-navy) 3%,var(--surface))!important;
+}
+.progress-wizard-summary__executed strong{
+  font-size:14px!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+}
+.progress-wizard-summary__executed strong em{
+  margin-inline:4px;
+  color:var(--muted);
+  font-size:9px;
+  font-style:normal;
+  font-weight:700;
+}
+
+@media(prefers-reduced-motion:reduce){
+  .project-record-progress-track>span,
+  .progress-wizard-summary__progress>span{
+    transition:none!important;
+  }
+}
