@@ -34,14 +34,14 @@ export default function LoginPage() {
 
   return (
     <main className="prelogin-page">
-      <section className="prelogin-hero-shell" aria-label="iChem Productivity">
+      <section className="prelogin-hero-shell" aria-label="STC Operations">
         <section className="login-visual prelogin-hero">
           <div className="login-brand-row">
             <img className="login-brand-logo" src="/stc-logo-hq.jpg" alt="STC Specialized Trading & Construction" />
           </div>
 
           <div className="login-copy">
-            <span className="eyebrow"><Sparkles size={15} /> iChem Productivity</span>
+            <span className="eyebrow"><Sparkles size={15} /> STC OPERATIONS</span>
             <h1>إدارة العمليات الهندسية والإنتاجية في مساحة عمل واحدة.</h1>
             <p>منصة داخلية تساعد الفريق على متابعة التشغيل، الحضور، الفرق، المشاريع والقطاعات مع وصول منظم حسب صلاحية كل مستخدم.</p>
 
@@ -154,7 +154,7 @@ export default function LoginPage() {
 
       <footer className="prelogin-footer">
         <img src="/stc-logo-hq.jpg" alt="" width="118" height="42" loading="lazy" decoding="async" />
-        <p>iChem Productivity · نظام داخلي لإدارة العمليات الهندسية والإنتاجية.</p>
+        <p>STC Operations · نظام داخلي لإدارة العمليات الهندسية والإنتاجية.</p>
       </footer>
     </main>
   )
