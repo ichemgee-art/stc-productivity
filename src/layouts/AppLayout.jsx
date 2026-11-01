@@ -165,6 +165,17 @@ export default function AppLayout() {
       </nav>
       <div className="sidebar-footer">
         <div className="sidebar-role"><ShieldCheck size={17} /><div><strong>{roleLabels[profile?.app_role] || profile?.app_role}</strong><small>{profile?.app_role === 'admin' ? 'إدارة كاملة' : 'قراءة فقط'}</small><span className="sidebar-creator-credit"><em>Designed & Developed by</em><b>Eng. Girgis Remon</b></span></div></div>
+        <div className="sidebar-utility-actions">
+          <button className="icon-btn" type="button" onClick={toggleTheme} title={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'} aria-label={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}>
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <button className={`icon-btn system-refresh-btn ${refreshing ? 'is-refreshing' : ''}`} type="button" onClick={refreshSystem} disabled={refreshing} title="تحديث بيانات النظام" aria-label="تحديث بيانات النظام">
+            <RefreshCw size={18} />
+          </button>
+          <button className="icon-btn" type="button" onClick={signOut} title="تسجيل الخروج" aria-label="تسجيل الخروج">
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
     </>
   )
@@ -194,25 +205,22 @@ export default function AppLayout() {
             <div className="topbar-utility-actions">
               <GlobalSearch />
               <NotificationCenter />
-              <button className="icon-btn" type="button" onClick={toggleTheme} title={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'} aria-label={isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}>
-                {isDark ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-              <button
-                className={`icon-btn system-refresh-btn ${refreshing ? 'is-refreshing' : ''}`}
-                type="button"
-                onClick={refreshSystem}
-                disabled={refreshing}
-                title={refreshing ? 'جاري تحديث البيانات' : 'تحديث بيانات النظام'}
-                aria-label={refreshing ? 'جاري تحديث البيانات' : 'تحديث بيانات النظام'}
-              >
-                <RefreshCw size={18} />
-              </button>
-              <button className="icon-btn topbar-logout-btn" onClick={signOut} title="تسجيل الخروج"><LogOut size={18} /></button>
             </div>
-            <div className="user-chip">
-              <div className="user-avatar">{(profile?.display_name || user?.email || 'U').slice(0, 1).toUpperCase()}</div>
-              <div><strong>{profile?.display_name || 'مستخدم'}</strong><small>{user?.email}</small></div>
-            </div>
+            <details className="user-menu">
+              <summary className="user-chip" aria-label="قائمة المستخدم">
+                <div className="user-avatar">{(profile?.display_name || user?.email || 'U').slice(0, 1).toUpperCase()}</div>
+                <div><strong>{profile?.display_name || 'مستخدم'}</strong><small>{roleLabels[profile?.app_role] || profile?.app_role}</small></div>
+              </summary>
+              <div className="user-menu__popover">
+                <div className="user-menu__identity">
+                  <strong>{profile?.display_name || 'مستخدم'}</strong>
+                  <span>{user?.email}</span>
+                </div>
+                <button type="button" onClick={toggleTheme}>{isDark ? <Sun size={17} /> : <Moon size={17} />}<span>{isDark ? 'الوضع الفاتح' : 'الوضع الداكن'}</span></button>
+                <button type="button" onClick={refreshSystem} disabled={refreshing}><RefreshCw size={17} /><span>{refreshing ? 'جاري التحديث...' : 'تحديث البيانات'}</span></button>
+                <button className="danger" type="button" onClick={signOut}><LogOut size={17} /><span>تسجيل الخروج</span></button>
+              </div>
+            </details>
           </div>
         </header>
         <main className="page-content">
