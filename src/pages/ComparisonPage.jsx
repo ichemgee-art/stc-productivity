@@ -116,6 +116,7 @@ export default function ComparisonPage() {
   const printRef = useRef(null)
   const [currentKey, setCurrentKey] = useSessionState('page:comparison:current', '')
   const [previousKey, setPreviousKey] = useSessionState('page:comparison:previous', '')
+  const [detailView, setDetailView] = useSessionState('page:comparison:detail-view', 'projects')
 
   useEffect(() => {
     if (!cycles.length || currentKey) return
@@ -291,12 +292,21 @@ export default function ComparisonPage() {
             </section>
           </section>
 
-          <NamedComparisonTable title="مقارنة المشاريع" rows={projectRows} moneyMode />
-          <NamedComparisonTable title="مقارنة القطاعات" rows={sectionRows} moneyMode />
-          <NamedComparisonTable title="مقارنة المهندسين" rows={engineerRows} peopleMode />
-          <NamedComparisonTable title="مقارنة الفنيين" rows={technicianRows} peopleMode />
-          <NamedComparisonTable title="مقارنة المساعدين" rows={assistantRows} peopleMode />
-          <NamedComparisonTable title="مقارنة العمال" rows={workerRows} peopleMode />
+          <section className="comparison-detail-switcher" data-html2canvas-ignore="true" aria-label="اختيار تفاصيل المقارنة">
+            <button type="button" className={detailView === 'projects' ? 'is-active' : ''} onClick={() => setDetailView('projects')}>المشاريع</button>
+            <button type="button" className={detailView === 'sections' ? 'is-active' : ''} onClick={() => setDetailView('sections')}>القطاعات</button>
+            <button type="button" className={detailView === 'engineers' ? 'is-active' : ''} onClick={() => setDetailView('engineers')}>المهندسين</button>
+            <button type="button" className={detailView === 'technicians' ? 'is-active' : ''} onClick={() => setDetailView('technicians')}>الفنيين</button>
+            <button type="button" className={detailView === 'assistants' ? 'is-active' : ''} onClick={() => setDetailView('assistants')}>المساعدين</button>
+            <button type="button" className={detailView === 'workers' ? 'is-active' : ''} onClick={() => setDetailView('workers')}>العمال</button>
+          </section>
+
+          {detailView === 'projects' ? <NamedComparisonTable title="مقارنة المشاريع" rows={projectRows} moneyMode /> : null}
+          {detailView === 'sections' ? <NamedComparisonTable title="مقارنة القطاعات" rows={sectionRows} moneyMode /> : null}
+          {detailView === 'engineers' ? <NamedComparisonTable title="مقارنة المهندسين" rows={engineerRows} peopleMode /> : null}
+          {detailView === 'technicians' ? <NamedComparisonTable title="مقارنة الفنيين" rows={technicianRows} peopleMode /> : null}
+          {detailView === 'assistants' ? <NamedComparisonTable title="مقارنة المساعدين" rows={assistantRows} peopleMode /> : null}
+          {detailView === 'workers' ? <NamedComparisonTable title="مقارنة العمال" rows={workerRows} peopleMode /> : null}
         </>
       )}
     </div>
