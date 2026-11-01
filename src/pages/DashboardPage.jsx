@@ -471,30 +471,38 @@ export default function DashboardPage() {
         />
       </section>
 
-      <section className="executive-kpi-grid">
-        <ExecutiveKpi icon={BriefcaseBusiness} label="العمليات" value={number(view.currentSummary.tasks)} current={view.currentSummary.tasks} previous={view.previousSummary.tasks} helper="مقارنة بنفس عدد الأيام من الدورة السابقة" />
-        <ExecutiveKpi icon={Ruler} label="الأمتار" value={`${number(view.currentSummary.meters)} م`} current={view.currentSummary.meters} previous={view.previousSummary.meters} helper="إجمالي التنفيذ المسجل" />
+      <section className="executive-kpi-grid executive-kpi-grid--primary">
+        <ExecutiveKpi icon={Ruler} label="إجمالي الأمتار" value={`${number(view.currentSummary.meters)} م`} current={view.currentSummary.meters} previous={view.previousSummary.meters} helper="إجمالي التنفيذ المسجل حتى اليوم" />
         <ExecutiveKpi icon={TrendingUp} label="قيمة الإنتاجية" value={money(view.currentSummary.revenue)} current={view.currentSummary.revenue} previous={view.previousSummary.revenue} helper="حسب أسعار القطاعات التاريخية" tone="success" />
-        <ExecutiveKpi icon={BarChart3} label="متوسط سعر المتر" value={money(view.currentSummary.avgPrice)} current={view.currentSummary.avgPrice} previous={view.previousSummary.avgPrice} helper="الإنتاجية ÷ الأمتار" />
-        <ExecutiveKpi icon={CircleDollarSign} label="مستحقات فريق التنفيذ" value={money(view.currentLabor)} current={view.currentLabor} previous={view.previousLabor} helper="فنيين + مساعدين + عمال" tone="amber" />
+        <ExecutiveKpi icon={BriefcaseBusiness} label="عدد العمليات" value={number(view.currentSummary.tasks)} current={view.currentSummary.tasks} previous={view.previousSummary.tasks} helper="مقارنة بنفس عدد الأيام من الدورة السابقة" />
         <ExecutiveKpi icon={CalendarCheck2} label="نسبة الحضور" value={`${number(view.currentAtt.rate, 1)}%`} current={view.currentAtt.rate} previous={view.previousAtt.rate} helper={`${number(view.currentAtt.present)} حضور · ${number(view.currentAtt.absent)} غياب`} />
       </section>
 
-      <section className="management-quick-grid">
+      <section className="management-quick-grid management-quick-grid--secondary">
+        <article className="management-quick-card">
+          <span>متوسط سعر المتر</span>
+          <strong>{money(view.currentSummary.avgPrice)}</strong>
+          <small>قيمة الإنتاجية ÷ إجمالي الأمتار</small>
+        </article>
+        <article className="management-quick-card">
+          <span>مستحقات فريق التنفيذ</span>
+          <strong>{money(view.currentLabor)}</strong>
+          <small>فنيين + مساعدين + عمال</small>
+        </article>
         <article className="management-quick-card">
           <span>أعلى مشروع تنفيذًا</span>
           <strong>{view.topProject?.name || '—'}</strong>
           <small>{view.topProject ? `${number(view.topProject.meters)} م · ${money(view.topProject.revenue)}` : 'لا توجد بيانات'}</small>
         </article>
         <article className="management-quick-card">
-          <span>أقل مشروع تنفيذًا</span>
-          <strong>{view.lowProject?.name || '—'}</strong>
-          <small>{view.lowProject ? `${number(view.lowProject.meters)} م · ${number(view.lowProject.tasks)} عملية` : 'لا توجد بيانات'}</small>
-        </article>
-        <article className="management-quick-card">
           <span>أعلى قطاع</span>
           <strong>{view.topSection?.name || '—'}</strong>
           <small>{view.topSection ? `${number(view.topSection.meters)} م · ${number(view.topSection.tasks)} عملية` : 'لا توجد بيانات'}</small>
+        </article>
+        <article className="management-quick-card">
+          <span>أقل مشروع تنفيذًا</span>
+          <strong>{view.lowProject?.name || '—'}</strong>
+          <small>{view.lowProject ? `${number(view.lowProject.meters)} م · ${number(view.lowProject.tasks)} عملية` : 'لا توجد بيانات'}</small>
         </article>
         <article className="management-quick-card">
           <span>الإنتاجية مقابل المستحقات</span>
