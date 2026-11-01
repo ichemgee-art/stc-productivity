@@ -137,9 +137,16 @@ export default function GlobalSearch() {
       </button>
 
       {open ? (
-        <div className="global-search-overlay" role="dialog" aria-modal="true">
+        <div
+          className="global-search-overlay"
+          role="dialog"
+          aria-modal="true"
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) setOpen(false)
+          }}
+        >
           <button className="floating-backdrop" type="button" aria-label="إغلاق البحث" onClick={() => setOpen(false)} />
-          <section className="global-search-panel">
+          <section className="global-search-panel" onPointerDown={(event) => event.stopPropagation()}>
             <header className="global-search-head">
               <div className="global-search-input">
                 <Search size={19} />
