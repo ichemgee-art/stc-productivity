@@ -100,6 +100,8 @@ export default function ProjectProgressForm({
   const [removeAttachmentIds, setRemoveAttachmentIds] = useState([])
   const [attachmentsLoading, setAttachmentsLoading] = useState(false)
   const [attachmentDragActive, setAttachmentDragActive] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
+  const [detailTab, setDetailTab] = useState('details')
 
   useEffect(() => {
     let active = true
@@ -143,6 +145,11 @@ export default function ProjectProgressForm({
   const visibleExistingAttachments = existingAttachments.filter((row) => !removeAttachmentIds.includes(row.id))
   const attachmentCount = visibleExistingAttachments.length + newFiles.length
 
+  const categoryLabel = PROJECT_PROGRESS_CATEGORIES.find((item) => item.value === form.project_category)?.label || 'غير محددة'
+  const projectDisplayName = projectMode === 'linked'
+    ? (selectedProject?.name || 'لم يتم اختيار مشروع')
+    : (form.project_name.trim() || 'مشروع جديد')
+
   const addAttachmentFiles = (files) => {
     const incoming = Array.from(files || [])
     if (!incoming.length) return
@@ -182,6 +189,32 @@ export default function ProjectProgressForm({
 
   const markAttachmentForRemoval = (id) => {
     setRemoveAttachmentIds((current) => current.includes(id) ? current : [...current, id])
+  }
+
+  const moveToStep = (targetStep) => {
+    setError('')
+
+    if (targetStep > currentStep && currentStep === 1) {
+      if (!form.report_date) return setError('اختار تاريخ المتابعة قبل ما تكمل')
+      if (projectMode === 'linked' && !form.project_id) return setError('اختار المشروع من قائمة المشاريع قبل ما تكمل')
+      if (projectMode === 'manual' && !form.project_name.trim() && !(initial?.source === 'excel_import' && initial?.legacy_excel_row)) {
+        return setError('اكتب اسم المشروع الجديد قبل ما تكمل')
+      }
+      if (!form.project_category) return setError('اختار حالة المشروع قبل ما تكمل')
+    }
+
+    if (targetStep > currentStep && currentStep === 2) {
+      if (form.contract_quantity !== '' && Number(form.contract_quantity) < 0) return setError('كميات التعاقد لا يمكن أن تكون سالبة')
+      if (form.original_contract_quantity !== '' && Number(form.original_contract_quantity) < 0) return setError('كمية التعاقد الأصلية لا يمكن أن تكون سالبة')
+      if (form.contract_value !== '' && Number(form.contract_value) < 0) return setError('قيمة العقد لا يمكن أن تكون سالبة')
+      if (projectMode === 'linked' && Number(form.historical_before_system || 0) < 0) return setError('منفذ قبل السيستم لا يمكن أن يكون سالبًا')
+      if (projectMode === 'manual' && Number(form.manual_executed_quantity || 0) < 0) return setError('الكميات المنفذة لا يمكن أن تكون سالبة')
+    }
+
+    setCurrentStep(Math.max(1, Math.min(3, targetStep)))
+    window.requestAnimationFrame(() => {
+      document.querySelector('.progress-wizard-intro')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
   }
 
   const submit = async (event) => {
@@ -251,10 +284,31 @@ export default function ProjectProgressForm({
 
   return (
     <form className="progress-entry-form" onSubmit={submit} aria-busy={submitting}>
-      <div className="progress-form-guide" aria-label="خطوات تسجيل متابعة المشروع">
-        <div><span>1</span><strong>اختار المشروع</strong><small>حدد التاريخ والمشروع أو أضف مشروع يدوي.</small></div>
-        <div><span>2</span><strong>سجل الكميات</strong><small>أدخل كمية العقد وما قبل النظام عند الحاجة.</small></div>
-        <div><span>3</span><strong>أكمل واحفظ</strong><small>أضف المراجعات والموقف المالي والملاحظات.</small></div>
+      <div className="progress-wizard-intro">
+        <div className="progress-wizard-intro__copy">
+          <span>تسجيل متابعة مشروع</span>
+          <strong>{initial ? 'تعديل بيانات المتابعة' : 'سجل المتابعة خطوة بخطوة'}</strong>
+          <small>3 خطوات قصيرة بدل فورم طويل — وكل الحسابات تفضل زي ما هي.</small>
+        </div>
+        <div className="progress-wizard-steps" aria-label="خطوات تسجيل متابعة المشروع">
+          {[
+            [1, 'المشروع'],
+            [2, 'التنفيذ والعقد'],
+            [3, 'التفاصيل والمرفقات'],
+          ].map(([step, label]) => (
+            <button
+              key={step}
+              type="button"
+              className={currentStep === step ? 'is-active' : currentStep > step ? 'is-done' : ''}
+              onClick={() => step <= currentStep ? moveToStep(step) : null}
+              disabled={step > currentStep}
+              aria-current={currentStep === step ? 'step' : undefined}
+            >
+              <span>{currentStep > step ? <Check size={14} /> : step}</span>
+              <strong>{label}</strong>
+            </button>
+          ))}
+        </div>
       </div>
 
       {error ? <div className="inline-error progress-form-error" role="alert">{error}</div> : null}
@@ -265,13 +319,16 @@ export default function ProjectProgressForm({
         </div>
       ) : null}
 
-      <section className="progress-form-card">
+            <div className="progress-wizard-workspace">
+        <main className="progress-wizard-main">
+          {currentStep === 1 ? (
+<section className="progress-form-card">
         <div className="progress-form-heading">
           <div>
             <span>01</span>
             <h3>بيانات المتابعة</h3>
           </div>
-          <p>اختار التاريخ والمشروع، أو سجل مشروع جديد يدويًا لو مش موجود في النظام.</p>
+          <p>حدد المشروع والتاريخ والحالة الأساسية.</p>
         </div>
 
         <div className="progress-form-grid">
@@ -283,7 +340,6 @@ export default function ProjectProgressForm({
           <div className="progress-mode-field progress-field-wide">
             <div className="progress-field-label">
               <span>مصدر المشروع</span>
-              <small>اختار الطريقة اللي هتسجل بيها المشروع. الاختيار ده بيحدد طريقة حساب الكميات المنفذة.</small>
             </div>
             <div className="progress-mode-selector" role="group" aria-label="مصدر المشروع">
               <button
@@ -293,7 +349,7 @@ export default function ProjectProgressForm({
                 onClick={() => setProjectMode('linked')}
               >
                 <span className="progress-mode-icon"><Database size={19} /></span>
-                <span><strong>مشروع موجود في السيستم</strong><small>الأفضل للمشاريع الحالية — التنفيذ يتحدث تلقائيًا من الإنتاجية.</small></span>
+                <span><strong>مشروع موجود</strong><small>مرتبط بالإنتاجية تلقائيًا</small></span>
               </button>
               <button
                 className={projectMode === 'manual' ? 'is-active' : ''}
@@ -305,7 +361,7 @@ export default function ProjectProgressForm({
                 }}
               >
                 <span className="progress-mode-icon"><PenLine size={19} /></span>
-                <span><strong>مشروع جديد / إدخال يدوي</strong><small>استخدمه لو المشروع مش موجود في قائمة المشاريع الحالية.</small></span>
+                <span><strong>مشروع جديد</strong><small>إدخال يدوي</small></span>
               </button>
             </div>
           </div>
@@ -367,7 +423,7 @@ export default function ProjectProgressForm({
                     onClick={() => setField('project_category', active ? '' : item.value)}
                   >
                     <span className="progress-category-selector__icon"><Icon size={19} /></span>
-                    <span><strong>{item.label}</strong><small>{item.description}</small></span>
+                    <span><strong>{item.label}</strong></span>
                     {active ? <span className="progress-category-selector__selected" aria-hidden="true"><Check size={14} /></span> : null}
                   </button>
                 )
@@ -377,14 +433,16 @@ export default function ProjectProgressForm({
           </div>
         </div>
       </section>
+          ) : null}
 
-      <section className="progress-form-card">
+          {currentStep === 2 ? (
+<section className="progress-form-card">
         <div className="progress-form-heading">
           <div>
             <span>02</span>
             <h3>الموقف التنفيذي</h3>
           </div>
-          <p>سجل كميات التعاقد والبيانات المرجعية، والسيستم هيحسب المنفذ ونسبة التنفيذ من كميات التعاقد المحملة على القطاعات.</p>
+          <p>أدخل أرقام العقد فقط — التنفيذ والنسبة بيتحسبوا تلقائيًا.</p>
         </div>
 
         <div className="progress-execution-grid">
@@ -440,139 +498,154 @@ export default function ProjectProgressForm({
           </div>
         </div>
       </section>
+          ) : null}
 
-      {executionPercent > 100 ? <div role="status" className="progress-import-note">التنفيذ تجاوز كميات التعاقد + البنود المحملة على القطاعات بـ {(executionPercent - 100).toFixed(2)}%</div> : null}
-
-      <section className="progress-form-card">
+          {currentStep === 3 ? (
+<section className="progress-form-card progress-form-card--details">
         <div className="progress-form-heading">
           <div>
             <span>03</span>
-            <h3>المراجعات والبيانات الإضافية</h3>
+            <h3>التفاصيل والمرفقات</h3>
           </div>
-          <p>سجل تواريخ المراجعة والموقف المالي والتعاقد والطاقم والملاحظات، وأرفق مستندات المشروع عند الحاجة.</p>
+          <p>كمّل فقط البيانات اللي محتاجها قبل الحفظ.</p>
         </div>
 
-        <div className="progress-subsection-title">
-          <strong>تواريخ آخر مراجعة</strong>
-          <span>سيب أي تاريخ فاضي لو الشخص لسه ما راجعش المشروع.</span>
+        <div className="progress-detail-tabs" role="tablist" aria-label="تفاصيل متابعة المشروع">
+          <button type="button" className={detailTab === 'details' ? 'is-active' : ''} onClick={() => setDetailTab('details')} role="tab" aria-selected={detailTab === 'details'}>بيانات المتابعة</button>
+          <button type="button" className={detailTab === 'reviews' ? 'is-active' : ''} onClick={() => setDetailTab('reviews')} role="tab" aria-selected={detailTab === 'reviews'}>المراجعات</button>
+          <button type="button" className={detailTab === 'attachments' ? 'is-active' : ''} onClick={() => setDetailTab('attachments')} role="tab" aria-selected={detailTab === 'attachments'}>المرفقات <span>{attachmentCount}/{MAX_ATTACHMENTS}</span></button>
         </div>
 
-        <div className="progress-review-dates">
-          <label className="field"><span>آخر مراجعة — م. يحيي حسين</span><input type="date" value={form.review_yahya_date} onChange={(e) => setField('review_yahya_date', e.target.value)} /></label>
-          <label className="field"><span>آخر مراجعة — م. مارينا سامي</span><input type="date" value={form.review_marina_date} onChange={(e) => setField('review_marina_date', e.target.value)} /></label>
-          <label className="field"><span>آخر مراجعة — م. عبدالرحمن حسين</span><input type="date" value={form.review_abdelrahman_date} onChange={(e) => setField('review_abdelrahman_date', e.target.value)} /></label>
-        </div>
-
-        <div className="progress-subsection-title progress-subsection-title--spaced">
-          <strong>بيانات التعاقد والمتابعة</strong>
-          <span>الحقول دي نصية ومرنة، وتقدر تجمع فيها عربي وEnglish وأرقام.</span>
-        </div>
-
-        <div className="progress-form-grid">
-          <label className="field progress-field-wide">
-            <span>الموقف المالي</span>
-            <textarea rows={3} value={form.financial_status} onChange={(e) => setField('financial_status', e.target.value)} placeholder="مثال: مستخلص 3 — 125,000 EGP — Approved بنسبة 70%" />
-            <small className="progress-field-hint">يقبل عربي + English + أرقام + نسب ومبالغ. مثال: تم صرف 85,000 جنيه والمتبقي 40,000 EGP.</small>
-          </label>
-          <label className="field">
-            <span>نوع التعاقد</span>
-            <input value={form.contract_type} onChange={(e) => setField('contract_type', e.target.value)} placeholder="مثال: توريد وتركيب / مقاولة / مطالبة" />
-            <small className="progress-field-hint">اكتب وصف مختصر لطبيعة التعاقد.</small>
-          </label>
-          <label className="field">
-            <span>الطاقم المسئول عن استكمال الأعمال</span>
-            <input value={form.responsible_team} onChange={(e) => setField('responsible_team', e.target.value)} placeholder="مثال: م. أحمد + فريق التركيب" />
-            <small className="progress-field-hint">اسم المهندس أو الفريق المسئول حاليًا عن استكمال المشروع.</small>
-          </label>
-          <label className="field progress-field-wide">
-            <span>ملاحظات</span>
-            <textarea rows={4} value={form.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="مثال: انتظار اعتماد الرسومات — مطلوب زيارة موقع — توريد الخامة خلال الأسبوع..." />
-            <small className="progress-field-hint">اكتب أي نقطة محتاج الفريق يفتكرها في المتابعة الجاية.</small>
-          </label>
-        </div>
-
-        <div className="progress-subsection-title progress-subsection-title--spaced">
-          <strong>مرفقات المشروع</strong>
-          <span>بحد أقصى 5 ملفات — PDF أو صور أو Word أو Excel — والـPDF بيتجهز له Preview للصفحة الأولى تلقائيًا.</span>
-        </div>
-
-        <div className="progress-attachments-box">
-          <div className="progress-attachment-slots" aria-label="أماكن المرفقات الخمسة">
-            {Array.from({ length: MAX_ATTACHMENTS }).map((_, index) => {
-              const filled = index < attachmentCount
-              return (
-                <div className={filled ? 'progress-attachment-slot is-filled' : 'progress-attachment-slot'} key={index}>
-                  {filled ? <CheckCircle2 size={17} /> : <UploadCloud size={17} />}
-                  <strong>{filled ? `مرفق ${index + 1}` : `مكان ${index + 1} متاح`}</strong>
-                  <small>{filled ? 'مستخدم' : 'يمكن إضافة ملف هنا'}</small>
-                </div>
-              )
-            })}
+        {detailTab === 'details' ? (
+          <div className="progress-form-grid progress-detail-panel">
+            <label className="field progress-field-wide">
+              <span>الموقف المالي</span>
+              <textarea rows={3} value={form.financial_status} onChange={(e) => setField('financial_status', e.target.value)} placeholder="مثال: مستخلص 3 — 125,000 EGP — Approved بنسبة 70%" />
+            </label>
+            <label className="field">
+              <span>نوع التعاقد</span>
+              <input value={form.contract_type} onChange={(e) => setField('contract_type', e.target.value)} placeholder="توريد وتركيب / مقاولة / مطالبة" />
+            </label>
+            <label className="field">
+              <span>الطاقم المسؤول</span>
+              <input value={form.responsible_team} onChange={(e) => setField('responsible_team', e.target.value)} placeholder="م. أحمد + فريق التركيب" />
+            </label>
+            <label className="field progress-field-wide">
+              <span>ملاحظات</span>
+              <textarea rows={4} value={form.notes} onChange={(e) => setField('notes', e.target.value)} placeholder="أي نقطة مهمة للمتابعة القادمة..." />
+            </label>
           </div>
+        ) : null}
 
-          <label
-            className={[
-              'progress-upload-zone',
-              attachmentCount >= MAX_ATTACHMENTS ? 'is-disabled' : '',
-              attachmentDragActive ? 'is-dragging' : '',
-            ].filter(Boolean).join(' ')}
-            onDragOver={onAttachmentDragOver}
-            onDragEnter={onAttachmentDragOver}
-            onDragLeave={onAttachmentDragLeave}
-            onDrop={onAttachmentDrop}
-          >
-            <UploadCloud size={22} />
-            <strong>{attachmentCount >= MAX_ATTACHMENTS ? 'وصلت للحد الأقصى 5 مرفقات' : attachmentDragActive ? 'سيب الملفات هنا' : 'إضافة مرفقات أو اسحبها هنا'}</strong>
-            <small>{attachmentCount} / {MAX_ATTACHMENTS} · المتاح {Math.max(0, MAX_ATTACHMENTS - attachmentCount)} · أي نوع ملف · بحد أقصى 15MB</small>
-            <input
-              type="file"
-              multiple
-              disabled={attachmentCount >= MAX_ATTACHMENTS}
-              onChange={onFilesSelected}
-            />
-          </label>
+        {detailTab === 'reviews' ? (
+          <div className="progress-review-list-form progress-detail-panel">
+            <label><span><strong>م. يحيي حسين</strong><small>آخر مراجعة</small></span><input type="date" value={form.review_yahya_date} onChange={(e) => setField('review_yahya_date', e.target.value)} /></label>
+            <label><span><strong>م. مارينا سامي</strong><small>آخر مراجعة</small></span><input type="date" value={form.review_marina_date} onChange={(e) => setField('review_marina_date', e.target.value)} /></label>
+            <label><span><strong>م. عبدالرحمن حسين</strong><small>آخر مراجعة</small></span><input type="date" value={form.review_abdelrahman_date} onChange={(e) => setField('review_abdelrahman_date', e.target.value)} /></label>
+          </div>
+        ) : null}
 
-          {attachmentsLoading ? <div className="progress-attachments-loading">جاري تحميل المرفقات...</div> : null}
-
-          {(visibleExistingAttachments.length || newFiles.length) ? (
-            <div className="progress-attachment-list">
-              {visibleExistingAttachments.map((item) => (
-                <div className="progress-attachment-item" key={item.id}>
-                  <span className="progress-attachment-item__icon">
-                    {item.mime_type === 'application/pdf' ? <FileText size={18} /> : item.mime_type?.startsWith('image/') ? <FileImage size={18} /> : item.mime_type === 'application/vnd.ms-excel' || item.mime_type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ? <FileSpreadsheet size={18} /> : <Paperclip size={18} />}
-                  </span>
-                  <div>
-                    <strong>{item.file_name}</strong>
-                    <small>{attachmentKind(item.mime_type, item.file_name)} · {fileSize(item.file_size)} · محفوظ</small>
-                  </div>
-                  {item.url ? <a href={item.url} target="_blank" rel="noreferrer">فتح</a> : null}
-                  <button type="button" onClick={() => markAttachmentForRemoval(item.id)} aria-label={`حذف ${item.file_name}`}><Trash2 size={15} /></button>
-                </div>
-              ))}
-
-              {newFiles.map((file, index) => (
-                <div className="progress-attachment-item is-new" key={`${file.name}-${file.size}-${index}`}>
-                  <span className="progress-attachment-item__icon">
-                    {file.type === 'application/pdf' ? <FileText size={18} /> : file.type?.startsWith('image/') ? <FileImage size={18} /> : file.type === 'application/vnd.ms-excel' || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ? <FileSpreadsheet size={18} /> : <Paperclip size={18} />}
-                  </span>
-                  <div>
-                    <strong>{file.name}</strong>
-                    <small>{attachmentKind(file.type, file.name)} · {fileSize(file.size)} · جاهز للرفع</small>
-                  </div>
-                  <button type="button" onClick={() => setNewFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`إزالة ${file.name}`}><Trash2 size={15} /></button>
-                </div>
-              ))}
+        {detailTab === 'attachments' ? (
+          <div className="progress-attachments-box progress-detail-panel">
+            <div className="progress-attachments-counter">
+              <div><Paperclip size={17} /><span><strong>{attachmentCount}</strong> من {MAX_ATTACHMENTS} مرفقات</span></div>
+              <small>PDF · Excel · Word · صور · أي ملف حتى 15MB</small>
             </div>
-          ) : (
-            <div className="progress-attachments-empty"><Paperclip size={17} /> لا توجد مرفقات مضافة.</div>
-          )}
-        </div>
+
+            <label
+              className={[
+                'progress-upload-zone',
+                attachmentCount >= MAX_ATTACHMENTS ? 'is-disabled' : '',
+                attachmentDragActive ? 'is-dragging' : '',
+              ].filter(Boolean).join(' ')}
+              onDragOver={onAttachmentDragOver}
+              onDragEnter={onAttachmentDragOver}
+              onDragLeave={onAttachmentDragLeave}
+              onDrop={onAttachmentDrop}
+            >
+              <UploadCloud size={24} />
+              <strong>{attachmentCount >= MAX_ATTACHMENTS ? 'وصلت للحد الأقصى' : attachmentDragActive ? 'سيب الملفات هنا' : 'اسحب الملفات هنا أو اضغط للاختيار'}</strong>
+              <small>{attachmentCount < MAX_ATTACHMENTS ? `متاح ${MAX_ATTACHMENTS - attachmentCount} مرفق` : '5 / 5'}</small>
+              <input type="file" multiple disabled={attachmentCount >= MAX_ATTACHMENTS} onChange={onFilesSelected} />
+            </label>
+
+            {attachmentsLoading ? <div className="progress-attachments-loading">جاري تحميل المرفقات...</div> : null}
+
+            {(visibleExistingAttachments.length || newFiles.length) ? (
+              <div className="progress-attachment-list">
+                {visibleExistingAttachments.map((item) => (
+                  <div className="progress-attachment-item" key={item.id}>
+                    <span className="progress-attachment-item__icon">
+                      {item.mime_type === 'application/pdf' ? <FileText size={18} /> : item.mime_type?.startsWith('image/') ? <FileImage size={18} /> : item.mime_type === 'application/vnd.ms-excel' || item.mime_type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ? <FileSpreadsheet size={18} /> : <Paperclip size={18} />}
+                    </span>
+                    <div><strong>{item.file_name}</strong><small>{attachmentKind(item.mime_type, item.file_name)} · {fileSize(item.file_size)} · محفوظ</small></div>
+                    {item.url ? <a href={item.url} target="_blank" rel="noreferrer">فتح</a> : null}
+                    <button type="button" onClick={() => markAttachmentForRemoval(item.id)} aria-label={`حذف ${item.file_name}`}><Trash2 size={15} /></button>
+                  </div>
+                ))}
+                {newFiles.map((file, index) => (
+                  <div className="progress-attachment-item is-new" key={`${file.name}-${file.size}-${index}`}>
+                    <span className="progress-attachment-item__icon">
+                      {file.type === 'application/pdf' ? <FileText size={18} /> : file.type?.startsWith('image/') ? <FileImage size={18} /> : file.type === 'application/vnd.ms-excel' || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ? <FileSpreadsheet size={18} /> : <Paperclip size={18} />}
+                    </span>
+                    <div><strong>{file.name}</strong><small>{attachmentKind(file.type, file.name)} · {fileSize(file.size)} · جاهز للرفع</small></div>
+                    <button type="button" onClick={() => setNewFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={`إزالة ${file.name}`}><Trash2 size={15} /></button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="progress-attachments-empty"><Paperclip size={17} /> لا توجد مرفقات مضافة.</div>
+            )}
+          </div>
+        ) : null}
       </section>
+          ) : null}
+
+          <div className="progress-wizard-nav">
+            <span>الخطوة {currentStep} من 3</span>
+            <div>
+              {onCancel ? <button className="btn btn-ghost" type="button" onClick={onCancel}>إلغاء</button> : null}
+              {currentStep > 1 ? <button className="btn btn-secondary" type="button" onClick={() => moveToStep(currentStep - 1)}>السابق</button> : null}
+              {currentStep < 3 ? <button className="btn btn-primary" type="button" onClick={() => moveToStep(currentStep + 1)}>التالي</button> : null}
+            </div>
+          </div>
+        </main>
+
+        <aside className="progress-wizard-summary" aria-label="ملخص متابعة المشروع">
+          <div className="progress-wizard-summary__head">
+            <span>ملخص المتابعة</span>
+            <strong>{projectDisplayName}</strong>
+            <small>{form.report_date || 'بدون تاريخ'}</small>
+          </div>
+
+          <div className="progress-wizard-summary__status">
+            <span>حالة المشروع</span>
+            <strong>{categoryLabel}</strong>
+          </div>
+
+          <div className="progress-wizard-summary__metrics">
+            <div><span>المنفذ</span><strong>{executedQuantity.toLocaleString('en-US', { maximumFractionDigits: 2 })} م</strong></div>
+            <div><span>نسبة التنفيذ</span><strong>{executionPercent == null ? '—' : `${executionPercent.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`}</strong></div>
+            <div><span>قيمة العقد</span><strong>{form.contract_value ? `${Number(form.contract_value).toLocaleString('en-US')} ج.م` : '—'}</strong></div>
+            <div><span>المرفقات</span><strong>{attachmentCount} / {MAX_ATTACHMENTS}</strong></div>
+          </div>
+
+          <div className="progress-wizard-summary__progress">
+            <span style={{ width: `${Math.max(0, Math.min(100, Number(executionPercent || 0)))}%` }} />
+          </div>
+
+          <div className="progress-wizard-summary__mode">
+            {projectMode === 'linked' ? <><Database size={15} /><span>التنفيذ مرتبط بالإنتاجية تلقائيًا</span></> : <><PenLine size={15} /><span>التنفيذ إدخال يدوي</span></>}
+          </div>
+        </aside>
+      </div>
+
 
       {initial?.source === 'excel_import' ? (
         <div className="progress-import-note"><FileSpreadsheet size={16} /> السجل ده مستورد من Excel، والنسخة الأصلية من أرقامه محفوظة للمراجعة.</div>
       ) : null}
 
+      {currentStep === 3 ? (
       <div className="progress-form-actions">
         {!initial && saved ? <button className="btn btn-ghost" type="button" disabled={submitting} onClick={() => {
           requestRef.current = null
@@ -583,13 +656,15 @@ export default function ProjectProgressForm({
           setExistingAttachments([])
           setRemoveAttachmentIds([])
           setProjectMode('linked')
+          setCurrentStep(1)
+          setDetailTab('details')
         }}>تسجيل متابعة جديدة</button> : null}
-        {onCancel ? <button className="btn btn-ghost" type="button" onClick={onCancel}><X size={16} /> إلغاء</button> : null}
         <button className="btn btn-primary" type="submit" disabled={submitting}>
           {projectMode === 'linked' ? <Link2 size={16} /> : <Save size={16} />}
           {submitting ? 'جاري الحفظ...' : initial ? 'حفظ التعديلات' : 'حفظ المتابعة'}
         </button>
       </div>
+      ) : null}
     </form>
   )
 }
