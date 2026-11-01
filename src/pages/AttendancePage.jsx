@@ -88,6 +88,13 @@ export default function AttendancePage() {
 
   return (
     <div className="page-stack">
+      <section className="attendance-summary-grid" aria-label="ملخص الحضور المعروض">
+        <article><span>الحضور</span><strong>{number(filtered.filter((row) => row.status === 'present').length)}</strong><small>سجل ظاهر</small></article>
+        <article><span>الغياب</span><strong>{number(filtered.filter((row) => row.status === 'absent').length)}</strong><small>سجل ظاهر</small></article>
+        <article><span>غياب بإذن</span><strong>{number(filtered.filter((row) => row.status === 'absent' && row.absence_type === 'excused').length)}</strong><small>من النتائج الحالية</small></article>
+        <article><span>بدون إذن</span><strong>{number(filtered.filter((row) => row.status === 'absent' && row.absence_type === 'unexcused').length)}</strong><small>من النتائج الحالية</small></article>
+      </section>
+
       <section className="panel" ref={exportRef}>
         <div className="filters-bar attendance-filters">
           <div className="input-with-icon grow"><Search size={16} /><input value={queryText} onChange={(e) => setQueryText(e.target.value)} placeholder="بحث بالاسم أو التاريخ..." /></div>
