@@ -59,6 +59,7 @@ export default function ProductivityPage() {
   const [section, setSection] = useSessionState('page:productivity:section', '')
   const [review, setReview] = useSessionState('page:productivity:review', routeReview)
   const [pinnedColumn, setPinnedColumn] = useState(getInitialPinnedColumn)
+  const [tableDensity, setTableDensity] = useSessionState('page:productivity:density', 'comfortable')
   const [editing, setEditing] = useState(null)
   const [editInitial, setEditInitial] = useState(null)
   const [error, setError] = useState('')
@@ -327,6 +328,10 @@ export default function ProductivityPage() {
           <span>تصدير البيانات المعروضة حاليًا بنفس الفلاتر المطبقة</span>
         </div>
         <div className="productivity-toolbar-actions">
+          <div className="table-density-control" role="group" aria-label="كثافة جدول الإنتاجية">
+            <button type="button" className={tableDensity === 'comfortable' ? 'is-active' : ''} onClick={() => setTableDensity('comfortable')}>مريح</button>
+            <button type="button" className={tableDensity === 'compact' ? 'is-active' : ''} onClick={() => setTableDensity('compact')}>مضغوط</button>
+          </div>
           <button
             className="btn btn-secondary productivity-expand-btn"
             type="button"
@@ -383,7 +388,7 @@ export default function ProductivityPage() {
           <button className="table-side-scroll-btn is-left" type="button" data-html2canvas-ignore="true" onClick={() => scrollTableHorizontally(-1)} title="تحريك الجدول لليسار" aria-label="تحريك الجدول لليسار"><ChevronLeft size={22} /></button>
           <button className="table-side-scroll-btn is-right" type="button" data-html2canvas-ignore="true" onClick={() => scrollTableHorizontally(1)} title="تحريك الجدول لليمين" aria-label="تحريك الجدول لليمين"><ChevronRight size={22} /></button>
           <div className="data-table-wrap productivity-scroll" ref={tableScrollRef}>
-          <table className="data-table">
+          <table className={`data-table table-density-${tableDensity}`}>
             <thead><tr>
               <th className={pinClass('date')}>التاريخ</th>
               <th className={pinClass('project')}>المشروع</th>
