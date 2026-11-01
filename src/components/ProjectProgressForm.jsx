@@ -126,6 +126,12 @@ export default function ProjectProgressForm({
     return () => { active = false }
   }, [initial?.id])
 
+  useEffect(() => {
+    if (!saved) return undefined
+    const timer = window.setTimeout(() => setSaved(false), 3200)
+    return () => window.clearTimeout(timer)
+  }, [saved])
+
   const projects = useMemo(
     () => (references?.projects || []).slice().sort((a, b) => a.name.localeCompare(b.name, 'ar')),
     [references?.projects],
@@ -313,9 +319,12 @@ export default function ProjectProgressForm({
 
       {error ? <div className="inline-error progress-form-error" role="alert">{error}</div> : null}
       {!initial && saved ? (
-        <div className="progress-save-success" role="status">
-          <CheckCircle2 size={18} />
-          <div><strong>تم حفظ المتابعة بنجاح</strong><span>المشروع اتسجل وبياناته جاهزة في متابعة المشاريع.</span></div>
+        <div className="progress-save-success progress-save-success--toast" role="status" aria-live="polite">
+          <span className="progress-save-success__icon"><CheckCircle2 size={23} /></span>
+          <div>
+            <strong>تم تسجيل المتابعة بنجاح</strong>
+            <span>{projectDisplayName} · البيانات اتحفظت وظهرت في متابعة المشاريع.</span>
+          </div>
         </div>
       ) : null}
 
