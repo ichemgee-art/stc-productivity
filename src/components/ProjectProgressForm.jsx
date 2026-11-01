@@ -146,6 +146,19 @@ export default function ProjectProgressForm({
   const contractQuantity = Number(form.contract_quantity || 0)
   const executedQuantity = projectMode === 'linked' ? beforeSystem + productivityMeters : manualExecuted
   const executionPercent = contractQuantity > 0 ? (executedQuantity / contractQuantity) * 100 : null
+  const progressToneClass = executionPercent == null || executionPercent <= 0
+    ? 'progress-tone-empty'
+    : executionPercent > 100
+      ? 'progress-tone-over'
+      : executionPercent >= 100
+        ? 'progress-tone-complete'
+        : executionPercent >= 75
+          ? 'progress-tone-near'
+          : executionPercent >= 50
+            ? 'progress-tone-mid'
+            : executionPercent >= 25
+              ? 'progress-tone-early'
+              : 'progress-tone-start'
   const setField = (key, value) => setForm((current) => ({ ...current, [key]: value }))
 
   const visibleExistingAttachments = existingAttachments.filter((row) => !removeAttachmentIds.includes(row.id))
@@ -633,13 +646,13 @@ export default function ProjectProgressForm({
           </div>
 
           <div className="progress-wizard-summary__metrics">
-            <div><span>المنفذ</span><strong>{executedQuantity.toLocaleString('en-US', { maximumFractionDigits: 2 })} م</strong></div>
+            <div className="progress-wizard-summary__executed"><span>المنفذ من التعاقد</span><strong>{executedQuantity.toLocaleString('en-US', { maximumFractionDigits: 2 })} م <em>من</em> {contractQuantity ? contractQuantity.toLocaleString('en-US', { maximumFractionDigits: 2 }) : '—'} م</strong></div>
             <div><span>نسبة التنفيذ</span><strong>{executionPercent == null ? '—' : `${executionPercent.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`}</strong></div>
             <div><span>قيمة العقد</span><strong>{form.contract_value ? `${Number(form.contract_value).toLocaleString('en-US')} ج.م` : '—'}</strong></div>
             <div><span>المرفقات</span><strong>{attachmentCount} / {MAX_ATTACHMENTS}</strong></div>
           </div>
 
-          <div className="progress-wizard-summary__progress">
+          <div className={`progress-wizard-summary__progress ${progressToneClass}`}>
             <span style={{ width: `${Math.max(0, Math.min(100, Number(executionPercent || 0)))}%` }} />
           </div>
 
