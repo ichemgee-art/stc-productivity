@@ -188,6 +188,8 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
         <span className={steps.review ? 'completed' : ''}><b>{steps.review ? <Check size={13} /> : '6'}</b> مراجعة وحفظ</span>
       </div>
 
+      <div className="submission-form-workspace">
+        <div className="submission-form-main">
       <section className="form-section">
         <div className="section-heading">
           <div><span className="section-kicker">01</span><h3>بيانات العملية</h3></div>
@@ -263,6 +265,9 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
         </section>
       ) : null}
 
+
+        </div>
+        <aside className="submission-form-sidebar" aria-label="ملخص العملية والحسابات">
       <section className="calc-preview">
         <div><span>سعر المتر</span><strong>{number(preview.price)}</strong></div>
         <div><span>إجمالي العملية</span><strong>{number(preview.total)}</strong></div>
@@ -298,6 +303,10 @@ export default function SubmissionForm({ references, initial, onSubmit, submitti
           </div>
         ) : null}
       </section>
+
+
+        </aside>
+      </div>
 
       {formError ? <div className="form-error">{formError}</div> : null}
       <footer className="form-actions">
