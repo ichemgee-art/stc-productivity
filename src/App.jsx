@@ -1,24 +1,25 @@
 // STC Operations application routes
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import LoadingScreen from './components/LoadingScreen'
-import LoginPage from './pages/LoginPage'
-import AppLayout from './layouts/AppLayout'
-import DashboardPage from './pages/DashboardPage'
-import ProductivityPage from './pages/ProductivityPage'
-import NewSubmissionPage from './pages/NewSubmissionPage'
-import PeoplePage from './pages/PeoplePage'
-import AttendancePage from './pages/AttendancePage'
-import ProjectsPage from './pages/ProjectsPage'
-import SectionsPage from './pages/SectionsPage'
-import ComparisonPage from './pages/ComparisonPage'
-import AuditPage from './pages/AuditPage'
-import ExecutiveReportPage from './pages/ExecutiveReportPage'
-import QuarterReportPage from './pages/QuarterReportPage'
-import ProjectProgressPage from './pages/ProjectProgressPage'
-import NewProjectProgressPage from './pages/NewProjectProgressPage'
-import UsersAdminPage from './pages/UsersAdminPage'
-import ProjectProgressDetailsPage from './pages/ProjectProgressDetailsPage'
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const AppLayout = lazy(() => import('./layouts/AppLayout'))
+const DashboardPage = lazy(() => import('./pages/DashboardPage'))
+const ProductivityPage = lazy(() => import('./pages/ProductivityPage'))
+const NewSubmissionPage = lazy(() => import('./pages/NewSubmissionPage'))
+const PeoplePage = lazy(() => import('./pages/PeoplePage'))
+const AttendancePage = lazy(() => import('./pages/AttendancePage'))
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'))
+const SectionsPage = lazy(() => import('./pages/SectionsPage'))
+const ComparisonPage = lazy(() => import('./pages/ComparisonPage'))
+const AuditPage = lazy(() => import('./pages/AuditPage'))
+const ExecutiveReportPage = lazy(() => import('./pages/ExecutiveReportPage'))
+const QuarterReportPage = lazy(() => import('./pages/QuarterReportPage'))
+const ProjectProgressPage = lazy(() => import('./pages/ProjectProgressPage'))
+const NewProjectProgressPage = lazy(() => import('./pages/NewProjectProgressPage'))
+const UsersAdminPage = lazy(() => import('./pages/UsersAdminPage'))
+const ProjectProgressDetailsPage = lazy(() => import('./pages/ProjectProgressDetailsPage'))
 
 function RequireAuth({ children }) {
   const { session, profile, loading, error, signOut } = useAuth()
@@ -54,6 +55,7 @@ export default function App() {
   if (loading) return <LoadingScreen />
 
   return (
+    <Suspense fallback={<LoadingScreen />}>
     <Routes>
       <Route path="/login" element={session ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/" element={<RequireAuth><AppLayout /></RequireAuth>}>
@@ -78,5 +80,6 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />
     </Routes>
+    </Suspense>
   )
 }
