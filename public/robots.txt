@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /productivity
+Disallow: /attendance
+Disallow: /project-progress
+Disallow: /people/
+Disallow: /projects
+Disallow: /sections
+Disallow: /comparison
+Disallow: /report
+Disallow: /quarter
+Disallow: /audit
+Disallow: /admin/
