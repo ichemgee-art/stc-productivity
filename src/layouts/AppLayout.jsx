@@ -167,7 +167,7 @@ export default function AppLayout() {
   const sidebar = (
     <>
       <div className="sidebar-brand">
-        <img className="sidebar-brand-logo" src="/stc-logo-hq.jpg" alt="STC Specialized Trading & Construction" />
+        <img className="sidebar-brand-logo" src="/stc-logo.jpg" width="140" height="53" decoding="async" fetchPriority="high" alt="STC Specialized Trading & Construction" />
         <div className="sidebar-brand-copy">
           <strong>STC Operations</strong>
           <small>Company Management Platform</small>
