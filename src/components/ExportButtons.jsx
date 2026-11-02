@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { BarChart3, Download, FileSpreadsheet, FileText } from 'lucide-react'
-import { exportElementPdf, exportExcel, exportExecutiveExcel, exportTablePdf } from '../lib/exporters'
 import { useFeedback } from '../context/FeedbackContext'
+
+let exportersPromise
+const loadExporters = () => {
+  exportersPromise ||= import('../lib/exporters')
+  return exportersPromise
+}
 
 export default function ExportButtons({ filename, excelSheets, executiveExcel, pdfTarget, pdfAttachments = [], compact = false, hideQuickExcel = false, showSuccess = false, preferElementPdf = false }) {
   const [busy, setBusy] = useState('')
@@ -10,6 +15,7 @@ export default function ExportButtons({ filename, excelSheets, executiveExcel, p
   const excel = async () => {
     setBusy('excel')
     try {
+      const { exportExcel } = await loadExporters()
       await exportExcel({ filename, sheets: excelSheets })
       if (showSuccess) feedback.success('تم تصدير Excel', 'تم تجهيز ملف Excel المنسق بنجاح.', 2800)
     } catch (error) {
@@ -23,6 +29,7 @@ export default function ExportButtons({ filename, excelSheets, executiveExcel, p
     if (!executiveExcel) return
     setBusy('executive')
     try {
+      const { exportExecutiveExcel } = await loadExporters()
       await exportExecutiveExcel({
         filename: executiveExcel.filename || `${filename}-executive`,
         title: executiveExcel.title,
@@ -41,6 +48,7 @@ export default function ExportButtons({ filename, excelSheets, executiveExcel, p
   const pdf = async () => {
     setBusy('pdf')
     try {
+      const { exportElementPdf, exportTablePdf } = await loadExporters()
       const element = typeof pdfTarget === 'function' ? pdfTarget() : pdfTarget?.current || pdfTarget
       const hasTabularData = Array.isArray(excelSheets) && excelSheets.some((sheet) => Array.isArray(sheet?.rows))
       if (preferElementPdf && element) {
