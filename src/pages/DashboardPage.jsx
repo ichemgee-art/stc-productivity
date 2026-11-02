@@ -5,10 +5,6 @@ import {
   AlertTriangle, ArrowDownLeft, ArrowUpRight, BarChart3, BriefcaseBusiness,
   CalendarCheck2, CircleDollarSign, Gauge, Ruler, TrendingUp, Users, ClipboardPlus, FileText, ClipboardList, ArrowLeft,
 } from 'lucide-react'
-import {
-  Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
-  ResponsiveContainer, Tooltip, XAxis, YAxis,
-} from 'recharts'
 import { useCycle } from '../context/CycleContext'
 import { useAuth } from '../context/AuthContext'
 import { appService } from '../services/appService'
@@ -16,15 +12,6 @@ import EmptyState from '../components/EmptyState'
 import { date, money, monthName, number, roleLabels } from '../lib/format'
 import ExportButtons from '../components/ExportButtons'
 
-const chartTooltipStyle = {
-  borderRadius: 12,
-  border: '1px solid var(--border)',
-  boxShadow: 'var(--shadow-soft)',
-  background: 'var(--surface-raised)',
-  color: 'var(--text)',
-  fontFamily: 'Cairo',
-  fontSize: 12,
-}
 
 const parseDay = (iso) => new Date(`${String(iso).slice(0, 10)}T12:00:00`)
 const isoDay = (d) => {
@@ -126,6 +113,86 @@ function median(values) {
   const sorted = [...values].sort((a, b) => a - b)
   const mid = Math.floor(sorted.length / 2)
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+}
+
+
+function LightweightLineChart({ data, currentName, previousName }) {
+  if (!data?.length) return <EmptyState />
+
+  const width = 760
+  const height = 300
+  const pad = { top: 24, right: 24, bottom: 48, left: 54 }
+  const innerWidth = width - pad.left - pad.right
+  const innerHeight = height - pad.top - pad.bottom
+  const values = data.flatMap((item) => [Number(item.current || 0), Number(item.previous || 0)])
+  const maxValue = Math.max(1, ...values)
+  const yMax = maxValue * 1.12
+  const x = (index) => pad.left + (data.length <= 1 ? innerWidth / 2 : (index / (data.length - 1)) * innerWidth)
+  const y = (value) => pad.top + innerHeight - (Number(value || 0) / yMax) * innerHeight
+  const currentPoints = data.map((item, index) => `${x(index)},${y(item.current)}`).join(' ')
+  const previousPoints = data.map((item, index) => `${x(index)},${y(item.previous)}`).join(' ')
+  const gridValues = [0, .25, .5, .75, 1].map((ratio) => yMax * ratio)
+  const labelStep = Math.max(1, Math.ceil(data.length / 7))
+
+  return (
+    <div className="lightweight-chart lightweight-line-chart" role="img" aria-label={`مقارنة الأمتار بين ${currentName} و${previousName}`}>
+      <div className="lightweight-chart__legend">
+        <span><i className="is-current" />{currentName}</span>
+        <span><i className="is-previous" />{previousName}</span>
+      </div>
+      <svg viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
+        {gridValues.map((value) => {
+          const py = y(value)
+          return (
+            <g key={value}>
+              <line x1={pad.left} x2={width - pad.right} y1={py} y2={py} className="lightweight-chart__grid" />
+              <text x={pad.left - 10} y={py + 4} className="lightweight-chart__axis-label" textAnchor="end">{number(value)}</text>
+            </g>
+          )
+        })}
+        <polyline points={previousPoints} className="lightweight-line is-previous" />
+        <polyline points={currentPoints} className="lightweight-line is-current" />
+        {data.map((item, index) => (
+          <g key={`${item.label}-${index}`}>
+            <circle cx={x(index)} cy={y(item.current)} r="3.4" className="lightweight-dot is-current">
+              <title>{currentName}: {number(item.current)} م</title>
+            </circle>
+            <circle cx={x(index)} cy={y(item.previous)} r="2.8" className="lightweight-dot is-previous">
+              <title>{previousName}: {number(item.previous)} م</title>
+            </circle>
+            {(index % labelStep === 0 || index === data.length - 1) ? (
+              <text x={x(index)} y={height - 17} className="lightweight-chart__x-label" textAnchor="middle">{item.label}</text>
+            ) : null}
+          </g>
+        ))}
+      </svg>
+    </div>
+  )
+}
+
+function LightweightBarChart({ data }) {
+  if (!data?.length) return <EmptyState />
+
+  const maxValue = Math.max(1, ...data.map((item) => Number(item.meters || 0)))
+
+  return (
+    <div className="lightweight-bars" role="img" aria-label="المشاريع حسب الأمتار">
+      {data.map((item) => {
+        const percent = Math.max(2, (Number(item.meters || 0) / maxValue) * 100)
+        return (
+          <div className="lightweight-bar-row" key={item.name}>
+            <div className="lightweight-bar-row__label">
+              <strong title={item.name}>{item.name}</strong>
+              <span>{number(item.meters)} م</span>
+            </div>
+            <div className="lightweight-bar-track" aria-hidden="true">
+              <span style={{ width: `${percent}%` }} />
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function DashboardPage() {
@@ -518,17 +585,11 @@ export default function DashboardPage() {
             <span className="chart-badge">Fair Comparison</span>
           </header>
           <div className="chart-wrap chart-wrap-large">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={view.dayComparison} margin={{ top: 18, right: 15, left: 8, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--chart-grid)" />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => `${number(value)} م`} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Line type="monotone" dataKey="current" name={monthName(monthKey)} stroke="var(--blue-600)" strokeWidth={2.8} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="previous" name={monthName(view.previousKey)} stroke="var(--navy-800)" strokeWidth={2.2} strokeDasharray="6 4" dot={{ r: 2 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            <LightweightLineChart
+              data={view.dayComparison}
+              currentName={monthName(monthKey)}
+              previousName={monthName(view.previousKey)}
+            />
           </div>
         </section>
 
@@ -565,17 +626,7 @@ export default function DashboardPage() {
             <span className="chart-badge">Projects</span>
           </header>
           <div className="chart-wrap">
-            {projectChartData.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={projectChartData} margin={{ top: 12, right: 8, left: 4, bottom: 50 }}>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="var(--chart-grid)" />
-                  <XAxis dataKey="name" angle={-18} textAnchor="end" height={72} tick={{ fontSize: 9, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "var(--chart-axis)" }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => `${number(value)} م`} />
-                  <Bar dataKey="meters" name="الأمتار" radius={[8, 8, 0, 0]} fill="var(--blue-600)" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : <EmptyState />}
+            <LightweightBarChart data={projectChartData} />
           </div>
         </section>
 
