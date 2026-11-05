@@ -59,6 +59,11 @@ export function AuthProvider({ children }) {
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     if (signInError) throw signInError
     if (data.session) {
+      try {
+        await appService.logAuthSessionEvent('sign_in', data.session.user.id)
+      } catch (auditError) {
+        console.warn('Could not record sign-in audit event', auditError)
+      }
       const nextProfile = await appService.profile(data.session.user.id)
       setSession(data.session)
       setProfile(nextProfile)
@@ -75,6 +80,14 @@ export function AuthProvider({ children }) {
   }
 
   const signOut = async () => {
+    const userId = session?.user?.id
+    if (userId) {
+      try {
+        await appService.logAuthSessionEvent('sign_out', userId)
+      } catch (auditError) {
+        console.warn('Could not record sign-out audit event', auditError)
+      }
+    }
     queryClient.clear()
     clearAllSessionCache()
     setProfile(null)
