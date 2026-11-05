@@ -8464,3 +8464,22 @@ a,button,input,select,textarea,[tabindex]{
     gap:8px;
   }
 }
+
+
+/* Auth session events inside audit trail */
+.audit-action-dot.action-sign_in,
+.audit-action-badge.action-sign_in{
+  border-color:color-mix(in srgb,var(--success) 28%,var(--border));
+  background:var(--success-soft);
+  color:var(--success);
+}
+.audit-action-dot.action-sign_out,
+.audit-action-badge.action-sign_out{
+  border-color:color-mix(in srgb,var(--warning) 28%,var(--border));
+  background:var(--warning-soft);
+  color:var(--warning);
+}
+.audit-event:has(.action-sign_in) .audit-summary-box,
+.audit-event:has(.action-sign_out) .audit-summary-box{
+  font-weight:800;
+}
