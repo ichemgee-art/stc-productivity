@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Clock3, History, RotateCcw, Search, ShieldCheck, UserRound } from 'lucide-react'
+import { Clock3, History, LogIn, LogOut, RotateCcw, Search, ShieldCheck, UserRound } from 'lucide-react'
 import { appService } from '../services/appService'
 import { useSessionState } from '../lib/sessionCache'
 import { useFeedback } from '../context/FeedbackContext'
@@ -19,6 +19,8 @@ const actionLabels = {
   absence_type: 'تغيير الغياب',
   attendance_note: 'ملاحظة حضور',
   set_active_cycle: 'تغيير الدورة الحالية',
+  sign_in: 'تسجيل دخول',
+  sign_out: 'تسجيل خروج',
 }
 
 const entityLabels = {
@@ -28,6 +30,7 @@ const entityLabels = {
   section: 'قطاع',
   attendance: 'حضور وغياب',
   system_state: 'إعدادات النظام',
+  auth_session: 'جلسة المستخدم',
 }
 
 const fieldDefs = [
@@ -122,6 +125,11 @@ function eventSummary(row) {
   const d = row.details || {}
   const source = d.after_full || d.after || d.submission || d.before || d
   if (row.action === 'restore') return `استرجاع التعديل رقم #${d.original_audit_id || '—'}`
+  if (row.entity_type === 'auth_session') {
+    if (row.action === 'sign_in') return 'دخل إلى النظام'
+    if (row.action === 'sign_out') return 'خرج من النظام'
+    return 'جلسة المستخدم'
+  }
   if (row.entity_type === 'submission') {
     const project = source?.project_name_snapshot || source?.project || d.project || 'عملية إنتاجية'
     const workDate = source?.work_date || d.work_date
@@ -258,10 +266,11 @@ export default function AuditPage() {
             const changes = changeRows(row)
             const restored = restoredIds.has(String(row.id))
             const reversible = canRestore(row, restoredIds, rows)
+            const EventIcon = row.action === 'sign_in' ? LogIn : row.action === 'sign_out' ? LogOut : History
             return (
               <article className={`audit-event ${row.action === 'restore' ? 'is-restore' : ''}`} key={row.id}>
                 <div className="audit-event__rail">
-                  <span className={`audit-action-dot action-${row.action}`}><History size={15} /></span>
+                  <span className={`audit-action-dot action-${row.action}`}><EventIcon size={15} /></span>
                 </div>
 
                 <div className="audit-event__body">
