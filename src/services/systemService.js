@@ -30,6 +30,17 @@ export const systemService = {
     return unwrap(await supabase.rpc('dashboard_data', { p_month_key: monthKey }))
   },
 
+  async logAuthSessionEvent(action, userId) {
+    if (!userId || !['sign_in', 'sign_out'].includes(action)) return null
+    return unwrap(await supabase.from('audit_log').insert({
+      user_id: userId,
+      action,
+      entity_type: 'auth_session',
+      entity_id: userId,
+      details: {},
+    }))
+  },
+
   async auditEntries() {
     const [logs, profiles] = await Promise.all([
       fetchAll((from, to) => supabase
