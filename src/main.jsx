@@ -15,6 +15,18 @@ import './styles/project-progress.css'
 
 installGlobalMonitoring()
 
+const preventNumberWheelChange = (event) => {
+  const target = event.target
+  if (!(target instanceof HTMLInputElement) || target.type !== 'number') return
+  if (document.activeElement !== target) return
+
+  // Remove focus before the browser applies its native wheel increment.
+  // The wheel event can then continue scrolling the page normally.
+  target.blur()
+}
+
+document.addEventListener('wheel', preventNumberWheelChange, { capture: true, passive: true })
+
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
