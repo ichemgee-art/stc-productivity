@@ -8483,3 +8483,15 @@ a,button,input,select,textarea,[tabindex]{
 .audit-event:has(.action-sign_out) .audit-summary-box{
   font-weight:800;
 }
+
+
+/* Numeric input safety: avoid accidental edits while scrolling */
+input[type="number"]{
+  -moz-appearance:textfield;
+  appearance:textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
