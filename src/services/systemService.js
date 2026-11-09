@@ -41,6 +41,11 @@ export const systemService = {
     }))
   },
 
+  async systemUsageSnapshot() {
+    const data = unwrap(await supabase.rpc('admin_system_usage_snapshot'))
+    return Array.isArray(data) ? data[0] : data
+  },
+
   async auditEntries() {
     const [logs, profiles] = await Promise.all([
       fetchAll((from, to) => supabase
