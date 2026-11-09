@@ -3,7 +3,7 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import {
   BarChart3, ClipboardPlus, Database, FolderKanban, Gauge, LogOut, Menu,
   Settings2, ShieldCheck, UserRoundCog, Users, X, CalendarDays, Wrench, ArrowLeftRight, History, RefreshCw, FileText, CalendarRange,
-  Moon, Sun, Home, MoreHorizontal, ClipboardList, UsersRound, ChevronDown,
+  Moon, Sun, Home, MoreHorizontal, ClipboardList, UsersRound, ChevronDown, HardDrive,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useCycle } from '../context/CycleContext'
@@ -30,6 +30,7 @@ const pageTitles = {
   '/quarter': ['حساب الكوارتر', 'اختيار 3 دورات وتحليلها في Dashboard واحدة شاملة.'],
   '/audit': ['سجل التعديلات', 'كل التغييرات ومن نفذها مع إمكانية الاسترجاع الآمن.'],
   '/admin/users': ['إدارة المستخدمين', 'إنشاء الحسابات وتغيير الصلاحيات وكلمات المرور بأمان.'],
+  '/admin/system-usage': ['استهلاك النظام', 'متابعة مساحة قاعدة البيانات والتخزين وأرقام استخدام Supabase.'],
 }
 
 const peopleLabels = { engineer: 'المهندسين', technician: 'الفنيين', assistant: 'المساعدين', worker: 'العمال' }
@@ -160,6 +161,7 @@ export default function AppLayout() {
         { to: '/sections', label: 'القطاعات والأسعار', icon: Settings2 },
         ...(permissions.canViewAudit ? [{ to: '/audit', label: 'سجل التعديلات', icon: History }] : []),
         ...(permissions.canManageUsers ? [{ to: '/admin/users', label: 'إدارة المستخدمين', icon: UsersRound }] : []),
+        ...(permissions.isAdmin ? [{ to: '/admin/system-usage', label: 'استهلاك النظام', icon: HardDrive }] : []),
       ],
     },
   ]
