@@ -11,7 +11,6 @@ import { appService } from '../services/appService'
 import EmptyState from '../components/EmptyState'
 import { date, money, monthName, number, roleLabels } from '../lib/format'
 import ExportButtons from '../components/ExportButtons'
-import SystemUsagePanel from '../components/SystemUsagePanel'
 
 
 const parseDay = (iso) => new Date(`${String(iso).slice(0, 10)}T12:00:00`)
@@ -669,7 +668,6 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <SystemUsagePanel />
     </div>
   )
 }
