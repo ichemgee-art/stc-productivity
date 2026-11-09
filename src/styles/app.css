@@ -8757,3 +8757,20 @@ input[type="number"]::-webkit-inner-spin-button{
   .system-usage-progress>span{transition:none}
   .system-usage-panel .is-spinning{animation:none}
 }
+
+
+/* Standalone admin system usage page */
+.system-usage-hero{margin-bottom:0}
+.system-usage-admin-note{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:9px 12px;
+  border:1px solid var(--border);
+  border-radius:11px;
+  background:var(--surface-soft);
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+}
+.system-usage-admin-note svg{color:var(--brand-gold)}
