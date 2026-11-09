@@ -19,6 +19,7 @@ const QuarterReportPage = lazy(() => import('./pages/QuarterReportPage'))
 const ProjectProgressPage = lazy(() => import('./pages/ProjectProgressPage'))
 const NewProjectProgressPage = lazy(() => import('./pages/NewProjectProgressPage'))
 const UsersAdminPage = lazy(() => import('./pages/UsersAdminPage'))
+const SystemUsagePage = lazy(() => import('./pages/SystemUsagePage'))
 const ProjectProgressDetailsPage = lazy(() => import('./pages/ProjectProgressDetailsPage'))
 
 function RequireAuth({ children }) {
@@ -77,6 +78,7 @@ export default function App() {
         <Route path="quarter" element={<QuarterReportPage />} />
         <Route path="audit" element={<RequireAdmin><AuditPage /></RequireAdmin>} />
         <Route path="admin/users" element={<RequireAdmin><UsersAdminPage /></RequireAdmin>} />
+        <Route path="admin/system-usage" element={<RequireAdmin><SystemUsagePage /></RequireAdmin>} />
       </Route>
       <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />
     </Routes>
