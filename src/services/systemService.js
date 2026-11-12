@@ -46,6 +46,34 @@ export const systemService = {
     return Array.isArray(data) ? data[0] : data
   },
 
+  async upsertDevicePresence({ userId, deviceId, deviceLabel, deviceKind, platform, browser, model, currentPath }) {
+    if (!userId || !deviceId) return null
+    return unwrap(await supabase.from('active_device_sessions').upsert({
+      user_id: userId,
+      device_id: deviceId,
+      device_label: deviceLabel,
+      device_kind: deviceKind,
+      platform,
+      browser,
+      model: model || null,
+      current_path: currentPath || '/',
+      last_seen_at: new Date().toISOString(),
+    }, { onConflict: 'user_id,device_id' }))
+  },
+
+  async removeDevicePresence(userId, deviceId) {
+    if (!userId || !deviceId) return null
+    return unwrap(await supabase
+      .from('active_device_sessions')
+      .delete()
+      .eq('user_id', userId)
+      .eq('device_id', deviceId))
+  },
+
+  async activeDevices() {
+    return unwrap(await supabase.rpc('admin_active_devices')) || []
+  },
+
   async auditEntries() {
     const [logs, profiles] = await Promise.all([
       fetchAll((from, to) => supabase
