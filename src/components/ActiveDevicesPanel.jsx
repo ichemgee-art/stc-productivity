@@ -4,6 +4,7 @@ import { Check, Clock3, Laptop, Monitor, Pencil, RefreshCw, Smartphone, Tablet, 
 import { useAuth } from '../context/AuthContext'
 import { roleLabels } from '../lib/format'
 import { appService } from '../services/appService'
+import { getDeviceId } from '../lib/devicePresence'
 
 const pageLabels = {
   '/': 'لوحة الإدارة',
@@ -59,7 +60,7 @@ function durationSeconds(value) {
   return rest ? `${hours} س ${rest} د` : `${hours} ساعة`
 }
 
-function DeviceRow({ row, onSaved }) {
+function DeviceRow({ row, onSaved, isCurrent }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(row.custom_name || '')
   const [saving, setSaving] = useState(false)
@@ -114,6 +115,7 @@ function DeviceRow({ row, onSaved }) {
                 <button className="device-rename-btn" type="button" onClick={() => setEditing(true)} title="تسمية الجهاز" aria-label={`تسمية الجهاز ${visibleName}`}><Pencil size={13} /></button>
               </>
             )}
+            {isCurrent ? <span className="this-device-badge">هذا الجهاز</span> : null}
             <span className="live-dot">متصل الآن</span>
           </div>
           <small>{deviceDetails}</small>
@@ -161,6 +163,7 @@ export default function ActiveDevicesPanel() {
 
   const rows = query.data || []
   const userCount = useMemo(() => new Set(rows.map((row) => row.user_id)).size, [rows])
+  const currentDeviceId = useMemo(() => getDeviceId(), [])
 
   if (!isAdmin) return null
 
@@ -198,6 +201,7 @@ export default function ActiveDevicesPanel() {
             <DeviceRow
               key={`${row.user_id}-${row.device_id}`}
               row={row}
+              isCurrent={row.device_id === currentDeviceId}
               onSaved={() => query.refetch()}
             />
           ))}
