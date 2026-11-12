@@ -7,7 +7,7 @@ function fallbackUuid() {
   bytes[8] = (bytes[8] & 0x3f) | 0x80
   return [...bytes].map((byte, index) => {
     const hex = byte.toString(16).padStart(2, '0')
-    return [3, 5, 7, 9].includes(index) ? `-${hex}` : hex
+    return [4, 6, 8, 10].includes(index) ? `-${hex}` : hex
   }).join('')
 }
 
