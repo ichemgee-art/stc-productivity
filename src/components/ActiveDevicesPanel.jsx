@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Clock3, Laptop, Monitor, RefreshCw, Smartphone, Tablet, UserRound } from 'lucide-react'
+import { Check, Clock3, Laptop, Monitor, Pencil, RefreshCw, Smartphone, Tablet, UserRound, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { roleLabels } from '../lib/format'
 import { appService } from '../services/appService'
@@ -39,23 +39,109 @@ function deviceIcon(kind) {
   return Laptop
 }
 
-function since(value) {
-  const seconds = Math.max(0, Math.round((Date.now() - new Date(value).getTime()) / 1000))
+function sinceSeconds(value) {
+  const seconds = Math.max(0, Number(value || 0))
   if (seconds < 10) return 'الآن'
-  if (seconds < 60) return `منذ ${seconds} ث`
+  if (seconds < 60) return `منذ ${Math.floor(seconds)} ث`
   const minutes = Math.floor(seconds / 60)
   if (minutes < 60) return `منذ ${minutes} د`
   const hours = Math.floor(minutes / 60)
   return `منذ ${hours} س`
 }
 
-function duration(value) {
-  const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60000))
+function durationSeconds(value) {
+  const seconds = Math.max(0, Number(value || 0))
+  const minutes = Math.floor(seconds / 60)
   if (minutes < 1) return 'أقل من دقيقة'
   if (minutes < 60) return `${minutes} دقيقة`
   const hours = Math.floor(minutes / 60)
   const rest = minutes % 60
   return rest ? `${hours} س ${rest} د` : `${hours} ساعة`
+}
+
+function DeviceRow({ row, onSaved }) {
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(row.custom_name || '')
+  const [saving, setSaving] = useState(false)
+  const DeviceIcon = deviceIcon(row.device_kind)
+  const visibleName = row.custom_name || row.device_label
+
+  const saveName = async () => {
+    if (saving) return
+    setSaving(true)
+    try {
+      await appService.renameDevice(row.user_id, row.device_id, name)
+      setEditing(false)
+      await onSaved()
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const cancelEdit = () => {
+    setName(row.custom_name || '')
+    setEditing(false)
+  }
+
+  return (
+    <article className="active-device-row">
+      <div className="active-device-row__device">
+        <span className="active-device-icon"><DeviceIcon size={20} /></span>
+        <div>
+          <div className="active-device-title">
+            {editing ? (
+              <div className="device-name-editor">
+                <input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  maxLength={80}
+                  autoFocus
+                  placeholder="مثال: HP مكتب جرجس"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') saveName()
+                    if (event.key === 'Escape') cancelEdit()
+                  }}
+                />
+                <button type="button" onClick={saveName} disabled={saving} title="حفظ اسم الجهاز" aria-label="حفظ اسم الجهاز"><Check size={14} /></button>
+                <button type="button" onClick={cancelEdit} disabled={saving} title="إلغاء" aria-label="إلغاء تعديل اسم الجهاز"><X size={14} /></button>
+              </div>
+            ) : (
+              <>
+                <strong>{visibleName}</strong>
+                <button className="device-rename-btn" type="button" onClick={() => setEditing(true)} title="تسمية الجهاز" aria-label={`تسمية الجهاز ${visibleName}`}><Pencil size={13} /></button>
+              </>
+            )}
+            <span className="live-dot">متصل الآن</span>
+          </div>
+          <small>
+            {row.custom_name ? `${row.device_label} · ` : ''}
+            {row.platform} · {row.browser}{row.model ? ` · ${row.model}` : ''}
+          </small>
+        </div>
+      </div>
+
+      <div className="active-device-row__user">
+        <UserRound size={15} />
+        <div>
+          <strong>{row.display_name || 'مستخدم'}</strong>
+          <small>{roleLabels[row.app_role] || row.app_role || '—'}</small>
+        </div>
+      </div>
+
+      <div className="active-device-row__page">
+        <span>الصفحة الحالية</span>
+        <strong>{pathLabel(row.current_path)}</strong>
+      </div>
+
+      <div className="active-device-row__time">
+        <Clock3 size={15} />
+        <div>
+          <strong>{sinceSeconds(row.last_seen_seconds)}</strong>
+          <small>مفتوح من {durationSeconds(row.session_seconds)}</small>
+        </div>
+      </div>
+    </article>
+  )
 }
 
 export default function ActiveDevicesPanel() {
@@ -84,7 +170,7 @@ export default function ActiveDevicesPanel() {
         <div>
           <span className="eyebrow">LIVE PRESENCE</span>
           <h3>الأجهزة المفتوح عليها النظام الآن</h3>
-          <p>الجهاز يظل ظاهرًا طالما يرسل نشاطًا حديثًا، ويختفي تلقائيًا بعد انقطاع الاتصال.</p>
+          <p>الوقت محسوب من سيرفر Supabase. اسم الجهاز التلقائي قد يكون عامًا؛ استخدم علامة القلم لتسميته مثل HP مكتب جرجس أو iPhone إسـراء.</p>
         </div>
         <div className="active-devices-header__summary">
           <span><strong>{rows.length}</strong> جهاز</span>
@@ -108,44 +194,13 @@ export default function ActiveDevicesPanel() {
         <div className="page-error">تعذر تحميل الأجهزة النشطة: {query.error?.message || 'خطأ غير معروف'}</div>
       ) : rows.length ? (
         <div className="active-devices-list">
-          {rows.map((row) => {
-            const DeviceIcon = deviceIcon(row.device_kind)
-            return (
-              <article className="active-device-row" key={`${row.user_id}-${row.device_id}`}>
-                <div className="active-device-row__device">
-                  <span className="active-device-icon"><DeviceIcon size={20} /></span>
-                  <div>
-                    <div className="active-device-title">
-                      <strong>{row.device_label}</strong>
-                      <span className="live-dot">متصل الآن</span>
-                    </div>
-                    <small>{row.platform} · {row.browser}{row.model ? ` · ${row.model}` : ''}</small>
-                  </div>
-                </div>
-
-                <div className="active-device-row__user">
-                  <UserRound size={15} />
-                  <div>
-                    <strong>{row.display_name || 'مستخدم'}</strong>
-                    <small>{roleLabels[row.app_role] || row.app_role || '—'}</small>
-                  </div>
-                </div>
-
-                <div className="active-device-row__page">
-                  <span>الصفحة الحالية</span>
-                  <strong>{pathLabel(row.current_path)}</strong>
-                </div>
-
-                <div className="active-device-row__time">
-                  <Clock3 size={15} />
-                  <div>
-                    <strong>{since(row.last_seen_at)}</strong>
-                    <small>مفتوح من {duration(row.first_seen_at)}</small>
-                  </div>
-                </div>
-              </article>
-            )
-          })}
+          {rows.map((row) => (
+            <DeviceRow
+              key={`${row.user_id}-${row.device_id}`}
+              row={row}
+              onSaved={() => query.refetch()}
+            />
+          ))}
         </div>
       ) : (
         <div className="active-devices-empty">
