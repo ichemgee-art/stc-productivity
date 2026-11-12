@@ -4,6 +4,7 @@ import { appService } from '../services/appService'
 import { permissionsFor } from '../lib/permissions'
 import { queryClient } from '../lib/queryClient'
 import { clearAllSessionCache } from '../lib/sessionCache'
+import { getDeviceId } from '../lib/devicePresence'
 
 const AuthContext = createContext(null)
 
@@ -86,6 +87,11 @@ export function AuthProvider({ children }) {
         await appService.logAuthSessionEvent('sign_out', userId)
       } catch (auditError) {
         console.warn('Could not record sign-out audit event', auditError)
+      }
+      try {
+        await appService.removeDevicePresence(userId, getDeviceId())
+      } catch (presenceError) {
+        console.warn('Could not clear device presence', presenceError)
       }
     }
     queryClient.clear()
