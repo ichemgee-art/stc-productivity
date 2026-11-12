@@ -8774,3 +8774,190 @@ input[type="number"]::-webkit-inner-spin-button{
   font-weight:800;
 }
 .system-usage-admin-note svg{color:var(--brand-gold)}
+
+
+/* Live active devices */
+.active-devices-panel{overflow:hidden}
+.active-devices-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  padding:17px 18px 13px;
+  border-bottom:1px solid var(--border);
+}
+.active-devices-header h3{
+  margin:3px 0 2px;
+  color:var(--text-strong);
+  font-size:16px;
+}
+.active-devices-header p{
+  margin:0;
+  color:var(--muted);
+  font-size:10.5px;
+  line-height:1.65;
+}
+.active-devices-header__summary{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:0 0 auto;
+}
+.active-devices-header__summary>span{
+  display:inline-flex;
+  align-items:baseline;
+  gap:4px;
+  padding:7px 9px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:var(--surface-soft);
+  color:var(--muted);
+  font-size:9px;
+  font-weight:800;
+}
+.active-devices-header__summary>span strong{
+  color:var(--text-strong);
+  font-size:12px;
+}
+.active-devices-list{display:grid}
+.active-device-row{
+  display:grid;
+  grid-template-columns:minmax(260px,1.4fr) minmax(150px,.8fr) minmax(150px,.7fr) minmax(150px,.7fr);
+  align-items:center;
+  gap:16px;
+  padding:13px 18px;
+  border-bottom:1px solid var(--border);
+}
+.active-device-row:last-child{border-bottom:0}
+.active-device-row__device{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.active-device-icon{
+  width:40px;
+  height:40px;
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  border:1px solid color-mix(in srgb,var(--success) 24%,var(--border));
+  background:var(--success-soft);
+  color:var(--success);
+}
+.active-device-row__device>div{min-width:0}
+.active-device-title{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.active-device-title>strong{
+  min-width:0;
+  color:var(--text-strong);
+  font-size:12px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.live-dot{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  color:var(--success);
+  font-size:8.5px;
+  font-weight:900;
+}
+.live-dot::before{
+  content:'';
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--success);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--success) 13%,transparent);
+}
+.active-device-row__device small,
+.active-device-row__user small,
+.active-device-row__time small{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:8.5px;
+}
+.active-device-row__user,
+.active-device-row__time{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--muted);
+}
+.active-device-row__user>div,
+.active-device-row__time>div{min-width:0}
+.active-device-row__user strong,
+.active-device-row__time strong{
+  display:block;
+  color:var(--text);
+  font-size:10.5px;
+}
+.active-device-row__page{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.active-device-row__page span{
+  color:var(--muted);
+  font-size:8.5px;
+}
+.active-device-row__page strong{
+  color:var(--text);
+  font-size:10.5px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.active-devices-empty{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:28px 18px;
+  color:var(--muted);
+}
+.active-devices-empty div{display:grid;gap:3px}
+.active-devices-empty strong{
+  color:var(--text);
+  font-size:11px;
+}
+.active-devices-empty span{font-size:9px}
+
+@media(max-width:1050px){
+  .active-device-row{
+    grid-template-columns:minmax(220px,1.4fr) minmax(140px,.8fr);
+  }
+  .active-device-row__page,
+  .active-device-row__time{
+    padding-inline-start:50px;
+  }
+}
+@media(max-width:760px){
+  .active-devices-header{
+    flex-direction:column;
+    align-items:stretch;
+    padding:14px;
+  }
+  .active-devices-header__summary{
+    justify-content:space-between;
+  }
+  .active-device-row{
+    grid-template-columns:1fr;
+    gap:10px;
+    padding:13px 14px;
+  }
+  .active-device-row__page,
+  .active-device-row__time{
+    padding-inline-start:50px;
+  }
+}
