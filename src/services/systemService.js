@@ -46,19 +46,17 @@ export const systemService = {
     return Array.isArray(data) ? data[0] : data
   },
 
-  async upsertDevicePresence({ userId, deviceId, deviceLabel, deviceKind, platform, browser, model, currentPath }) {
-    if (!userId || !deviceId) return null
-    return unwrap(await supabase.from('active_device_sessions').upsert({
-      user_id: userId,
-      device_id: deviceId,
-      device_label: deviceLabel,
-      device_kind: deviceKind,
-      platform,
-      browser,
-      model: model || null,
-      current_path: currentPath || '/',
-      last_seen_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,device_id' }))
+  async upsertDevicePresence({ deviceId, deviceLabel, deviceKind, platform, browser, model, currentPath }) {
+    if (!deviceId) return null
+    return unwrap(await supabase.rpc('touch_device_presence', {
+      p_device_id: deviceId,
+      p_device_label: deviceLabel,
+      p_device_kind: deviceKind,
+      p_platform: platform,
+      p_browser: browser,
+      p_model: model || null,
+      p_current_path: currentPath || '/',
+    }))
   },
 
   async removeDevicePresence(userId, deviceId) {
@@ -72,6 +70,16 @@ export const systemService = {
 
   async activeDevices() {
     return unwrap(await supabase.rpc('admin_active_devices')) || []
+  },
+
+  async renameDevice(userId, deviceId, customName) {
+    if (!userId || !deviceId) return null
+    const value = String(customName || '').trim()
+    return unwrap(await supabase
+      .from('active_device_sessions')
+      .update({ custom_name: value || null })
+      .eq('user_id', userId)
+      .eq('device_id', deviceId))
   },
 
   async auditEntries() {
