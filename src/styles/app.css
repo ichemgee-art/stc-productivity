@@ -9032,3 +9032,18 @@ input[type="number"]::-webkit-inner-spin-button{
     flex:1;
   }
 }
+
+
+.this-device-badge{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  padding:3px 6px;
+  border:1px solid color-mix(in srgb,var(--brand-gold) 30%,var(--border));
+  border-radius:999px;
+  background:color-mix(in srgb,var(--brand-gold) 10%,var(--surface));
+  color:var(--warning);
+  font-size:8px;
+  font-weight:900;
+  white-space:nowrap;
+}
