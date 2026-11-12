@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import PageErrorBoundary from '../components/PageErrorBoundary'
 import GlobalSearch from '../components/GlobalSearch'
 import NotificationCenter from '../components/NotificationCenter'
+import DevicePresenceTracker from '../components/DevicePresenceTracker'
 import { useTheme } from '../context/ThemeContext'
 import { readSessionCache, writeSessionCache } from '../lib/sessionCache'
 
@@ -208,6 +209,7 @@ export default function AppLayout() {
 
   return (
     <div className="app-shell">
+      <DevicePresenceTracker />
       <aside className="sidebar desktop-sidebar">{sidebar}</aside>
       {mobileOpen ? <div className="mobile-sidebar-backdrop" onClick={() => setMobileOpen(false)}><aside className="sidebar mobile-sidebar" onClick={(e) => e.stopPropagation()}><button className="mobile-close icon-btn" onClick={() => setMobileOpen(false)}><X size={18} /></button>{sidebar}</aside></div> : null}
 
