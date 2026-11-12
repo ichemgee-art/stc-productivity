@@ -1,5 +1,6 @@
 import { Database, ShieldCheck } from 'lucide-react'
 import SystemUsagePanel from '../components/SystemUsagePanel'
+import ActiveDevicesPanel from '../components/ActiveDevicesPanel'
 
 export default function SystemUsagePage() {
   return (
@@ -21,6 +22,7 @@ export default function SystemUsagePage() {
       </div>
 
       <SystemUsagePanel />
+      <ActiveDevicesPanel />
     </div>
   )
 }
