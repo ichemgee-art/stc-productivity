@@ -65,6 +65,9 @@ function DeviceRow({ row, onSaved }) {
   const [saving, setSaving] = useState(false)
   const DeviceIcon = deviceIcon(row.device_kind)
   const visibleName = row.custom_name || row.device_label
+  const deviceDetails = row.custom_name
+    ? row.device_label
+    : [row.platform, row.browser, row.model].filter(Boolean).join(' · ')
 
   const saveName = async () => {
     if (saving) return
@@ -113,10 +116,7 @@ function DeviceRow({ row, onSaved }) {
             )}
             <span className="live-dot">متصل الآن</span>
           </div>
-          <small>
-            {row.custom_name ? `${row.device_label} · ` : ''}
-            {row.platform} · {row.browser}{row.model ? ` · ${row.model}` : ''}
-          </small>
+          <small>{deviceDetails}</small>
         </div>
       </div>
 
