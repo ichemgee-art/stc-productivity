@@ -89,7 +89,7 @@ export function AuthProvider({ children }) {
         console.warn('Could not record sign-out audit event', auditError)
       }
       try {
-        await appService.removeDevicePresence(userId, getDeviceId())
+        await appService.markDeviceOffline(getDeviceId())
       } catch (presenceError) {
         console.warn('Could not clear device presence', presenceError)
       }
