@@ -68,6 +68,34 @@ function genericDeviceName(platform, kind) {
   return 'Computer'
 }
 
+function gpuRenderer() {
+  try {
+    const canvas = document.createElement('canvas')
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+    if (!gl) return ''
+    const ext = gl.getExtension('WEBGL_debug_renderer_info')
+    if (!ext) return ''
+    return String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) || '')
+  } catch {
+    return ''
+  }
+}
+
+async function hashFingerprint(parts) {
+  const value = parts.map((part) => String(part ?? '')).join('|')
+  if (crypto?.subtle && typeof TextEncoder !== 'undefined') {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+  }
+
+  let hash = 2166136261
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return `fallback-${(hash >>> 0).toString(16)}`
+}
+
 export async function detectDeviceInfo() {
   const ua = navigator.userAgent || ''
   const uaData = navigator.userAgentData
@@ -75,19 +103,40 @@ export async function detectDeviceInfo() {
   const platform = platformFromUserAgent(ua, uaData?.platform || navigator.platform || '')
   const kind = kindFromUserAgent(ua, Boolean(uaData?.mobile))
   let model = modelFromUserAgent(ua)
+  let architecture = ''
+  let bitness = ''
 
   if (uaData?.getHighEntropyValues) {
     try {
-      const highEntropy = await uaData.getHighEntropyValues(['model'])
+      const highEntropy = await uaData.getHighEntropyValues(['model', 'architecture', 'bitness'])
       if (highEntropy?.model) model = highEntropy.model.trim()
+      architecture = highEntropy?.architecture || ''
+      bitness = highEntropy?.bitness || ''
     } catch {
       // High entropy client hints are optional; generic detection remains valid.
     }
   }
 
   const baseName = model || genericDeviceName(platform, kind)
+  const fingerprint = await hashFingerprint([
+    platform,
+    kind,
+    model || '',
+    architecture,
+    bitness,
+    navigator.hardwareConcurrency || '',
+    navigator.deviceMemory || '',
+    navigator.maxTouchPoints || 0,
+    window.screen?.width || '',
+    window.screen?.height || '',
+    window.screen?.colorDepth || '',
+    window.devicePixelRatio || '',
+    gpuRenderer(),
+  ])
+
   return {
     deviceId: getDeviceId(),
+    deviceFingerprint: fingerprint,
     deviceLabel: `${baseName} · ${browser}`,
     deviceKind: kind,
     platform,
