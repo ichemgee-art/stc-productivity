@@ -46,10 +46,11 @@ export const systemService = {
     return Array.isArray(data) ? data[0] : data
   },
 
-  async upsertDevicePresence({ deviceId, deviceLabel, deviceKind, platform, browser, model, currentPath }) {
+  async upsertDevicePresence({ deviceId, deviceFingerprint, deviceLabel, deviceKind, platform, browser, model, currentPath }) {
     if (!deviceId) return null
     return unwrap(await supabase.rpc('touch_device_presence', {
       p_device_id: deviceId,
+      p_device_fingerprint: deviceFingerprint || null,
       p_device_label: deviceLabel,
       p_device_kind: deviceKind,
       p_platform: platform,
@@ -59,13 +60,9 @@ export const systemService = {
     }))
   },
 
-  async removeDevicePresence(userId, deviceId) {
-    if (!userId || !deviceId) return null
-    return unwrap(await supabase
-      .from('active_device_sessions')
-      .delete()
-      .eq('user_id', userId)
-      .eq('device_id', deviceId))
+  async markDeviceOffline(deviceId) {
+    if (!deviceId) return null
+    return unwrap(await supabase.rpc('mark_device_offline', { p_device_id: deviceId }))
   },
 
   async activeDevices() {
@@ -74,12 +71,11 @@ export const systemService = {
 
   async renameDevice(userId, deviceId, customName) {
     if (!userId || !deviceId) return null
-    const value = String(customName || '').trim()
-    return unwrap(await supabase
-      .from('active_device_sessions')
-      .update({ custom_name: value || null })
-      .eq('user_id', userId)
-      .eq('device_id', deviceId))
+    return unwrap(await supabase.rpc('admin_rename_device', {
+      p_user_id: userId,
+      p_device_id: deviceId,
+      p_custom_name: String(customName || '').trim() || null,
+    }))
   },
 
   async auditEntries() {
